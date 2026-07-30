@@ -1,0 +1,58 @@
+# ==========================================
+# Godot Engine - Caché y Editor
+# ==========================================
+
+# Caché de Godot 4.x (recursos importados, shaders compilados, etc.)
+.godot/
+
+# Caché de Godot 3.x
+.import/
+
+# Configuración de sobrescritura local (no subir settings locales)
+override.cfg
+
+# ==========================================
+# Archivos de Exportación / Compilaciones
+# ==========================================
+
+# Carpetas típicas para exportar (crea estas carpetas si compilas dentro del proyecto)
+/export/
+/build/
+/bin/
+
+# Extensiones de binarios y paquetes exportados
+*.apk
+*.aab
+*.exe
+*.zip
+*.tar.gz
+*.7z
+*.ipa
+*.pck
+*.dmg
+
+# ==========================================
+# Proyectos en C# / Mono (Godot .NET)
+# ==========================================
+.mono/
+data_*/
+[Bb]in/
+[Oo]bj/
+.vs/
+*.csproj.user
+
+# ==========================================
+# Editores y Sistema Operativo
+# ==========================================
+
+# Windows / macOS
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Editores de código (VS Code, Rider, etc.)
+.vscode/
+.idea/
+*.swp
+*~
