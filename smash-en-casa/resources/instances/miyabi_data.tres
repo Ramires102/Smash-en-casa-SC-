@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="CharacterData" load_steps=3 format=3 uid="uid://c_miyabi_data"]
+
+[ext_resource type="Script" path="res://resources/character_data.gd" id="1_chardata"]
+[ext_resource type="Resource" uid="uid://moveset_default" path="res://resources/instances/default_moveset.tres" id="2_mset"]
+
+[resource]
+script = ExtResource("1_chardata")
+character_name = "Miyabi"
+move_speed = 9.0
+jump_velocity = 15.0
+weight = 90.0
+character_color = Color(0.9, 0.2, 0.3, 1)
+moveset = ExtResource("2_mset")

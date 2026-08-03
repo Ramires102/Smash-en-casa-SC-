@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="AttackData" load_steps=2 format=3 uid="uid://atk_neutral"]
+
+[ext_resource type="Script" path="res://resources/attack_data.gd" id="1_atk"]
+
+[resource]
+script = ExtResource("1_atk")
+attack_name = "Jab Neutral"
+damage = 8.0
+base_knockback = 12.0
+knockback_scaling = 1.1
+angle_degrees = 45.0
+startup_frames = 4
+active_frames = 8
+recovery_frames = 10
+animation_name = "Attack"

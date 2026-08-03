@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="CharacterData" load_steps=3 format=3 uid="uid://c_sakuya_data"]
+
+[ext_resource type="Script" path="res://resources/character_data.gd" id="1_chardata"]
+[ext_resource type="Resource" uid="uid://moveset_default" path="res://resources/instances/default_moveset.tres" id="2_mset"]
+
+[resource]
+script = ExtResource("1_chardata")
+character_name = "Sakuya"
+move_speed = 10.0
+jump_velocity = 16.0
+weight = 80.0
+character_color = Color(0.8, 0.8, 0.9, 1)
+moveset = ExtResource("2_mset")

@@ -1,0 +1,158 @@
+[gd_scene load_steps=5 format=3 uid="uid://c_char_select"]
+
+[ext_resource type="Script" path="res://ui/character_select.gd" id="1_cselect"]
+[ext_resource type="Resource" uid="uid://c_miyabi_data" path="res://resources/instances/miyabi_data.tres" id="2_miyabi"]
+[ext_resource type="Resource" uid="uid://c_gogeta_data" path="res://resources/instances/gogeta_data.tres" id="3_gogeta"]
+[ext_resource type="Resource" uid="uid://c_sakuya_data" path="res://resources/instances/sakuya_data.tres" id="4_sakuya"]
+
+[node name="CharacterSelect" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_cselect")
+miyabi_data = ExtResource("2_miyabi")
+gogeta_data = ExtResource("3_gogeta")
+sakuya_data = ExtResource("4_sakuya")
+
+[node name="ColorRect" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.12, 0.15, 0.2, 1)
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 15
+
+[node name="TopMargin" type="Control" parent="VBoxContainer"]
+custom_minimum_size = Vector2(0, 10)
+layout_mode = 2
+
+[node name="Title" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 36
+text = "SELECCIÓN DE PERSONAJES"
+horizontal_alignment = 1
+
+[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+alignment = 1
+
+[node name="P1Selection" type="VBoxContainer" parent="VBoxContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 12
+alignment = 1
+
+[node name="LabelP1" type="Label" parent="VBoxContainer/HBoxContainer/P1Selection"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "JUGADOR 1:"
+horizontal_alignment = 1
+
+[node name="P1Status" type="Label" parent="VBoxContainer/HBoxContainer/P1Selection"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "P1: Sin seleccionar"
+horizontal_alignment = 1
+
+[node name="BtnMiyabiP1" type="Button" parent="VBoxContainer/HBoxContainer/P1Selection"]
+custom_minimum_size = Vector2(180, 40)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "Miyabi (Rojo)"
+
+[node name="BtnGogetaP1" type="Button" parent="VBoxContainer/HBoxContainer/P1Selection"]
+custom_minimum_size = Vector2(180, 40)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "Gogeta (Azul)"
+
+[node name="BtnSakuyaP1" type="Button" parent="VBoxContainer/HBoxContainer/P1Selection"]
+custom_minimum_size = Vector2(180, 40)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "Sakuya (Blanco)"
+
+[node name="VSeparator" type="VSeparator" parent="VBoxContainer/HBoxContainer"]
+layout_mode = 2
+
+[node name="P2Selection" type="VBoxContainer" parent="VBoxContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 12
+alignment = 1
+
+[node name="LabelP2" type="Label" parent="VBoxContainer/HBoxContainer/P2Selection"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "JUGADOR 2:"
+horizontal_alignment = 1
+
+[node name="P2Status" type="Label" parent="VBoxContainer/HBoxContainer/P2Selection"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "P2: Sin seleccionar"
+horizontal_alignment = 1
+
+[node name="BtnMiyabiP2" type="Button" parent="VBoxContainer/HBoxContainer/P2Selection"]
+custom_minimum_size = Vector2(180, 40)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "Miyabi (Rojo)"
+
+[node name="BtnGogetaP2" type="Button" parent="VBoxContainer/HBoxContainer/P2Selection"]
+custom_minimum_size = Vector2(180, 40)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "Gogeta (Azul)"
+
+[node name="BtnSakuyaP2" type="Button" parent="VBoxContainer/HBoxContainer/P2Selection"]
+custom_minimum_size = Vector2(180, 40)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "Sakuya (Blanco)"
+
+[node name="CenterContainer" type="CenterContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="StartBattleButton" type="Button" parent="VBoxContainer/CenterContainer"]
+custom_minimum_size = Vector2(280, 50)
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+disabled = true
+text = "Seleccionen Personajes para Iniciar"
+
+[node name="BottomContainer" type="CenterContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="BackButton" type="Button" parent="VBoxContainer/BottomContainer"]
+custom_minimum_size = Vector2(220, 40)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "← Volver al Menú Principal"
+
+[node name="BottomMargin" type="Control" parent="VBoxContainer"]
+custom_minimum_size = Vector2(0, 15)
+layout_mode = 2
+
+[connection signal="pressed" from="VBoxContainer/HBoxContainer/P1Selection/BtnMiyabiP1" to="." method="_on_p1_miyabi_pressed"]
+[connection signal="pressed" from="VBoxContainer/HBoxContainer/P1Selection/BtnGogetaP1" to="." method="_on_p1_gogeta_pressed"]
+[connection signal="pressed" from="VBoxContainer/HBoxContainer/P1Selection/BtnSakuyaP1" to="." method="_on_p1_sakuya_pressed"]
+[connection signal="pressed" from="VBoxContainer/HBoxContainer/P2Selection/BtnMiyabiP2" to="." method="_on_p2_miyabi_pressed"]
+[connection signal="pressed" from="VBoxContainer/HBoxContainer/P2Selection/BtnGogetaP2" to="." method="_on_p2_gogeta_pressed"]
+[connection signal="pressed" from="VBoxContainer/HBoxContainer/P2Selection/BtnSakuyaP2" to="." method="_on_p2_sakuya_pressed"]
+[connection signal="pressed" from="VBoxContainer/CenterContainer/StartBattleButton" to="." method="_on_start_battle_button_pressed"]
+[connection signal="pressed" from="VBoxContainer/BottomContainer/BackButton" to="." method="_on_back_button_pressed"]

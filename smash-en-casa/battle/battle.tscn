@@ -1,0 +1,39 @@
+[gd_scene load_steps=9 format=3 uid="uid://c_battle_scene"]
+
+[ext_resource type="Script" path="res://battle/battle.gd" id="1_battle"]
+[ext_resource type="PackedScene" uid="uid://b_stage_main" path="res://battle/stage.tscn" id="2_stage"]
+[ext_resource type="Script" path="res://battle/spawn_manager.gd" id="3_spawn"]
+[ext_resource type="Script" path="res://battle/battle_manager.gd" id="4_bmgr"]
+[ext_resource type="Script" path="res://systems/camera_controller.gd" id="5_cam"]
+[ext_resource type="Script" path="res://systems/screen_shake.gd" id="6_shake"]
+[ext_resource type="PackedScene" uid="uid://c_hud_scene" path="res://ui/hud.tscn" id="7_hud"]
+[ext_resource type="PackedScene" uid="uid://c_pause_scene" path="res://ui/pause.tscn" id="8_pause"]
+
+[node name="Battle" type="Node3D"]
+script = ExtResource("1_battle")
+
+[node name="Stage" parent="." instance=ExtResource("2_stage")]
+
+[node name="SpawnManager" type="Node" parent="." node_paths=PackedStringArray("stage")]
+script = ExtResource("3_spawn")
+stage = NodePath("../Stage")
+
+[node name="BattleManager" type="Node" parent="." node_paths=PackedStringArray("stage", "spawn_manager")]
+script = ExtResource("4_bmgr")
+stage = NodePath("../Stage")
+spawn_manager = NodePath("../SpawnManager")
+
+[node name="CameraController" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 16)
+script = ExtResource("5_cam")
+
+[node name="ScreenShake" type="Node" parent="." node_paths=PackedStringArray("camera")]
+script = ExtResource("6_shake")
+camera = NodePath("../CameraController")
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+
+[node name="HUD" parent="CanvasLayer" instance=ExtResource("7_hud")]
+
+[node name="PauseMenu" parent="CanvasLayer" instance=ExtResource("8_pause")]
+visible = false

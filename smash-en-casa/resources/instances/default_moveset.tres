@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="MoveSet" load_steps=4 format=3 uid="uid://moveset_default"]
+
+[ext_resource type="Script" path="res://resources/moveset.gd" id="1_mset"]
+[ext_resource type="Resource" uid="uid://atk_neutral" path="res://resources/instances/attacks/neutral_attack.tres" id="2_neutral"]
+[ext_resource type="Resource" uid="uid://atk_special" path="res://resources/instances/attacks/special_attack.tres" id="3_special"]
+
+[resource]
+script = ExtResource("1_mset")
+neutral_attack = ExtResource("2_neutral")
+side_tilt = ExtResource("2_neutral")
+up_tilt = ExtResource("2_neutral")
+down_tilt = ExtResource("2_neutral")
+neutral_air = ExtResource("2_neutral")
+special_neutral = ExtResource("3_special")
