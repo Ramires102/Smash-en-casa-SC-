@@ -25,15 +25,15 @@ height = 1.8
 albedo_color = Color(0.2, 0.6, 1, 1)
 
 [sub_resource type="SphereMesh" id="SphereMesh_head"]
-radius = 0.25
-height = 0.5
+radius = 0.22
+height = 0.44
 
 [sub_resource type="BoxMesh" id="BoxMesh_torso"]
-size = Vector3(0.5, 0.7, 0.3)
+size = Vector3(0.48, 0.65, 0.28)
 
-[sub_resource type="CapsuleMesh" id="CapsuleMesh_limb"]
-radius = 0.08
-height = 0.6
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_segment"]
+radius = 0.065
+height = 0.35
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_shield"]
 transparency = 1
@@ -75,28 +75,48 @@ mesh = SubResource("BoxMesh_torso")
 surface_material_override/0 = SubResource("StandardMaterial3D_body")
 
 [node name="HeadMesh" type="MeshInstance3D" parent="Humanoid/TorsoMesh"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.55, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.52, 0)
 mesh = SubResource("SphereMesh_head")
 surface_material_override/0 = SubResource("StandardMaterial3D_body")
 
-[node name="LeftArmMesh" type="MeshInstance3D" parent="Humanoid/TorsoMesh"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.35, 0, 0)
-mesh = SubResource("CapsuleMesh_limb")
+[node name="LeftUpperArm" type="MeshInstance3D" parent="Humanoid/TorsoMesh"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.31, 0.15, 0)
+mesh = SubResource("CapsuleMesh_segment")
 surface_material_override/0 = SubResource("StandardMaterial3D_body")
 
-[node name="RightArmMesh" type="MeshInstance3D" parent="Humanoid/TorsoMesh"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.35, 0, 0)
-mesh = SubResource("CapsuleMesh_limb")
+[node name="LeftForearm" type="MeshInstance3D" parent="Humanoid/TorsoMesh/LeftUpperArm"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.28, 0)
+mesh = SubResource("CapsuleMesh_segment")
 surface_material_override/0 = SubResource("StandardMaterial3D_body")
 
-[node name="LeftLegMesh" type="MeshInstance3D" parent="Humanoid"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.18, -0.55, 0)
-mesh = SubResource("CapsuleMesh_limb")
+[node name="RightUpperArm" type="MeshInstance3D" parent="Humanoid/TorsoMesh"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.31, 0.15, 0)
+mesh = SubResource("CapsuleMesh_segment")
 surface_material_override/0 = SubResource("StandardMaterial3D_body")
 
-[node name="RightLegMesh" type="MeshInstance3D" parent="Humanoid"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.18, -0.55, 0)
-mesh = SubResource("CapsuleMesh_limb")
+[node name="RightForearm" type="MeshInstance3D" parent="Humanoid/TorsoMesh/RightUpperArm"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.28, 0)
+mesh = SubResource("CapsuleMesh_segment")
+surface_material_override/0 = SubResource("StandardMaterial3D_body")
+
+[node name="LeftUpperLeg" type="MeshInstance3D" parent="Humanoid"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.16, -0.38, 0)
+mesh = SubResource("CapsuleMesh_segment")
+surface_material_override/0 = SubResource("StandardMaterial3D_body")
+
+[node name="LeftLowerLeg" type="MeshInstance3D" parent="Humanoid/LeftUpperLeg"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.28, 0)
+mesh = SubResource("CapsuleMesh_segment")
+surface_material_override/0 = SubResource("StandardMaterial3D_body")
+
+[node name="RightUpperLeg" type="MeshInstance3D" parent="Humanoid"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.16, -0.38, 0)
+mesh = SubResource("CapsuleMesh_segment")
+surface_material_override/0 = SubResource("StandardMaterial3D_body")
+
+[node name="RightLowerLeg" type="MeshInstance3D" parent="Humanoid/RightUpperLeg"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.28, 0)
+mesh = SubResource("CapsuleMesh_segment")
 surface_material_override/0 = SubResource("StandardMaterial3D_body")
 
 [node name="ShieldMesh" type="MeshInstance3D" parent="Humanoid"]
