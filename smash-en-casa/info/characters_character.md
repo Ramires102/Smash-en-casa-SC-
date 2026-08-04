@@ -1,31 +1,16 @@
 # Explicación de `characters/character.gd`
 
 ## Resumen
-Controlador principal de personaje 2.5D (`CharacterBody3D`). Gestiona la carga de `CharacterData`, entradas, estado de porcentaje %, colisión de Hitbox/Hurtbox, física de escudos de *Super Smash Bros. Ultimate*, física de empuje terrestre (Pushboxes / Dash Cross-Through / Roll Cross-Through), física de desvío de superficies de escenario (ECB Head Sliding), recepción de golpes, física de movimiento según fórmulas de Smash Ultimate, efectos de desorientación (*Daze Stars*) y el efecto pasivo **JoJo Menacing Aura** (`ゴゴゴゴ`) para John Placeholder en estado `IdleState`.
+Controlador principal de personaje 2.5D (`CharacterBody3D`). Integra la arquitectura de componentes (`CharacterController`, `CharacterStats`, `AttackController`, `AnimationController`, `StateMachine`), constantes de escudo (`MAX_SHIELD_HP`, `SHIELD_BREAK_RESPAWN_HP`, `SHIELD_DRAIN_RATE`), rotura de escudo (Shield Break), estado de mareo (Daze) y articulación visual 3D.
 
-## Explicación Línea por Línea
-```gdscript
-class_name Character
-extends CharacterBody3D
+## Constantes de Escudo y Mareo
+- `MAX_SHIELD_HP = 50.0`: Salud máxima del escudo 3D.
+- `SHIELD_BREAK_RESPAWN_HP = 30.0`: Salud del escudo asignada tras salir del estado de mareo (`DazeState`).
+- `SHIELD_DRAIN_RATE = 8.0`: Tasa de desgaste por segundo al mantener el escudo presionado.
 
-func _ready() -> void:
-	collision_layer = 2 # Capa de Jugadores
-	collision_mask = 1  # Colisiona solo con el Escenario / Entorno (Capa 1)
-```
-- Configura las máscaras de colisión del motor 3D de Godot para que las mallas de los jugadores colisionen con el escenario/suelos (Capa 1) pero no bloqueen físicamente a otros jugadores en `move_and_slide()`. toda la física entre personajes es gestionada por `_handle_ecb_and_pushbox_collisions()`.
-
-```gdscript
-func update_menacing_aura(delta: float) -> void:
-```
-- Instancia y actualiza los sprites 3D (`Sprite3D`) con la textura `jojo_menacing.png` cuando **John Placeholder** permanece en reposo (`IdleState`). Aplica animación de flotación sinusoidal y pulso en tono morado anime alrededor del personaje.
-
-```gdscript
-func _handle_ecb_and_pushbox_collisions(delta: float) -> void:
-```
-- **Pushbox Ground Collisions (Walking Pushback vs Cross-Through)**:
-  - En estados terrestres de caminata o reposo (`WalkState`, `IdleState`, `SquatState`, `RunBrakeState`, `PivotState`, etc.), la colisión de Pushbox es **sólida**, empujando al rival y restringiendo las posiciones (`global_position.x`) para impedir atravesarse.
-  - Únicamente en estados de impulso o evasión (`DashState`, `RunState`, `RollState`), se habilita el *Cross-Through* permitiendo pasar a la espalda del oponente.
-- **ECB Head Sliding**: Si dos personajes se solapan verticalmente (un jugador salta o cae sobre la cabeza del otro), el motor aplica una fuerza de repulsión lateral instantánea (`push_side * 14.0 * delta`) impidiendo matemáticamente pararse sobre la cabeza del rival.
+## Métodos de Escudo
+- `break_shield()`: Agota el escudo a 0 y transiciona la FSM a `Daze`.
+- `update_shield_scale()`: Escala el tamaño de la burbuja 3D proporcionalmente a la salud del escudo restante.
 
 ## Comunicación e Interacciones
-- **Comunica con**: `CharacterController`, `InputManager`, `KnockbackCalculator`, `AudioManager`, `StateMachine`, `Hitbox`, `Hurtbox`, `HUD`, `Events`.
+- **Comunica con**: `ShieldState.gd`, `DazeState.gd`, `DamageCalculator`, `KnockbackCalculator`, `Events`, `AudioManager`.

@@ -4,6 +4,11 @@ extends CharacterBody3D
 signal percentage_changed(new_percentage: float)
 signal character_ko(player_id: int)
 
+# Constantes de Escudo y Mareo (Shield & Daze)
+const MAX_SHIELD_HP: float = 50.0
+const SHIELD_BREAK_RESPAWN_HP: float = 30.0
+const SHIELD_DRAIN_RATE: float = 8.0
+
 @export var player_id: int = 1
 @export var character_data: CharacterData
 
@@ -14,6 +19,9 @@ signal character_ko(player_id: int)
 @onready var state_machine: StateMachine = $StateMachine
 @onready var hitbox: Hitbox = $Hitbox
 @onready var hurtbox: Hurtbox = $Hurtbox
+
+var shield_health: float = 50.0
+var shield_release_timer: float = 0.0
 
 var move_speed: float:
 	get: return controller.move_speed if controller else 8.0
@@ -87,6 +95,22 @@ func deactivate_hitbox() -> void:
 	if attack_controller:
 		attack_controller.disable_hitbox()
 
+func break_shield() -> void:
+	shield_health = 0.0
+	state_machine.transition_to("Daze")
+
+func update_shield_scale() -> void:
+	if has_node("Humanoid/ShieldMesh"):
+		var shield_mesh: Node3D = $Humanoid/ShieldMesh
+		var scale_ratio: float = clamp(shield_health / MAX_SHIELD_HP, 0.2, 1.0)
+		shield_mesh.scale = Vector3.ONE * scale_ratio
+
+func set_daze_effects_enabled(_enabled: bool) -> void:
+	pass
+
+func update_daze_effects(_delta: float, _daze_timer: float) -> void:
+	pass
+
 func on_hit_received(attack_data: AttackData, attacker: Node3D) -> void:
 	var new_percent: float = stats.add_damage(attack_data.damage)
 	percentage_changed.emit(new_percent)
@@ -119,6 +143,7 @@ func reset_player(spawn_position: Vector3) -> void:
 	global_position = spawn_position
 	velocity = Vector3.ZERO
 	if stats: stats.reset()
+	shield_health = MAX_SHIELD_HP
 	percentage_changed.emit(0.0)
 	visible = true
 	state_machine.transition_to("Idle")
