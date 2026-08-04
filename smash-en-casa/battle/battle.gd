@@ -15,7 +15,7 @@ var p2_character: Character
 func _ready() -> void:
 	var p1_data: CharacterData = GameManager.player_1_data
 	if p1_data == null:
-		p1_data = preload("res://resources/instances/miyabi_data.tres")
+		p1_data = preload("res://resources/instances/john_placeholder_data.tres")
 		
 	var p2_data: CharacterData = GameManager.player_2_data
 	if p2_data == null:
@@ -26,6 +26,9 @@ func _ready() -> void:
 
 	add_child(p1_character)
 	add_child(p2_character)
+
+	spawn_manager.set_initial_transform(p1_character, 1)
+	spawn_manager.set_initial_transform(p2_character, 2)
 
 	# Conectar cámara
 	camera_controller.player_1 = p1_character

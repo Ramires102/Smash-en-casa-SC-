@@ -6,8 +6,19 @@
 [resource]
 script = ExtResource("1_chardata")
 character_name = "Sakuya"
-move_speed = 10.0
+run_speed = 2.077
+walk_speed = 1.22
+initial_dash_speed = 1.87
+traction = 0.09
 jump_velocity = 16.0
+short_hop_velocity = 12.0
+air_speed = 1.1
+air_acceleration = 0.05
+air_friction = 0.01
 weight = 80.0
+gravity = 0.09
+fall_speed = 1.6
+fast_fall_speed = 2.56
+pushbox_radius = 0.5
 character_color = Color(0.8, 0.8, 0.9, 1)
 moveset = ExtResource("2_mset")

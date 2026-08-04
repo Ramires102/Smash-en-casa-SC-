@@ -1,7 +1,7 @@
 # Explicación de `battle/battle_manager.gd`
 
 ## Resumen
-Árbitro central de la partida. Supervisa las vidas (stocks) de P1 y P2, el temporizador regresivo de combate, la detección de KOs mediante las BlastZones del escenario, los reaparecimientos (respawns) y determina el ganador al finalizar el tiempo o las vidas.
+Árbitro central de la partida. Supervisa las vidas (stocks) de P1 y P2, el temporizador regresivo de combate, la detección de KOs mediante las BlastZones del escenario, los reaparecimientos (respawns) con control de reingreso (debounce) y declara al ganador al finalizar las vidas o el tiempo.
 
 ## Explicación Línea por Línea
 ```gdscript
@@ -12,49 +12,31 @@
 5: signal timer_updated(time_remaining: float)
 6: signal match_finished(winner_id: int)
 ```
-- Señales emitidas para mantener al HUD y al sistema de victoria informados en todo momento.
+- Señales emitidas para mantener al HUD y al sistema de victoria informados.
 
 ```gdscript
-8: @export var stage: Stage
-9: @export var spawn_manager: SpawnManager
-10: var p1_lives: int = 3
-11: var p2_lives: int = 3
-12: var current_time: float = 480.0
-13: var is_active: bool = false
+40: var is_ko_processing: Dictionary = {}
+
+42: func _on_player_ko(character: Character) -> void:
+43: 	if not is_active or character == null: return
+44: 	var pid: int = character.player_id
+45: 	if is_ko_processing.get(pid, false): return
+46: 	is_ko_processing[pid] = true
+47: 	Events.camera_shake_requested.emit(10.0)
 ```
-- Variables de control de reglas.
+- Filtra eventos duplicados durante el procesamiento del KO, activa sacudida de cámara e inicia la pérdida de vida.
 
 ```gdscript
-18: func setup_match(p1: Character, p2: Character, initial_lives: int = 3, time_limit: float = 480.0) -> void:
-19: 	player_1 = p1
-20: 	player_2 = p2
-21: 	p1_lives = initial_lives
-22: 	p2_lives = initial_lives
-23: 	current_time = time_limit
-24: 	is_active = true
-25: 	if stage: stage.blast_zone_entered.connect(_on_player_ko)
+49: 	if pid == 1:
+50: 		p1_lives -= 1
+51: 		lives_updated.emit(1, p1_lives)
+52: 		if p1_lives <= 0: _finish_game(2)
+53: 		else:
+54: 			spawn_manager.respawn_player(character)
+55: 			get_tree().create_timer(0.5).timeout.connect(func(): is_ko_processing[1] = false)
 ```
-- Inicia el combate, registra a ambos luchadores y conecta la señal `blast_zone_entered` del escenario.
-
-```gdscript
-39: func _on_player_ko(character: Character) -> void:
-40: 	if not is_active: return
-41: 	if character.player_id == 1:
-42: 		p1_lives -= 1
-43: 		lives_updated.emit(1, p1_lives)
-44: 		if p1_lives <= 0: _finish_game(2)
-45: 		else: spawn_manager.respawn_player(character)
-```
-- Al detectar que un personaje cruzó la `BlastZone`, descuenta 1 vida, actualiza el HUD y decide si reaparecerlo o declarar KO definitivo.
-
-```gdscript
-67: func _finish_game(winner_id: int) -> void:
-68: 	is_active = false
-69: 	match_finished.emit(winner_id)
-70: 	GameManager.end_match(winner_id)
-```
-- Declara al ganador y notifica a `GameManager`.
+- Descuenta la vida, notifica al HUD y reaparece al luchador o declara la victoria del rival si se agotaron los stocks.
 
 ## Comunicación e Interacciones
 - **Escucha a**: `Stage.gd` (`blast_zone_entered`).
-- **Comunica con**: `HUD.gd`, `SpawnManager.gd`, `GameManager.gd`.
+- **Comunica con**: `HUD.gd`, `SpawnManager.gd`, `GameManager.gd`, `Events.gd`.

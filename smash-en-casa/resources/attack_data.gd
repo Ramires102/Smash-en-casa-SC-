@@ -11,3 +11,5 @@ extends Resource
 @export var recovery_frames: int = 10
 @export var animation_name: String = "AttackNeutral"
 @export var hit_sfx: AudioStream
+@export var bonus_shield_damage: float = 0.0
+@export var is_aerial: bool = false

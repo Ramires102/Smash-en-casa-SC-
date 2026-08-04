@@ -24,7 +24,8 @@ Refactorización del nodo `Character` a una arquitectura modular basada en compo
 ## 3. `character_controller.gd`
 - **Ubicación en árbol**: `Character/Controller`
 - **Responsabilidad**: Maneja la física de movimiento horizontal y salto, consultando al `InputManager`.
-  - Controla la orientación de mirada (`facing_direction`: 1.0 derecha, -1.0 izquierda).
+  - Propiedad `@export var facing_angle: float = 75.0`: Ángulo de perspectiva 3/4 para peleas 2.5D.
+  - Método `set_facing_direction(dir)`: Ajusta la orientación en $Y$ a $+75.0^\circ$ al mirar a la derecha ($+1.0$) y a $-105.0^\circ$ al mirar a la izquierda ($-1.0$), asegurando que el cuerpo y las Hitboxes apunten correctamente hacia el adversario.
 
 ## Comunicación e Interacciones
 - Todos estos componentes son instanciados en `Character.tscn` y se configuran automáticamente desde el Resource `CharacterData` mediante `load_character()`.

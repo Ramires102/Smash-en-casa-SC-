@@ -28,7 +28,7 @@ func get_attack_data_for_input(player_id: int, input_vec: Vector2, is_on_floor: 
 		return current_moveset.down_tilt
 	return current_moveset.neutral_attack
 
-func start_attack(attack_data: AttackData, attacker: Node3D) -> void:
+func start_attack(attack_data: AttackData, _attacker: Node3D) -> void:
 	if not attack_data:
 		return
 	is_attacking = true

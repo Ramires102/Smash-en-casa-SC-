@@ -16,15 +16,20 @@ func physics_update(_delta: float) -> void:
 
 	var input_vec: Vector2 = character.get_input_vector()
 	if abs(input_vec.x) < 0.1:
-		character.velocity.x = move_toward(character.velocity.x, 0, character.move_speed)
-		state_machine.transition_to("Idle")
+		state_machine.transition_to("RunBrake")
 		return
 
-	character.velocity.x = input_vec.x * character.move_speed
+	var current_facing: float = character.get_facing_direction()
+	if sign(input_vec.x) != current_facing and abs(input_vec.x) > 0.1:
+		state_machine.transition_to("Pivot", {"target_dir": sign(input_vec.x)})
+		return
+
+	var run_spd: float = character.controller.get_run_speed() if character.controller else 10.0
+	character.velocity.x = input_vec.x * run_spd
 	character.update_facing_direction(input_vec.x)
 
 	if character.is_jump_just_pressed():
-		state_machine.transition_to("Jump")
+		state_machine.transition_to("JumpSquat")
 		return
 
 	if character.is_attack_just_pressed():

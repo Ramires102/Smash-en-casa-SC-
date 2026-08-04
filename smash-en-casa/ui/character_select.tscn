@@ -86,6 +86,12 @@ layout_mode = 2
 size_flags_horizontal = 4
 text = "Sakuya (Blanco)"
 
+[node name="BtnJohnP1" type="Button" parent="VBoxContainer/HBoxContainer/P1Selection"]
+custom_minimum_size = Vector2(180, 40)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "John Placeholder"
+
 [node name="VSeparator" type="VSeparator" parent="VBoxContainer/HBoxContainer"]
 layout_mode = 2
 
@@ -125,6 +131,12 @@ layout_mode = 2
 size_flags_horizontal = 4
 text = "Sakuya (Blanco)"
 
+[node name="BtnJohnP2" type="Button" parent="VBoxContainer/HBoxContainer/P2Selection"]
+custom_minimum_size = Vector2(180, 40)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "John Placeholder"
+
 [node name="CenterContainer" type="CenterContainer" parent="VBoxContainer"]
 layout_mode = 2
 
@@ -151,8 +163,10 @@ layout_mode = 2
 [connection signal="pressed" from="VBoxContainer/HBoxContainer/P1Selection/BtnMiyabiP1" to="." method="_on_p1_miyabi_pressed"]
 [connection signal="pressed" from="VBoxContainer/HBoxContainer/P1Selection/BtnGogetaP1" to="." method="_on_p1_gogeta_pressed"]
 [connection signal="pressed" from="VBoxContainer/HBoxContainer/P1Selection/BtnSakuyaP1" to="." method="_on_p1_sakuya_pressed"]
+[connection signal="pressed" from="VBoxContainer/HBoxContainer/P1Selection/BtnJohnP1" to="." method="_on_p1_john_pressed"]
 [connection signal="pressed" from="VBoxContainer/HBoxContainer/P2Selection/BtnMiyabiP2" to="." method="_on_p2_miyabi_pressed"]
 [connection signal="pressed" from="VBoxContainer/HBoxContainer/P2Selection/BtnGogetaP2" to="." method="_on_p2_gogeta_pressed"]
 [connection signal="pressed" from="VBoxContainer/HBoxContainer/P2Selection/BtnSakuyaP2" to="." method="_on_p2_sakuya_pressed"]
+[connection signal="pressed" from="VBoxContainer/HBoxContainer/P2Selection/BtnJohnP2" to="." method="_on_p2_john_pressed"]
 [connection signal="pressed" from="VBoxContainer/CenterContainer/StartBattleButton" to="." method="_on_start_battle_button_pressed"]
 [connection signal="pressed" from="VBoxContainer/BottomContainer/BackButton" to="." method="_on_back_button_pressed"]

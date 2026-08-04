@@ -69,23 +69,23 @@ shape = SubResource("CapsuleShape3D_1")
 
 [node name="Humanoid" type="Node3D" parent="."]
 
-[node name="HeadMesh" type="MeshInstance3D" parent="Humanoid"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
-mesh = SubResource("SphereMesh_head")
-surface_material_override/0 = SubResource("StandardMaterial3D_body")
-
 [node name="TorsoMesh" type="MeshInstance3D" parent="Humanoid"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 0)
 mesh = SubResource("BoxMesh_torso")
 surface_material_override/0 = SubResource("StandardMaterial3D_body")
 
-[node name="LeftArmMesh" type="MeshInstance3D" parent="Humanoid"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.35, 0.05, 0)
+[node name="HeadMesh" type="MeshInstance3D" parent="Humanoid/TorsoMesh"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.55, 0)
+mesh = SubResource("SphereMesh_head")
+surface_material_override/0 = SubResource("StandardMaterial3D_body")
+
+[node name="LeftArmMesh" type="MeshInstance3D" parent="Humanoid/TorsoMesh"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.35, 0, 0)
 mesh = SubResource("CapsuleMesh_limb")
 surface_material_override/0 = SubResource("StandardMaterial3D_body")
 
-[node name="RightArmMesh" type="MeshInstance3D" parent="Humanoid"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.35, 0.05, 0)
+[node name="RightArmMesh" type="MeshInstance3D" parent="Humanoid/TorsoMesh"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.35, 0, 0)
 mesh = SubResource("CapsuleMesh_limb")
 surface_material_override/0 = SubResource("StandardMaterial3D_body")
 

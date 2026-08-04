@@ -1,20 +1,19 @@
 # Explicación de `characters/animation_controller.gd`
 
 ## Resumen
-Abstracción limpia sobre el nodo `AnimationPlayer` de Godot para reproducir animaciones por nombre de forma segura.
+Abstracción limpia sobre el nodo `AnimationPlayer` de Godot para reproducir animaciones 3D por nombre de forma segura. Genera automáticamente animaciones procedimentales por fotogramas (*Keyframed Procedural Animations*) con poses ultra-exageradas estilo JoJo / MUGEN meme para John Placeholder y todos los luchadores que utilicen la jerarquía `Humanoid`. Incluye una pista de animación `RESET` para asegurar que las extremidades del personaje (piernas, brazos, torso) vuelvan instantáneamente a su pose inicial de reposo al pasar de agachado (`Squat`) u otras acciones hacia `Idle`.
 
-## Explicación Línea por Línea
+## Funciones Principales
+
 ```gdscript
-1: class_name AnimationController
-2: extends Node
-
-4: @export var animation_player: AnimationPlayer
-
-6: func play_animation(anim_name: String) -> void:
-7: 	if animation_player and animation_player.has_animation(anim_name):
-8: 		animation_player.play(anim_name)
+func play_animation(anim_name: String) -> void:
+	if animation_player and animation_player.has_animation(anim_name):
+		animation_player.play(anim_name)
 ```
-- `play_animation`: Valida la existencia del reproductor y la existencia de la animación antes de invocar `play()`, previniendo errores en tiempo de ejecución.
+- `_ready()`: Inicializa y construye la `AnimationLibrary` en tiempo de ejecución.
+- `_create_reset_animation()`: Registra la pista `RESET` restaurando posiciones y rotaciones relativas predeterminadas de todos los miembros del cuerpo.
+- `_create_idle_animation()`: Pose de combate estilo JoJo (*Menacing Stance*) con reseteo de posiciones de piernas y torso.
+- **Animaciones soportadas**: `Idle`, `Walk`, `Run`, `RunBrake`, `Pivot`, `Squat`, `JumpSquat`, `Jump`, `Fall`, `FastFall`, `Attack`, `Hit`, `Shield`, `Roll`, `Spotdodge`.
 
 ## Comunicación e Interacciones
-- **Consumido por**: Todos los estados de la FSM (`IdleState`, `RunState`, `JumpState`, `AttackState`, etc.).
+- **Consumido por**: Todos los estados de la máquina de estados FSM (`IdleState`, `WalkState`, `DashState`, `RunState`, `RunBrakeState`, `PivotState`, `SquatState`, `JumpSquatState`, `JumpState`, `FallState`, `AttackState`, `HitState`, `ShieldState`, `RollState`, `SpotDodgeState`).
