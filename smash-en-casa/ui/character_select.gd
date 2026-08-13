@@ -5,6 +5,7 @@ extends Control
 @export var gogeta_data: CharacterData = preload("res://resources/instances/gogeta_data.tres")
 @export var sakuya_data: CharacterData = preload("res://resources/instances/sakuya_data.tres")
 @export var john_data: CharacterData = preload("res://resources/instances/john_placeholder_data.tres")
+@export var nekomiya_data: CharacterData = preload("res://resources/instances/nekomiya_data.tres")
 
 var p1_selected: CharacterData = null
 var p2_selected: CharacterData = null
@@ -58,6 +59,17 @@ func _on_p2_sakuya_pressed() -> void:
 func _on_p2_john_pressed() -> void:
 	p2_selected = john_data
 	p2_status.text = "P2 Seleccionó: John Placeholder"
+	_check_ready()
+
+# --- Selección de Nekomiya Mana ---
+func _on_p1_nekomiya_pressed() -> void:
+	p1_selected = nekomiya_data
+	p1_status.text = "P1 Seleccionó: Nekomiya Mana"
+	_check_ready()
+
+func _on_p2_nekomiya_pressed() -> void:
+	p2_selected = nekomiya_data
+	p2_status.text = "P2 Seleccionó: Nekomiya Mana"
 	_check_ready()
 
 # --- Verificación ---

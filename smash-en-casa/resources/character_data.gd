@@ -19,4 +19,7 @@ extends Resource
 @export var pushbox_radius: float = 0.5
 @export var icon: Texture2D
 @export var character_color: Color = Color.WHITE
+@export var model_scene: PackedScene
+@export var model_offset: Vector3 = Vector3(0.0, -0.9, 0.0)
+@export var model_scale: float = 1.0
 @export var moveset: MoveSet

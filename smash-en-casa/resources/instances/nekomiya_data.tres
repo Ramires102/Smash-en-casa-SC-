@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="CharacterData" load_steps=4 format=3 uid="uid://c_nekomiya_data"]
+
+[ext_resource type="Script" path="res://resources/character_data.gd" id="1_chardata"]
+[ext_resource type="Resource" uid="uid://moveset_default" path="res://resources/instances/default_moveset.tres" id="2_mset"]
+[ext_resource type="PackedScene" uid="uid://6u6n3ae7slyd" path="res://characters/nekomiya/nekomiya_mana.fbx" id="3_model"]
+
+[resource]
+script = ExtResource("1_chardata")
+character_name = "Nekomiya Mana"
+run_speed = 2.20
+walk_speed = 1.30
+initial_dash_speed = 2.10
+traction = 0.10
+jump_velocity = 15.5
+short_hop_velocity = 11.8
+air_speed = 1.15
+air_acceleration = 0.06
+air_friction = 0.01
+weight = 85.0
+gravity = 0.09
+fall_speed = 1.60
+fast_fall_speed = 2.56
+pushbox_radius = 0.5
+character_color = Color(0.95, 0.6, 0.85, 1)
+model_scene = ExtResource("3_model")
+model_offset = Vector3(0.0, -0.9, 0.0)
+model_scale = 1.15
+moveset = ExtResource("2_mset")
+

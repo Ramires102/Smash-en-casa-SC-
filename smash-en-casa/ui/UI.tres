@@ -1,0 +1,8 @@
+[gd_resource type="Theme" format=3 uid="uid://m1t1eeuyi0aa"]
+
+[ext_resource type="FontFile" uid="uid://c2ydqsw07kicu" path="res://ui/Fondos de texto/Kamikaze3DGradient-Italic.ttf" id="1_csokd"]
+[ext_resource type="FontFile" uid="uid://tsrtekwes7hg" path="res://ui/Fondos de texto/Kamikaze-Italic.ttf" id="1_hwq5n"]
+
+[resource]
+Button/fonts/font = ExtResource("1_hwq5n")
+Label/fonts/font = ExtResource("1_csokd")
