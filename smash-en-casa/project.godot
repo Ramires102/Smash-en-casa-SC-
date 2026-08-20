@@ -21,11 +21,18 @@ Events="*res://core/events.gd"
 GameManager="*res://core/game_manager.gd"
 AudioManager="*res://core/audio_manager.gd"
 InputManager="*res://core/input_manager.gd"
+ProfileManager="*res://core/profile_manager.gd"
 
 [display]
 
+window/size/viewport_width=1600
+window/size/viewport_height=900
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
+
+[gui]
+
+theme/custom="uid://m1t1eeuyi0aa"
 
 [physics]
 

@@ -47,9 +47,33 @@ func load_character(data: CharacterData) -> void:
 	
 	if has_node("Humanoid"):
 		var humanoid_node: Node3D = $Humanoid
-		var mat := StandardMaterial3D.new()
-		mat.albedo_color = data.character_color
-		_apply_material_recursive(humanoid_node, mat)
+		if data and data.model_scene:
+			# Ocultar los meshes placeholder (excepto ShieldMesh y efectos)
+			for child in humanoid_node.get_children():
+				if child is MeshInstance3D and child.name != "ShieldMesh":
+					child.visible = false
+				elif child.name not in ["ShieldMesh", "DazeStars", "MenacingAura"]:
+					if child is Node3D and child.name != "ModelRoot":
+						child.visible = false
+			# Eliminar modelo anterior si ya existia (para recargas)
+			var old_model: Node = humanoid_node.get_node_or_null("ModelRoot")
+			if old_model:
+				old_model.queue_free()
+			# Instanciar el modelo real
+			var model_instance: Node3D = data.model_scene.instantiate()
+			model_instance.name = "ModelRoot"
+			model_instance.position = data.model_offset
+			var s: float = data.model_scale
+			model_instance.scale = Vector3(s, s, s)
+			humanoid_node.add_child(model_instance)
+		else:
+			# Fallback: meshes placeholder con color del personaje
+			var mat := StandardMaterial3D.new()
+			mat.albedo_color = data.character_color if data else Color.WHITE
+			for child in humanoid_node.get_children():
+				if child is MeshInstance3D and child.name != "ShieldMesh" and child.name != "DazeStars":
+					child.material_override = mat
+					child.visible = true
 
 func _apply_material_recursive(node: Node, mat: Material) -> void:
 	for child in node.get_children():

@@ -1,6 +1,9 @@
-[gd_scene load_steps=2 format=3 uid="uid://c_gacha_scene"]
+[gd_scene load_steps=5 format=3 uid="uid://cc63mwp0wj0vy"]
 
-[ext_resource type="Script" path="res://ui/gacha.gd" id="1_gacha"]
+[ext_resource type="Script" uid="uid://quf8wdocwt5s" path="res://ui/gacha.gd" id="1_gacha"]
+[ext_resource type="Script" path="res://ui/tesseract_display.gd" id="2_tess"]
+[ext_resource type="Script" path="res://ui/dust_circles.gd" id="3_dust"]
+[ext_resource type="Script" path="res://ui/space_background.gd" id="4_space"]
 
 [node name="GachaMenu" type="Control"]
 layout_mode = 3
@@ -11,44 +14,190 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_gacha")
 
-[node name="ColorRect" type="ColorRect" parent="."]
+[node name="SpaceBackground" type="Control" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.2, 0.1, 0.25, 1)
+script = ExtResource("4_space")
 
-[node name="VBoxContainer" type="VBoxContainer" parent="."]
+[node name="MainVBox" type="VBoxContainer" parent="."]
 layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -150.0
-offset_top = -100.0
-offset_right = 150.0
-offset_bottom = 100.0
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/separation = 20
-alignment = 1
+theme_override_constants/separation = 12
 
-[node name="Title" type="Label" parent="VBoxContainer"]
+[node name="TopMargin" type="Control" parent="MainVBox"]
+custom_minimum_size = Vector2(0, 10)
+layout_mode = 2
+
+[node name="Title" type="Label" parent="MainVBox"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 36
-text = "GACHA DE PERSONAJES"
+text = "✦ GACHA ✦"
 horizontal_alignment = 1
 
-[node name="InfoLabel" type="Label" parent="VBoxContainer"]
+[node name="DustRow" type="HBoxContainer" parent="MainVBox"]
 layout_mode = 2
-text = "Obtén nuevos luchadores y coleccionables."
+alignment = 1
+theme_override_constants/separation = 80
+
+[node name="VictoryBox" type="VBoxContainer" parent="MainVBox/DustRow"]
+layout_mode = 2
+alignment = 1
+theme_override_constants/separation = 4
+
+[node name="VictoryCircles" type="Control" parent="MainVBox/DustRow/VictoryBox"]
+custom_minimum_size = Vector2(110, 32)
+layout_mode = 2
+script = ExtResource("3_dust")
+dust_type = "victory"
+
+[node name="VictoryLabel" type="Label" parent="MainVBox/DustRow/VictoryBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+theme_override_colors/font_color = Color(1, 0.85, 0.1, 1)
+text = "0"
 horizontal_alignment = 1
 
-[node name="BackButton" type="Button" parent="VBoxContainer"]
+[node name="VictoryCaption" type="Label" parent="MainVBox/DustRow/VictoryBox"]
 layout_mode = 2
-text = "Volver al Menú Principal"
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.75, 0.65, 0.3, 1)
+text = "Polvo de Victoria"
+horizontal_alignment = 1
 
-[connection signal="pressed" from="VBoxContainer/BackButton" to="." method="_on_back_button_pressed"]
+[node name="DefeatBox" type="VBoxContainer" parent="MainVBox/DustRow"]
+layout_mode = 2
+alignment = 1
+theme_override_constants/separation = 4
+
+[node name="DefeatCircles" type="Control" parent="MainVBox/DustRow/DefeatBox"]
+custom_minimum_size = Vector2(110, 32)
+layout_mode = 2
+script = ExtResource("3_dust")
+dust_type = "defeat"
+
+[node name="DefeatLabel" type="Label" parent="MainVBox/DustRow/DefeatBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+theme_override_colors/font_color = Color(0.85, 0.2, 0.2, 1)
+text = "0"
+horizontal_alignment = 1
+
+[node name="DefeatCaption" type="Label" parent="MainVBox/DustRow/DefeatBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.6, 0.25, 0.25, 1)
+text = "Polvo de Derrota"
+horizontal_alignment = 1
+
+[node name="StatusLabel" type="Label" parent="MainVBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+theme_override_colors/font_color = Color(1, 0.85, 0.2, 1)
+text = ""
+horizontal_alignment = 1
+
+[node name="TesseractArea" type="CenterContainer" parent="MainVBox"]
+custom_minimum_size = Vector2(0, 280)
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Tesseract" type="Control" parent="MainVBox/TesseractArea"]
+layout_mode = 2
+script = ExtResource("2_tess")
+
+[node name="SkipBtn" type="Button" parent="MainVBox"]
+custom_minimum_size = Vector2(180, 36)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 14
+text = "⏩ SALTAR MINIJUEGOS"
+
+[node name="ResultPanel" type="PanelContainer" parent="MainVBox"]
+layout_mode = 2
+
+[node name="ResultVBox" type="VBoxContainer" parent="MainVBox/ResultPanel"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="RarityLabel" type="Label" parent="MainVBox/ResultPanel/ResultVBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 28
+text = "COMÚN"
+horizontal_alignment = 1
+
+[node name="RewardLabel" type="Label" parent="MainVBox/ResultPanel/ResultVBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "+15 ✦ Polvo de Victoria"
+horizontal_alignment = 1
+
+[node name="ItemGrid" type="GridContainer" parent="MainVBox/ResultPanel/ResultVBox"]
+layout_mode = 2
+size_flags_horizontal = 4
+columns = 2
+theme_override_constants/h_separation = 25
+theme_override_constants/v_separation = 4
+
+[node name="CollectBtn" type="Button" parent="MainVBox/ResultPanel/ResultVBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "✦ Cobrar"
+
+[node name="ButtonRow" type="HBoxContainer" parent="MainVBox"]
+layout_mode = 2
+theme_override_constants/separation = 15
+alignment = 1
+
+[node name="PullVictoryBtn" type="Button" parent="MainVBox/ButtonRow"]
+custom_minimum_size = Vector2(210, 42)
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "TIRAR x1  160 ✦"
+
+[node name="PullVictory10Btn" type="Button" parent="MainVBox/ButtonRow"]
+custom_minimum_size = Vector2(210, 42)
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "TIRAR x10  1600 ✦"
+
+[node name="ButtonRow2" type="HBoxContainer" parent="MainVBox"]
+layout_mode = 2
+theme_override_constants/separation = 15
+alignment = 1
+
+[node name="PullDefeatBtn" type="Button" parent="MainVBox/ButtonRow2"]
+custom_minimum_size = Vector2(210, 42)
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "TIRAR x1  200 ☽"
+
+[node name="PullDefeat10Btn" type="Button" parent="MainVBox/ButtonRow2"]
+custom_minimum_size = Vector2(210, 42)
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "TIRAR x10  2000 ☽"
+
+[node name="BackButton" type="Button" parent="MainVBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "← Volver al Menú Principal"
+
+[node name="BottomMargin" type="Control" parent="MainVBox"]
+custom_minimum_size = Vector2(0, 10)
+layout_mode = 2
+
+[connection signal="pressed" from="MainVBox/SkipBtn" to="." method="_on_skip_btn_pressed"]
+[connection signal="pressed" from="MainVBox/ResultPanel/ResultVBox/CollectBtn" to="." method="_on_collect_btn_pressed"]
+[connection signal="pressed" from="MainVBox/ButtonRow/PullVictoryBtn" to="." method="_on_pull_victory_btn_pressed"]
+[connection signal="pressed" from="MainVBox/ButtonRow/PullVictory10Btn" to="." method="_on_pull_victory_10_btn_pressed"]
+[connection signal="pressed" from="MainVBox/ButtonRow2/PullDefeatBtn" to="." method="_on_pull_defeat_btn_pressed"]
+[connection signal="pressed" from="MainVBox/ButtonRow2/PullDefeat10Btn" to="." method="_on_pull_defeat_10_btn_pressed"]
+[connection signal="pressed" from="MainVBox/BackButton" to="." method="_on_back_button_pressed"]

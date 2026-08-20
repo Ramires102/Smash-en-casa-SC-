@@ -87,5 +87,12 @@ func _end_match_by_time() -> void:
 
 func _finish_game(winner_id: int) -> void:
 	is_active = false
+
+	# ── Recompensa de polvo (modo local, misma cuenta) ────────
+	# En local: ganador recibe 15 de victoria, nadie recibe derrota.
+	# TODO online: ganador +30 victoria / perdedor +30 derrota a sus cuentas separadas.
+	if winner_id > 0:
+		ProfileManager.add_victory_dust(15)
+
 	match_finished.emit(winner_id)
 	GameManager.end_match(winner_id)
