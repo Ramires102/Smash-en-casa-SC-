@@ -7,12 +7,20 @@ extends Control
 @onready var defeat_count: Label     = $VBoxContainer/DustHBox/DefeatCount
 
 func _ready() -> void:
+	var retry_btn: Button = get_node_or_null("VBoxContainer/RetryButton")
+	if retry_btn:
+		retry_btn.grab_focus()
+
 	# Etiqueta de ganador
 	if winner_label:
 		if GameManager.winner_player_id > 0:
 			winner_label.text = "¡JUGADOR %d GANA!" % GameManager.winner_player_id
 		else:
 			winner_label.text = "¡EMPATE!"
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event.is_action_pressed("ui_cancel"):
+		_on_main_menu_pressed()
 
 	# Polvo ganado — siempre 15 victoria en local si hubo ganador
 	if dust_label:

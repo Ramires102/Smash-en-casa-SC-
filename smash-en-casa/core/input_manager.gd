@@ -22,6 +22,31 @@ var is_dash_intent: Dictionary = {
 
 func _ready() -> void:
 	_setup_default_input_map()
+	_setup_ui_input_map()
+
+func _setup_ui_input_map() -> void:
+	# Mapeo de UI de Godot para navegación por menús con Joystick y Teclado
+	# Device 0 (P1) y Device 1 (P2)
+	for dev in [0, 1]:
+		# Aceptar / Seleccionar botón (Botón A del joystick)
+		_register_action_joy_button("ui_accept", JOY_BUTTON_A, dev)
+		_register_action_joy_button("ui_select", JOY_BUTTON_A, dev)
+		
+		# Cancelar / Volver atrás / Pausar (Botón B y Start del joystick)
+		_register_action_joy_button("ui_cancel", JOY_BUTTON_B, dev)
+		_register_action_joy_button("ui_cancel", JOY_BUTTON_START, dev)
+
+		# Direcciones de UI con D-Pad
+		_register_action_joy_button("ui_left", JOY_BUTTON_DPAD_LEFT, dev)
+		_register_action_joy_button("ui_right", JOY_BUTTON_DPAD_RIGHT, dev)
+		_register_action_joy_button("ui_up", JOY_BUTTON_DPAD_UP, dev)
+		_register_action_joy_button("ui_down", JOY_BUTTON_DPAD_DOWN, dev)
+
+		# Direcciones de UI con Stick Analógico Izquierdo
+		_register_action_joy_axis("ui_left", JOY_AXIS_LEFT_X, -1.0, dev)
+		_register_action_joy_axis("ui_right", JOY_AXIS_LEFT_X, 1.0, dev)
+		_register_action_joy_axis("ui_up", JOY_AXIS_LEFT_Y, -1.0, dev)
+		_register_action_joy_axis("ui_down", JOY_AXIS_LEFT_Y, 1.0, dev)
 
 func _setup_default_input_map() -> void:
 	# =========================================================================

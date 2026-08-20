@@ -72,6 +72,12 @@ func _ready() -> void:
 	tesseract.luck_bonus_applied.connect(_on_luck_bonus)
 	ProfileManager.dust_changed.connect(_on_dust_changed)
 	_update_buttons()
+	if pull_victory_btn:
+		pull_victory_btn.grab_focus()
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event.is_action_pressed("ui_cancel") and _state == State.IDLE:
+		_on_back_button_pressed()
 
 func _process(_delta: float) -> void:
 	if _state == State.ANIMATING:
@@ -176,6 +182,8 @@ func _on_tesseract_done() -> void:
 
 	result_panel.show()
 	_update_buttons()
+	if collect_btn:
+		collect_btn.grab_focus()
 
 # ── Handlers de Botones ───────────────────────────────────────
 func _on_pull_victory_btn_pressed() -> void:
@@ -203,6 +211,8 @@ func _on_collect_btn_pressed() -> void:
 	result_panel.hide()
 	_state = State.IDLE
 	_update_buttons()
+	if pull_victory_btn:
+		pull_victory_btn.grab_focus()
 
 func _on_back_button_pressed() -> void:
 	get_tree().change_scene_to_file("res://ui/main_menu.tscn")

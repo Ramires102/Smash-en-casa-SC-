@@ -18,6 +18,14 @@ func _ready() -> void:
 	if start_battle_button:
 		start_battle_button.disabled = true
 		start_battle_button.text = "Seleccionen Personajes para Iniciar"
+	
+	var first_btn: Button = get_node_or_null("VBoxContainer/HBoxContainer/P1Selection/BtnMiyabiP1")
+	if first_btn:
+		first_btn.grab_focus()
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event.is_action_pressed("ui_cancel"):
+		_on_back_button_pressed()
 
 # --- Selección de P1 ---
 func _on_p1_miyabi_pressed() -> void:
