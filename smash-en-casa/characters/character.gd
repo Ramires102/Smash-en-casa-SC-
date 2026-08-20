@@ -10,6 +10,18 @@ const MAX_SHIELD_HP: float = 50.0
 const SHIELD_BREAK_RESPAWN_HP: float = 30.0
 const SHIELD_DRAIN_RATE: float = 8.0
 
+# Contrato minimo de nodos para Character.tscn
+const REQUIRED_NODE_PATHS: Array[NodePath] = [
+	NodePath("Controller"),
+	NodePath("Stats"),
+	NodePath("AttackController"),
+	NodePath("AnimationController"),
+	NodePath("StateMachine"),
+	NodePath("Hitbox"),
+	NodePath("Hurtbox"),
+	NodePath("Humanoid")
+]
+
 @export var player_id: int = 1
 @export var character_data: CharacterData
 
@@ -38,8 +50,20 @@ var weight: float:
 	get: return stats.weight if stats else 100.0
 
 func _ready() -> void:
+	if not _validate_required_nodes():
+		set_physics_process(false)
+		return
+
 	if character_data:
 		configure(character_data)
+
+func _validate_required_nodes() -> bool:
+	var is_valid: bool = true
+	for required_path in REQUIRED_NODE_PATHS:
+		if get_node_or_null(required_path) == null:
+			push_error("Character contract violation: missing required node '%s'" % required_path)
+			is_valid = false
+	return is_valid
 
 ## Contrato de Configuración Data-Driven estándar
 func configure(data: CharacterData) -> void:

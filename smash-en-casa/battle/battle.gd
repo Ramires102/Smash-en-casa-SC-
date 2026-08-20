@@ -14,12 +14,13 @@ var p2_character: Character
 
 func _ready() -> void:
 	var p1_data: CharacterData = GameManager.player_1_data
-	if p1_data == null:
-		p1_data = preload("res://resources/instances/john_placeholder_data.tres")
-		
 	var p2_data: CharacterData = GameManager.player_2_data
-	if p2_data == null:
-		p2_data = preload("res://resources/instances/gogeta_data.tres")
+
+	# Sin seleccion valida no se inicia batalla para evitar hardcode por personaje.
+	if p1_data == null or p2_data == null:
+		push_warning("BattleScene: faltan CharacterData seleccionados. Redirigiendo a character_select.")
+		get_tree().call_deferred("change_scene_to_file", "res://ui/character_select.tscn")
+		return
 
 	p1_character = spawn_manager.spawn_player(character_base_scene, 1, p1_data)
 	p2_character = spawn_manager.spawn_player(character_base_scene, 2, p2_data)

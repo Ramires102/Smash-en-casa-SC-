@@ -28,8 +28,10 @@ Este documento divide las epicas actuales (issues #1-#16) en issues mas chicos y
 
 ## Epic #5 - FSM Core State Set
 
-- [ ] Transiciones base Idle/Run/Jump/Fall.
-- [ ] Transiciones Attack/Hit/Death.
+- [ ] Transiciones de piso: Idle/Walk/Dash/Run/RunBrake/Pivot/Squat/Shield.
+- [ ] Transiciones de aire/combate: JumpSquat/Jump/Fall/Attack/Hit/Death.
+- [ ] Validar estados de esquiva: Roll y Spotdodge.
+- [ ] Garantizar entrada a Death antes de respawn/fin de partida.
 - [ ] Verificacion de estados muertos y loops invalidos.
 
 ## Epic #6 - Attack State and Frame Windows

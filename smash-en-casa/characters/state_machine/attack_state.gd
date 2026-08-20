@@ -30,6 +30,9 @@ func physics_update(delta: float) -> void:
 	if attack_timer <= 0.0:
 		character.deactivate_hitbox()
 		if character.is_on_floor():
-			state_machine.transition_to("Idle")
+			if abs(character.get_input_vector().x) > 0.1:
+				state_machine.transition_to("Run")
+			else:
+				state_machine.transition_to("Idle")
 		else:
 			state_machine.transition_to("Fall")

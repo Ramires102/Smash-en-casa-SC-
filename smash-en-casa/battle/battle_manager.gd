@@ -42,6 +42,10 @@ func _process(delta: float) -> void:
 
 var is_ko_processing: Dictionary = {}
 
+func _enter_death_state(character: Character) -> void:
+	if character and character.state_machine:
+		character.state_machine.transition_to("Death")
+
 func _on_player_ko(character: Character) -> void:
 	if not is_active or character == null:
 		return
@@ -51,23 +55,36 @@ func _on_player_ko(character: Character) -> void:
 
 	is_ko_processing[pid] = true
 	Events.camera_shake_requested.emit(10.0)
+	_enter_death_state(character)
 
 	if pid == 1:
 		p1_lives -= 1
 		lives_updated.emit(1, p1_lives)
 		if p1_lives <= 0:
-			_finish_game(2) # P2 gana
+			get_tree().create_timer(0.2).timeout.connect(func():
+				_finish_game(2) # P2 gana
+				is_ko_processing[1] = false
+			)
 		else:
-			spawn_manager.respawn_player(character)
-			get_tree().create_timer(0.5).timeout.connect(func(): is_ko_processing[1] = false)
+			get_tree().create_timer(0.35).timeout.connect(func():
+				if is_instance_valid(character):
+					spawn_manager.respawn_player(character)
+				is_ko_processing[1] = false
+			)
 	elif pid == 2:
 		p2_lives -= 1
 		lives_updated.emit(2, p2_lives)
 		if p2_lives <= 0:
-			_finish_game(1) # P1 gana
+			get_tree().create_timer(0.2).timeout.connect(func():
+				_finish_game(1) # P1 gana
+				is_ko_processing[2] = false
+			)
 		else:
-			spawn_manager.respawn_player(character)
-			get_tree().create_timer(0.5).timeout.connect(func(): is_ko_processing[2] = false)
+			get_tree().create_timer(0.35).timeout.connect(func():
+				if is_instance_valid(character):
+					spawn_manager.respawn_player(character)
+				is_ko_processing[2] = false
+			)
 
 func _end_match_by_time() -> void:
 	is_active = false

@@ -8,12 +8,25 @@ signal state_changed(current_state_name: String)
 var current_state: State
 var states: Dictionary = {}
 
-# Mapeo de alias de ACMD Action States de Super Smash Bros. Ultimate
+# Estados opcionales para jugabilidad completa mientras se prueba contenido de animaciones.
+const COMPAT_STATE_SCRIPTS: Dictionary = {
+	"Walk": "res://characters/state_machine/walk_state.gd",
+	"Dash": "res://characters/state_machine/dash_state.gd",
+	"RunBrake": "res://characters/state_machine/run_brake_state.gd",
+	"Pivot": "res://characters/state_machine/pivot_state.gd",
+	"Squat": "res://characters/state_machine/squat_state.gd",
+	"JumpSquat": "res://characters/state_machine/jumpsquat_state.gd",
+	"Daze": "res://characters/state_machine/daze_state.gd",
+	"Roll": "res://characters/state_machine/roll_state.gd",
+	"Spotdodge": "res://characters/state_machine/spotdodge_state.gd"
+}
+
+# Mapeo de alias ACMD hacia FSM jugable.
 const ACMD_ALIASES: Dictionary = {
 	"wait": "idle",
 	"walk": "walk",
 	"dash": "dash",
-	"run_brake": "runbrake",
+	"run_brake": "run_brake",
 	"pivot": "pivot",
 	"squat": "squat",
 	"jump_squat": "jumpsquat",
@@ -25,7 +38,7 @@ const ACMD_ALIASES: Dictionary = {
 	"guard_on": "shield",
 	"guard": "shield",
 	"guard_off": "shield",
-	"guard_damage": "shield",
+	"guard_damage": "hit",
 	"escape_f": "roll",
 	"escape_b": "roll",
 	"escape_n": "spotdodge",
@@ -36,54 +49,32 @@ const ACMD_ALIASES: Dictionary = {
 
 func _ready() -> void:
 	await owner.ready
-	_ensure_default_states()
-	for child in get_children():
-		if child is State:
-			states[child.name.to_lower()] = child
-			child.state_machine = self
-			child.character = owner as CharacterBody3D
+	_ensure_compat_states()
+	_cache_states()
 
 	if initial_state:
 		current_state = initial_state
 		current_state.enter()
 
-func _ensure_default_states() -> void:
-	if not has_node("Roll"):
-		var roll_node := RollState.new()
-		roll_node.name = "Roll"
-		add_child(roll_node)
-	if not has_node("Spotdodge"):
-		var dodge_node := SpotDodgeState.new()
-		dodge_node.name = "Spotdodge"
-		add_child(dodge_node)
-	if not has_node("Daze"):
-		var daze_node := DazeState.new()
-		daze_node.name = "Daze"
-		add_child(daze_node)
-	if not has_node("JumpSquat"):
-		var js_node := JumpSquatState.new()
-		js_node.name = "JumpSquat"
-		add_child(js_node)
-	if not has_node("Walk"):
-		var walk_node := WalkState.new()
-		walk_node.name = "Walk"
-		add_child(walk_node)
-	if not has_node("Dash"):
-		var dash_node := DashState.new()
-		dash_node.name = "Dash"
-		add_child(dash_node)
-	if not has_node("RunBrake"):
-		var rb_node := RunBrakeState.new()
-		rb_node.name = "RunBrake"
-		add_child(rb_node)
-	if not has_node("Pivot"):
-		var pivot_node := PivotState.new()
-		pivot_node.name = "Pivot"
-		add_child(pivot_node)
-	if not has_node("Squat"):
-		var squat_node := SquatState.new()
-		squat_node.name = "Squat"
-		add_child(squat_node)
+func _ensure_compat_states() -> void:
+	for state_name in COMPAT_STATE_SCRIPTS.keys():
+		if has_node(state_name):
+			continue
+		var script_res: Script = load(COMPAT_STATE_SCRIPTS[state_name])
+		if script_res == null:
+			continue
+		var state_node: Node = Node.new()
+		state_node.name = state_name
+		state_node.set_script(script_res)
+		add_child(state_node)
+
+func _cache_states() -> void:
+	states.clear()
+	for child in get_children():
+		if child is State:
+			states[child.name.to_lower()] = child
+			child.state_machine = self
+			child.character = owner as CharacterBody3D
 
 func _unhandled_input(event: InputEvent) -> void:
 	if current_state:
