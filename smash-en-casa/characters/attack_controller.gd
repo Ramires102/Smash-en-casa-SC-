@@ -12,19 +12,19 @@ func setup(data: CharacterData) -> void:
 	if data:
 		current_moveset = data.moveset
 
-func get_attack_data_for_input(player_id: int, input_vec: Vector2, is_on_floor: bool) -> AttackData:
-	if not current_moveset:
+func get_attack_data_for_input(player_input: PlayerInput, is_on_floor: bool) -> AttackData:
+	if not current_moveset or not player_input:
 		return null
 		
-	if InputManager.is_special_pressed(player_id):
+	if player_input.special_pressed:
 		return current_moveset.special_neutral
 	elif not is_on_floor:
 		return current_moveset.neutral_air
-	elif abs(input_vec.x) > 0.1:
+	elif abs(player_input.movement.x) > 0.1:
 		return current_moveset.side_tilt
-	elif input_vec.y > 0.1:
+	elif player_input.movement.y > 0.1:
 		return current_moveset.up_tilt
-	elif input_vec.y < -0.1:
+	elif player_input.movement.y < -0.1:
 		return current_moveset.down_tilt
 	return current_moveset.neutral_attack
 

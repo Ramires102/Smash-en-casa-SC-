@@ -17,7 +17,7 @@ func physics_update(delta: float) -> void:
 	squat_timer -= delta
 
 	# Si se mantiene presionado Jump durante las 3 frames -> Full Hop
-	if character and InputManager.is_jump_held(character.player_id):
+	if character and character.is_jump_held():
 		is_short_hop = false
 
 	if squat_timer <= 0.0:

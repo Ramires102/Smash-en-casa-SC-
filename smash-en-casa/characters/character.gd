@@ -23,6 +23,7 @@ const SHIELD_DRAIN_RATE: float = 8.0
 
 var shield_health: float = 50.0
 var shield_release_timer: float = 0.0
+var current_input: PlayerInput = PlayerInput.new()
 
 var move_speed: float:
 	get: return controller.move_speed if controller else 8.0
@@ -83,6 +84,9 @@ func _apply_material_recursive(node: Node, mat: Material) -> void:
 		_apply_material_recursive(child, mat)
 
 func _physics_process(delta: float) -> void:
+	# Actualizar intenciones de input desacopladas para el frame actual
+	current_input = InputManager.get_player_input(player_id)
+
 	if not is_on_floor():
 		velocity.y += get_gravity_value() * delta
 
@@ -92,17 +96,30 @@ func _physics_process(delta: float) -> void:
 func get_gravity_value() -> float:
 	return -30.0
 
+# ── Consultas Desacopladas de Intenciones (PlayerInput) ──────────────────────
 func get_input_vector() -> Vector2:
-	return controller.get_input_vector(player_id) if controller else InputManager.get_move_vector(player_id)
+	return current_input.movement
+
+func is_dash_intent() -> bool:
+	return current_input.is_dash
 
 func is_jump_just_pressed() -> bool:
-	return InputManager.is_jump_pressed(player_id)
+	return current_input.jump_pressed
+
+func is_jump_held() -> bool:
+	return current_input.jump_held
 
 func is_attack_just_pressed() -> bool:
-	return InputManager.is_attack_pressed(player_id) or InputManager.is_special_pressed(player_id)
+	return current_input.attack_pressed or current_input.special_pressed
+
+func is_normal_attack_pressed() -> bool:
+	return current_input.attack_pressed
+
+func is_special_attack_pressed() -> bool:
+	return current_input.special_pressed
 
 func is_shield_pressed() -> bool:
-	return InputManager.is_shield_pressed(player_id)
+	return current_input.shield_pressed
 
 func update_facing_direction(input_x: float) -> void:
 	if controller:
@@ -113,7 +130,7 @@ func set_facing_direction(dir: float) -> void:
 		controller.set_facing_direction(dir)
 
 func get_current_attack() -> AttackData:
-	return attack_controller.get_attack_data_for_input(player_id, get_input_vector(), is_on_floor()) if attack_controller else null
+	return attack_controller.get_attack_data_for_input(current_input, is_on_floor()) if attack_controller else null
 
 func execute_attack(attack_data: AttackData) -> void:
 	if attack_controller:

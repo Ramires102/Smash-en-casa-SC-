@@ -39,8 +39,8 @@ func setup(data: CharacterData) -> void:
 		smash_fall_speed = data.fall_speed
 		smash_fast_fall_speed = data.fast_fall_speed
 
-func get_input_vector(player_id: int) -> Vector2:
-	return InputManager.get_move_vector(player_id)
+func get_input_vector(player_input: PlayerInput = null) -> Vector2:
+	return player_input.movement if player_input else Vector2.ZERO
 
 func get_run_speed() -> float:
 	return run_speed * SPEED_SCALE

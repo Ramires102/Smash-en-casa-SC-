@@ -31,7 +31,7 @@ func physics_update(delta: float) -> void:
 		return
 
 	if abs(input_vec.x) > 0.1:
-		if InputManager.is_dash_pressed(character.player_id):
+		if character.is_dash_intent():
 			state_machine.transition_to("Dash")
 		else:
 			state_machine.transition_to("Walk")
