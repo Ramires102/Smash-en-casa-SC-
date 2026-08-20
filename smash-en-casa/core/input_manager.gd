@@ -5,8 +5,6 @@
 # ==============================================================================
 extends Node
 
-const PlayerInput = preload("res://core/player_input.gd")
-
 # Mapeo de controles por jugador (Player 1, Player 2)
 
 var last_press_time: Dictionary = {

@@ -130,9 +130,6 @@ func _process(delta: float) -> void:
 	queue_redraw()
 
 func _draw() -> void:
-	var screen_w: float = size.x if size.x > 0 else 1280.0
-	var screen_h: float = size.y if size.y > 0 else 720.0
-
 	# ── 1. Fondo Oscuro Abismal Gradiente ────────────────────
 	draw_rect(Rect2(Vector2.ZERO, size), Color(0.04, 0.02, 0.08))
 
@@ -171,7 +168,6 @@ func _draw() -> void:
 		if st.active:
 			var tail_end := st.pos - st.dir * st.length
 			var col_head := Color(1.0, 1.0, 1.0, st.alpha)
-			var col_tail := Color(0.3, 0.7, 1.0, 0.0)
 			
 			draw_line(st.pos, tail_end, Color(0.4, 0.8, 1.0, st.alpha * 0.7), 2.5, true)
 			draw_line(st.pos, st.pos - st.dir * (st.length * 0.4), col_head, 1.5, true)

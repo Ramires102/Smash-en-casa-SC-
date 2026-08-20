@@ -450,16 +450,21 @@ func _draw() -> void:
 	if _settled:
 		var verts_o: Array[Vector2] = _project_tesseract(s,        _angle_xw,       _angle_yw,       _angle_zw)
 		var verts_i: Array[Vector2] = _project_tesseract(s * 0.42, _angle_xw + 0.6, _angle_yw + 0.4, _angle_zw + 0.2)
-		var aura: Color = target_outer_color; aura.a = 0.15 + sin(_settled_time * 2.5) * 0.06
+		var aura: Color = target_outer_color
+		aura.a = 0.15 + sin(_settled_time * 2.5) * 0.06
 		draw_circle(center, s * 1.5, aura)
 		
-		var glow_o: Color = target_outer_color; glow_o.a = 0.30
-		var glow_i: Color = target_inner_color; glow_i.a = 0.40
+		var glow_o: Color = target_outer_color
+		glow_o.a = 0.30
+		var glow_i: Color = target_inner_color
+		glow_i.a = 0.40
 		_draw_tesseract_edges(verts_o, center, glow_o, 8.0)
 		_draw_tesseract_edges(verts_i, center, glow_i, 5.5)
 		
-		var mid_o: Color = target_outer_color; mid_o.a = 0.65
-		var mid_i: Color = target_inner_color; mid_i.a = 0.70
+		var mid_o: Color = target_outer_color
+		mid_o.a = 0.65
+		var mid_i: Color = target_inner_color
+		mid_i.a = 0.70
 		_draw_tesseract_edges(verts_o, center, mid_o, 4.0)
 		_draw_tesseract_edges(verts_i, center, mid_i, 3.0)
 		

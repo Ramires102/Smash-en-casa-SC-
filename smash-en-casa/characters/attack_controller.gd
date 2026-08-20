@@ -1,8 +1,6 @@
 class_name AttackController
 extends Node
 
-const PlayerInput = preload("res://core/player_input.gd")
-
 signal attack_executed(attack_data: AttackData)
 signal attack_ended
 
