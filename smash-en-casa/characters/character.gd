@@ -1,6 +1,8 @@
 class_name Character
 extends CharacterBody3D
 
+const PlayerInput = preload("res://core/player_input.gd")
+
 signal percentage_changed(new_percentage: float)
 @warning_ignore("unused_signal")
 signal character_ko(player_id: int)
