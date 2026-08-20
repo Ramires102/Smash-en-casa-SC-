@@ -1,6 +1,9 @@
+# ==============================================================================
+# AudioManager (Autoload / Singleton Core)
+# Responsabilidad: Reproducción centralizada de BGM y pool de canales para SFX.
+# Nota: No contiene lógica de juego ni decide eventos de combate.
+# ==============================================================================
 extends Node
-
-# Autoload centralizado de Audio
 
 var bgm_player: AudioStreamPlayer
 var sfx_players: Array[AudioStreamPlayer] = []
