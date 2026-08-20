@@ -13,10 +13,7 @@ func physics_update(_delta: float) -> void:
 
 	if character.is_on_floor():
 		if abs(input_vec.x) > 0.1:
-			if character.is_dash_intent():
-				state_machine.transition_to("Dash")
-			else:
-				state_machine.transition_to("Walk")
+			state_machine.transition_to("Run")
 		else:
 			state_machine.transition_to("Idle")
 		return

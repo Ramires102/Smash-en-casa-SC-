@@ -1,18 +1,18 @@
-# Plan 02 - Character + FSM Minima
+# Plan 02 - Character + FSM Jugable
 
 ## Objetivo
 
-Tener un Character reusable para cualquier personaje via data, con FSM minima cerrada.
+Tener un Character reusable para cualquier personaje via data, con FSM jugable completa y estable para pruebas reales.
 
 ## Alcance
 
 - Incluye:
 - CharacterBody3D + componentes necesarios de movimiento/animacion/ataque.
-- Estados minimos: Idle, Run, Jump, Fall, Attack, Hit, Death.
+- Estados base jugables: Idle, Walk, Dash, Run, RunBrake, Pivot, Squat, JumpSquat, Jump, Fall, Attack, Shield, Roll, Spotdodge, Hit, Death.
 - Transiciones claras por input, suelo/aire, impacto y KO.
 
 - No incluye:
-- Estados avanzados no criticos para MVP (ejemplo: tech compleja o variantes especiales).
+- Logica de dano/knockback/balance dentro de la FSM (eso va en combate/fisica).
 
 ## Dependencias
 
