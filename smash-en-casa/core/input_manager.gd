@@ -1,3 +1,8 @@
+# ==============================================================================
+# InputManager (Autoload / Singleton Core)
+# Responsabilidad: Mapeo global de controles (P1/P2) y consulta centralizada de inputs.
+# Nota: No altera directamente físicas ni lógica de combate de los personajes.
+# ==============================================================================
 extends Node
 
 # Mapeo de controles por jugador (Player 1, Player 2)

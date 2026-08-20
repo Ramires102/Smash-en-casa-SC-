@@ -1,3 +1,8 @@
+# ==============================================================================
+# GameManager (Autoload / Singleton Core)
+# Responsabilidad: Estado de sesión, parámetros de partida y control de pausa.
+# Nota: No maneja reglas de combate en tiempo real ni físicas (ver BattleManager).
+# ==============================================================================
 extends Node
 
 signal match_started
