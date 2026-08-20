@@ -1,3 +1,4 @@
+@tool
 class_name AnimationController
 extends Node
 
@@ -85,9 +86,9 @@ func _real_reset_anim() -> Animation:
 	var tp := a.add_track(Animation.TYPE_VALUE)
 	a.track_set_path(tp, "Humanoid/ModelRoot:position")
 	a.track_insert_key(tp, 0.0, Vector3(0.0, -0.9, 0.0))
-	var tr := a.add_track(Animation.TYPE_VALUE)
-	a.track_set_path(tr, "Humanoid/ModelRoot:rotation_degrees")
-	a.track_insert_key(tr, 0.0, Vector3(0, 0, 0))
+	var track_rot := a.add_track(Animation.TYPE_VALUE)
+	a.track_set_path(track_rot, "Humanoid/ModelRoot:rotation_degrees")
+	a.track_insert_key(track_rot, 0.0, Vector3(0, 0, 0))
 	return a
 
 # Idle — suave rebote vertical (respiración)
@@ -103,11 +104,11 @@ func _real_idle_anim() -> Animation:
 	a.track_insert_key(tp, 0.8,  Vector3(0.0, base_y,        0.0))
 	a.track_insert_key(tp, 1.2,  Vector3(0.0, base_y - 0.02, 0.0))
 	a.track_insert_key(tp, 1.6,  Vector3(0.0, base_y,        0.0))
-	var tr := a.add_track(Animation.TYPE_VALUE)
-	a.track_set_path(tr, "Humanoid/ModelRoot:rotation_degrees")
-	a.track_insert_key(tr, 0.0,  Vector3(0.0,  0.0, 0.0))
-	a.track_insert_key(tr, 0.8,  Vector3(0.0,  2.0, 1.0))
-	a.track_insert_key(tr, 1.6,  Vector3(0.0,  0.0, 0.0))
+	var track_rot := a.add_track(Animation.TYPE_VALUE)
+	a.track_set_path(track_rot, "Humanoid/ModelRoot:rotation_degrees")
+	a.track_insert_key(track_rot, 0.0,  Vector3(0.0,  0.0, 0.0))
+	a.track_insert_key(track_rot, 0.8,  Vector3(0.0,  2.0, 1.0))
+	a.track_insert_key(track_rot, 1.6,  Vector3(0.0,  0.0, 0.0))
 	return a
 
 # Walk — balanceo lateral suave
@@ -123,11 +124,11 @@ func _real_walk_anim() -> Animation:
 	a.track_insert_key(tp, 0.35,  Vector3(0.0, base_y,        0.0))
 	a.track_insert_key(tp, 0.525, Vector3(0.0, base_y - 0.03, 0.0))
 	a.track_insert_key(tp, 0.7,   Vector3(0.0, base_y,        0.0))
-	var tr := a.add_track(Animation.TYPE_VALUE)
-	a.track_set_path(tr, "Humanoid/ModelRoot:rotation_degrees")
-	a.track_insert_key(tr, 0.0,   Vector3(0.0, 0.0,  3.0))
-	a.track_insert_key(tr, 0.35,  Vector3(0.0, 0.0, -3.0))
-	a.track_insert_key(tr, 0.7,   Vector3(0.0, 0.0,  3.0))
+	var track_rot := a.add_track(Animation.TYPE_VALUE)
+	a.track_set_path(track_rot, "Humanoid/ModelRoot:rotation_degrees")
+	a.track_insert_key(track_rot, 0.0,   Vector3(0.0, 0.0,  3.0))
+	a.track_insert_key(track_rot, 0.35,  Vector3(0.0, 0.0, -3.0))
+	a.track_insert_key(track_rot, 0.7,   Vector3(0.0, 0.0,  3.0))
 	return a
 
 # Run — inclinación hacia adelante + rebote rápido
@@ -143,11 +144,11 @@ func _real_run_anim() -> Animation:
 	a.track_insert_key(tp, 0.2,  Vector3(0.0, base_y,        0.0))
 	a.track_insert_key(tp, 0.3,  Vector3(0.0, base_y - 0.05, 0.0))
 	a.track_insert_key(tp, 0.4,  Vector3(0.0, base_y,        0.0))
-	var tr := a.add_track(Animation.TYPE_VALUE)
-	a.track_set_path(tr, "Humanoid/ModelRoot:rotation_degrees")
-	a.track_insert_key(tr, 0.0,  Vector3(-12.0, 0.0, 0.0))
-	a.track_insert_key(tr, 0.2,  Vector3(-15.0, 0.0, 0.0))
-	a.track_insert_key(tr, 0.4,  Vector3(-12.0, 0.0, 0.0))
+	var track_rot := a.add_track(Animation.TYPE_VALUE)
+	a.track_set_path(track_rot, "Humanoid/ModelRoot:rotation_degrees")
+	a.track_insert_key(track_rot, 0.0,  Vector3(-12.0, 0.0, 0.0))
+	a.track_insert_key(track_rot, 0.2,  Vector3(-15.0, 0.0, 0.0))
+	a.track_insert_key(track_rot, 0.4,  Vector3(-12.0, 0.0, 0.0))
 	return a
 
 # Jump — salta: estira el cuerpo hacia arriba
@@ -172,24 +173,24 @@ func _real_fall_anim() -> Animation:
 	var a := Animation.new()
 	a.loop_mode = Animation.LOOP_LINEAR
 	a.length = 0.5
-	var tr := a.add_track(Animation.TYPE_VALUE)
-	a.track_set_path(tr, "Humanoid/ModelRoot:rotation_degrees")
-	a.track_insert_key(tr, 0.0,  Vector3(10.0, 0.0, 0.0))
-	a.track_insert_key(tr, 0.25, Vector3(12.0, 0.0, 0.0))
-	a.track_insert_key(tr, 0.5,  Vector3(10.0, 0.0, 0.0))
+	var track_rot := a.add_track(Animation.TYPE_VALUE)
+	a.track_set_path(track_rot, "Humanoid/ModelRoot:rotation_degrees")
+	a.track_insert_key(track_rot, 0.0,  Vector3(10.0, 0.0, 0.0))
+	a.track_insert_key(track_rot, 0.25, Vector3(12.0, 0.0, 0.0))
+	a.track_insert_key(track_rot, 0.5,  Vector3(10.0, 0.0, 0.0))
 	return a
 
 # Hit — sacudida brusca al recibir daño
 func _real_hit_anim() -> Animation:
 	var a := Animation.new()
 	a.length = 0.35
-	var tr := a.add_track(Animation.TYPE_VALUE)
-	a.track_set_path(tr, "Humanoid/ModelRoot:rotation_degrees")
-	a.track_insert_key(tr, 0.0,   Vector3(0.0,  0.0,  0.0))
-	a.track_insert_key(tr, 0.05,  Vector3(-20.0, 0.0, 15.0))
-	a.track_insert_key(tr, 0.15,  Vector3(10.0,  0.0, -8.0))
-	a.track_insert_key(tr, 0.25,  Vector3(-5.0,  0.0,  4.0))
-	a.track_insert_key(tr, 0.35,  Vector3(0.0,   0.0,  0.0))
+	var track_rot := a.add_track(Animation.TYPE_VALUE)
+	a.track_set_path(track_rot, "Humanoid/ModelRoot:rotation_degrees")
+	a.track_insert_key(track_rot, 0.0,   Vector3(0.0,  0.0,  0.0))
+	a.track_insert_key(track_rot, 0.05,  Vector3(-20.0, 0.0, 15.0))
+	a.track_insert_key(track_rot, 0.15,  Vector3(10.0,  0.0, -8.0))
+	a.track_insert_key(track_rot, 0.25,  Vector3(-5.0,  0.0,  4.0))
+	a.track_insert_key(track_rot, 0.35,  Vector3(0.0,   0.0,  0.0))
 	return a
 
 # Attack — giro ofensivo hacia el frente
@@ -197,12 +198,12 @@ func _real_attack_anim() -> Animation:
 	var a := Animation.new()
 	a.length = 0.4
 	var base_y: float = -0.9
-	var tr := a.add_track(Animation.TYPE_VALUE)
-	a.track_set_path(tr, "Humanoid/ModelRoot:rotation_degrees")
-	a.track_insert_key(tr, 0.0,  Vector3(0.0,  0.0,  0.0))
-	a.track_insert_key(tr, 0.1,  Vector3(-5.0, 0.0, -8.0))
-	a.track_insert_key(tr, 0.25, Vector3(5.0,  0.0, 12.0))
-	a.track_insert_key(tr, 0.4,  Vector3(0.0,  0.0,  0.0))
+	var track_rot := a.add_track(Animation.TYPE_VALUE)
+	a.track_set_path(track_rot, "Humanoid/ModelRoot:rotation_degrees")
+	a.track_insert_key(track_rot, 0.0,  Vector3(0.0,  0.0,  0.0))
+	a.track_insert_key(track_rot, 0.1,  Vector3(-5.0, 0.0, -8.0))
+	a.track_insert_key(track_rot, 0.25, Vector3(5.0,  0.0, 12.0))
+	a.track_insert_key(track_rot, 0.4,  Vector3(0.0,  0.0,  0.0))
 	var tp := a.add_track(Animation.TYPE_VALUE)
 	a.track_set_path(tp, "Humanoid/ModelRoot:position")
 	a.track_insert_key(tp, 0.0,  Vector3(0.0, base_y,        0.0))
@@ -231,11 +232,11 @@ func _real_shield_anim() -> Animation:
 func _real_brake_anim() -> Animation:
 	var a := Animation.new()
 	a.length = 0.25
-	var tr := a.add_track(Animation.TYPE_VALUE)
-	a.track_set_path(tr, "Humanoid/ModelRoot:rotation_degrees")
-	a.track_insert_key(tr, 0.0,  Vector3(-12.0, 0.0, 0.0))
-	a.track_insert_key(tr, 0.1,  Vector3(18.0,  0.0, 0.0))
-	a.track_insert_key(tr, 0.25, Vector3(0.0,   0.0, 0.0))
+	var track_rot := a.add_track(Animation.TYPE_VALUE)
+	a.track_set_path(track_rot, "Humanoid/ModelRoot:rotation_degrees")
+	a.track_insert_key(track_rot, 0.0,  Vector3(-12.0, 0.0, 0.0))
+	a.track_insert_key(track_rot, 0.1,  Vector3(18.0,  0.0, 0.0))
+	a.track_insert_key(track_rot, 0.25, Vector3(0.0,   0.0, 0.0))
 	return a
 
 # ─────────────────────────────────────────────────────────────

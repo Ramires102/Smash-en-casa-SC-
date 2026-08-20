@@ -2,6 +2,7 @@ class_name Character
 extends CharacterBody3D
 
 signal percentage_changed(new_percentage: float)
+@warning_ignore("unused_signal")
 signal character_ko(player_id: int)
 
 # Constantes de Escudo y Mareo (Shield & Daze)
@@ -47,7 +48,6 @@ func load_character(data: CharacterData) -> void:
 	
 	if has_node("Humanoid"):
 		var humanoid_node: Node3D = $Humanoid
-<<<<<<< HEAD
 		if data and data.model_scene:
 			# Ocultar los meshes placeholder (excepto ShieldMesh y efectos)
 			for child in humanoid_node.get_children():
@@ -75,11 +75,6 @@ func load_character(data: CharacterData) -> void:
 				if child is MeshInstance3D and child.name != "ShieldMesh" and child.name != "DazeStars":
 					child.material_override = mat
 					child.visible = true
-=======
-		var mat := StandardMaterial3D.new()
-		mat.albedo_color = data.character_color
-		_apply_material_recursive(humanoid_node, mat)
->>>>>>> fe9df12bbf99b5edd5976e0a9bc83f58365ed2be
 
 func _apply_material_recursive(node: Node, mat: Material) -> void:
 	for child in node.get_children():
@@ -113,6 +108,10 @@ func update_facing_direction(input_x: float) -> void:
 	if controller:
 		controller.apply_horizontal_movement(input_x)
 
+func set_facing_direction(dir: float) -> void:
+	if controller:
+		controller.set_facing_direction(dir)
+
 func get_current_attack() -> AttackData:
 	return attack_controller.get_attack_data_for_input(player_id, get_input_vector(), is_on_floor()) if attack_controller else null
 
@@ -134,6 +133,16 @@ func update_shield_scale() -> void:
 		var shield_mesh: Node3D = $Humanoid/ShieldMesh
 		var scale_ratio: float = clamp(shield_health / MAX_SHIELD_HP, 0.2, 1.0)
 		shield_mesh.scale = Vector3.ONE * scale_ratio
+
+func set_menacing_aura_enabled(enabled: bool) -> void:
+	var aura_node: Node3D = get_node_or_null("Humanoid/MenacingAura")
+	if aura_node:
+		aura_node.visible = enabled
+
+func update_menacing_aura(delta: float) -> void:
+	var aura_node: Node3D = get_node_or_null("Humanoid/MenacingAura")
+	if aura_node and aura_node.visible:
+		aura_node.rotate_y(delta * 1.2)
 
 func set_daze_effects_enabled(_enabled: bool) -> void:
 	pass
