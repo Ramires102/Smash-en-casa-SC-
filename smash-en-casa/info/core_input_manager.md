@@ -15,10 +15,10 @@ Todas las acciones siguen la convención estándar `p{player_id}_{action}`:
 | `p{id}_right` | `D` | Stick Izq (→) / D-Pad Right | `Flecha Derecha` | Stick Izq (→) / D-Pad Right |
 | `p{id}_up` | `W` | Stick Izq (↑) / D-Pad Up | `Flecha Arriba` | Stick Izq (↑) / D-Pad Up |
 | `p{id}_down` | `S` (Agacharse) | Stick Izq (↓) / D-Pad Down | `Flecha Abajo` | Stick Izq (↓) / D-Pad Down |
-| `p{id}_jump` | `Espacio` | Botón `X` / `Y` | `B` / `Numpad 0` | Botón `X` / `Y` |
-| `p{id}_attack` | `J` (Normal / Jab) | Botón `A` (Xbox) / `Cross` (PS) | `N` / `Numpad 1` | Botón `A` (Xbox) / `Cross` (PS) |
-| `p{id}_special` | `K` (Especial) | Botón `B` (Xbox) / `Circle` (PS) | `M` / `Numpad 2` | Botón `B` (Xbox) / `Circle` (PS) |
-| `p{id}_shield` | `L` (Burbuja Escudo) | `LB` / `RB` / `LT` / `RT` | `V` / `Numpad 3` | `LB` / `RB` / `LT` / `RT` |
+| `p{id}_jump` | `Espacio` | Botón `A` (Salto) | `B` / `Numpad 0` | Botón `A` (Salto) |
+| `p{id}_attack` | `J` (Normal / Jab) | Botón `X` / `Y` (Ataque Normal) | `N` / `Numpad 1` | Botón `X` / `Y` (Ataque Normal) |
+| `p{id}_special` | `K` (Especial) | Botón `B` (Especial) | `M` / `Numpad 2` | Botón `B` (Especial) |
+| `p{id}_shield` | `L` (Burbuja Escudo) | `LB` / `RB` / `LT` / `RT` (Escudo) | `V` / `Numpad 3` | `LB` / `RB` / `LT` / `RT` (Escudo) |
 
 ---
 

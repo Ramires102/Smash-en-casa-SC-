@@ -46,14 +46,14 @@ func _setup_default_input_map() -> void:
 	_register_action_joy_button("p1_right", JOY_BUTTON_DPAD_RIGHT, 0)
 	_register_action_joy_button("p1_up", JOY_BUTTON_DPAD_UP, 0)
 	_register_action_joy_button("p1_down", JOY_BUTTON_DPAD_DOWN, 0)
-	_register_action_joy_button("p1_jump", JOY_BUTTON_X, 0)
-	_register_action_joy_button("p1_jump", JOY_BUTTON_Y, 0)
-	_register_action_joy_button("p1_attack", JOY_BUTTON_A, 0)
-	_register_action_joy_button("p1_special", JOY_BUTTON_B, 0)
-	_register_action_joy_button("p1_shield", JOY_BUTTON_RIGHT_SHOULDER, 0)
-	_register_action_joy_button("p1_shield", JOY_BUTTON_LEFT_SHOULDER, 0)
-	_register_action_joy_axis("p1_shield", JOY_AXIS_TRIGGER_RIGHT, 1.0, 0)
-	_register_action_joy_axis("p1_shield", JOY_AXIS_TRIGGER_LEFT, 1.0, 0)
+	_register_action_joy_button("p1_jump", JOY_BUTTON_A, 0) # A = Salto
+	_register_action_joy_button("p1_attack", JOY_BUTTON_X, 0) # X = Ataque Normal
+	_register_action_joy_button("p1_attack", JOY_BUTTON_Y, 0) # Y = Ataque Normal
+	_register_action_joy_button("p1_special", JOY_BUTTON_B, 0) # B = Ataque Especial
+	_register_action_joy_button("p1_shield", JOY_BUTTON_RIGHT_SHOULDER, 0) # RB
+	_register_action_joy_button("p1_shield", JOY_BUTTON_LEFT_SHOULDER, 0) # LB
+	_register_action_joy_axis("p1_shield", JOY_AXIS_TRIGGER_RIGHT, 1.0, 0) # RT
+	_register_action_joy_axis("p1_shield", JOY_AXIS_TRIGGER_LEFT, 1.0, 0) # LT
 
 	# =========================================================================
 	# JUGADOR 2 (P2): Teclado (Flechas + B/N/M/V o Numpad) + Joystick (Device 1)
@@ -83,14 +83,14 @@ func _setup_default_input_map() -> void:
 	_register_action_joy_button("p2_right", JOY_BUTTON_DPAD_RIGHT, 1)
 	_register_action_joy_button("p2_up", JOY_BUTTON_DPAD_UP, 1)
 	_register_action_joy_button("p2_down", JOY_BUTTON_DPAD_DOWN, 1)
-	_register_action_joy_button("p2_jump", JOY_BUTTON_X, 1)
-	_register_action_joy_button("p2_jump", JOY_BUTTON_Y, 1)
-	_register_action_joy_button("p2_attack", JOY_BUTTON_A, 1)
-	_register_action_joy_button("p2_special", JOY_BUTTON_B, 1)
-	_register_action_joy_button("p2_shield", JOY_BUTTON_RIGHT_SHOULDER, 1)
-	_register_action_joy_button("p2_shield", JOY_BUTTON_LEFT_SHOULDER, 1)
-	_register_action_joy_axis("p2_shield", JOY_AXIS_TRIGGER_RIGHT, 1.0, 1)
-	_register_action_joy_axis("p2_shield", JOY_AXIS_TRIGGER_LEFT, 1.0, 1)
+	_register_action_joy_button("p2_jump", JOY_BUTTON_A, 1) # A = Salto
+	_register_action_joy_button("p2_attack", JOY_BUTTON_X, 1) # X = Ataque Normal
+	_register_action_joy_button("p2_attack", JOY_BUTTON_Y, 1) # Y = Ataque Normal
+	_register_action_joy_button("p2_special", JOY_BUTTON_B, 1) # B = Ataque Especial
+	_register_action_joy_button("p2_shield", JOY_BUTTON_RIGHT_SHOULDER, 1) # RB
+	_register_action_joy_button("p2_shield", JOY_BUTTON_LEFT_SHOULDER, 1) # LB
+	_register_action_joy_axis("p2_shield", JOY_AXIS_TRIGGER_RIGHT, 1.0, 1) # RT
+	_register_action_joy_axis("p2_shield", JOY_AXIS_TRIGGER_LEFT, 1.0, 1) # LT
 
 func _register_action_key(action_name: String, keycode: Key) -> void:
 	if not InputMap.has_action(action_name):
