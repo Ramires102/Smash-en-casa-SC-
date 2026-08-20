@@ -5,6 +5,8 @@
 # ==============================================================================
 extends Node
 
+const PlayerInput = preload("res://core/player_input.gd")
+
 # Mapeo de controles por jugador (Player 1, Player 2)
 
 var last_press_time: Dictionary = {
@@ -219,3 +221,15 @@ func is_shield_pressed(player_id: int) -> bool:
 
 func is_jump_held(player_id: int) -> bool:
 	return Input.is_action_pressed("p%d_jump" % player_id)
+
+## Adapter centralizado: Convierte el estado actual del InputMap en un objeto PlayerInput
+func get_player_input(player_id: int) -> PlayerInput:
+	var pi := PlayerInput.new()
+	pi.movement = get_move_vector(player_id)
+	pi.is_dash = is_dash_pressed(player_id)
+	pi.jump_pressed = is_jump_pressed(player_id)
+	pi.jump_held = is_jump_held(player_id)
+	pi.attack_pressed = is_attack_pressed(player_id)
+	pi.special_pressed = is_special_pressed(player_id)
+	pi.shield_pressed = is_shield_pressed(player_id)
+	return pi

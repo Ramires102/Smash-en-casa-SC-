@@ -24,7 +24,7 @@ func physics_update(_delta: float) -> void:
 		state_machine.transition_to("Squat")
 		return
 
-	if InputManager.is_dash_pressed(character.player_id):
+	if character.is_dash_intent():
 		state_machine.transition_to("Dash")
 		return
 
