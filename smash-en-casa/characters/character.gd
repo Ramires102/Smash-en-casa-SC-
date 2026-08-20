@@ -1,8 +1,6 @@
 class_name Character
 extends CharacterBody3D
 
-const PlayerInput = preload("res://core/player_input.gd")
-
 signal percentage_changed(new_percentage: float)
 @warning_ignore("unused_signal")
 signal character_ko(player_id: int)
@@ -41,43 +39,54 @@ var weight: float:
 
 func _ready() -> void:
 	if character_data:
-		load_character(character_data)
+		configure(character_data)
 
-func load_character(data: CharacterData) -> void:
+## Contrato de Configuración Data-Driven estándar
+func configure(data: CharacterData) -> void:
 	character_data = data
+	if not data:
+		return
+	
 	if controller: controller.setup(data)
 	if stats: stats.setup(data)
 	if attack_controller: attack_controller.setup(data)
-	
-	if has_node("Humanoid"):
-		var humanoid_node: Node3D = $Humanoid
-		if data and data.model_scene:
-			# Ocultar los meshes placeholder (excepto ShieldMesh y efectos)
-			for child in humanoid_node.get_children():
-				if child is MeshInstance3D and child.name != "ShieldMesh":
+	_setup_visuals(data)
+
+## Alias de compatibilidad
+func load_character(data: CharacterData) -> void:
+	configure(data)
+
+func _setup_visuals(data: CharacterData) -> void:
+	if not has_node("Humanoid"):
+		return
+	var humanoid_node: Node3D = $Humanoid
+	if data.model_scene:
+		# Ocultar los meshes placeholder (excepto ShieldMesh y efectos)
+		for child in humanoid_node.get_children():
+			if child is MeshInstance3D and child.name != "ShieldMesh":
+				child.visible = false
+			elif child.name not in ["ShieldMesh", "DazeStars", "MenacingAura"]:
+				if child is Node3D and child.name != "ModelRoot":
 					child.visible = false
-				elif child.name not in ["ShieldMesh", "DazeStars", "MenacingAura"]:
-					if child is Node3D and child.name != "ModelRoot":
-						child.visible = false
-			# Eliminar modelo anterior si ya existia (para recargas)
-			var old_model: Node = humanoid_node.get_node_or_null("ModelRoot")
-			if old_model:
-				old_model.queue_free()
-			# Instanciar el modelo real
-			var model_instance: Node3D = data.model_scene.instantiate()
-			model_instance.name = "ModelRoot"
-			model_instance.position = data.model_offset
-			var s: float = data.model_scale
-			model_instance.scale = Vector3(s, s, s)
-			humanoid_node.add_child(model_instance)
-		else:
-			# Fallback: meshes placeholder con color del personaje
-			var mat := StandardMaterial3D.new()
-			mat.albedo_color = data.character_color if data else Color.WHITE
-			for child in humanoid_node.get_children():
-				if child is MeshInstance3D and child.name != "ShieldMesh" and child.name != "DazeStars":
-					child.material_override = mat
-					child.visible = true
+		# Eliminar modelo anterior si ya existia (para recargas)
+		var old_model: Node = humanoid_node.get_node_or_null("ModelRoot")
+		if old_model:
+			old_model.queue_free()
+		# Instanciar el modelo real
+		var model_instance: Node3D = data.model_scene.instantiate()
+		model_instance.name = "ModelRoot"
+		model_instance.position = data.model_offset
+		var s: float = data.model_scale
+		model_instance.scale = Vector3(s, s, s)
+		humanoid_node.add_child(model_instance)
+	else:
+		# Fallback: meshes placeholder con color del personaje
+		var mat := StandardMaterial3D.new()
+		mat.albedo_color = data.character_color
+		for child in humanoid_node.get_children():
+			if child is MeshInstance3D and child.name != "ShieldMesh" and child.name != "DazeStars":
+				child.material_override = mat
+				child.visible = true
 
 func _apply_material_recursive(node: Node, mat: Material) -> void:
 	for child in node.get_children():

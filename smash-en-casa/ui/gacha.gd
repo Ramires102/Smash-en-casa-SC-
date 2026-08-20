@@ -59,7 +59,7 @@ const RARITY_WEIGHTS := [50, 75, 90, 97, 100]
 enum State { IDLE, ANIMATING, REWARD }
 var _state := State.IDLE
 var _pending_dust: int = 0
-var _pending_rarity := Rarity.COMMON
+var _pending_rarity: Rarity = Rarity.COMMON
 var _pull_count: int = 1
 var _pending_items: Array[Dictionary] = []
 
@@ -126,11 +126,11 @@ func _start_pull(pull_count: int = 1) -> void:
 	# El color del tesseracto muestra la mayor rareza obtenida en el conjunto
 	tesseract.start(RARITY_COLORS[_pending_rarity], RARITY_INNER[_pending_rarity])
 
-func _roll_rarity() -> int:
+func _roll_rarity() -> Rarity:
 	var roll: int = randi_range(1, 100)
 	for i in range(RARITY_WEIGHTS.size()):
 		if roll <= RARITY_WEIGHTS[i]:
-			return i
+			return i as Rarity
 	return Rarity.COMMON
 
 func _on_lock_in_triggered() -> void:
@@ -142,7 +142,7 @@ func _on_luck_bonus(bonus_tiers: int) -> void:
 	_pending_dust   = 0
 
 	for item in _pending_items:
-		var new_r: int = mini(item["rarity"] + bonus_tiers, Rarity.LEGENDARY)
+		var new_r: Rarity = mini(item["rarity"] + bonus_tiers, Rarity.LEGENDARY) as Rarity
 		item["rarity"] = new_r
 		item["dust"]   = randi_range(RARITY_DUST[new_r][0], RARITY_DUST[new_r][1])
 		if new_r > _pending_rarity:

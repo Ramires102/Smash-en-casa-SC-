@@ -48,4 +48,4 @@ func _ready() -> void:
 	battle_manager.setup_match(p1_character, p2_character, GameManager.stock_lives, GameManager.time_limit_seconds)
 
 func _on_match_finished(_winner_id: int) -> void:
-	get_tree().change_scene_to_file("res://ui/victory.tscn")
+	get_tree().call_deferred("change_scene_to_file", "res://ui/victory.tscn")
