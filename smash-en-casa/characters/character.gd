@@ -118,6 +118,8 @@ func _apply_material_recursive(node: Node, mat: Material) -> void:
 			child.material_override = mat
 		_apply_material_recursive(child, mat)
 
+var can_act: bool = true
+
 func _physics_process(delta: float) -> void:
 	# Actualizar intenciones de input desacopladas para el frame actual
 	current_input = InputManager.get_player_input(player_id)
@@ -133,31 +135,47 @@ func get_gravity_value() -> float:
 
 # ── Consultas Desacopladas de Intenciones (PlayerInput) ──────────────────────
 func get_input_vector() -> Vector2:
+	if not can_act:
+		return Vector2.ZERO
 	return current_input.movement
 
 func is_dash_intent() -> bool:
+	if not can_act:
+		return false
 	return current_input.is_dash
 
 func is_jump_just_pressed() -> bool:
+	if not can_act:
+		return false
 	return current_input.jump_pressed
 
 func is_jump_held() -> bool:
+	if not can_act:
+		return false
 	return current_input.jump_held
 
 func is_attack_just_pressed() -> bool:
+	if not can_act:
+		return false
 	return current_input.attack_pressed or current_input.special_pressed
 
 func is_normal_attack_pressed() -> bool:
+	if not can_act:
+		return false
 	return current_input.attack_pressed
 
 func is_special_attack_pressed() -> bool:
+	if not can_act:
+		return false
 	return current_input.special_pressed
 
 func is_shield_pressed() -> bool:
+	if not can_act:
+		return false
 	return current_input.shield_pressed
 
 func update_facing_direction(input_x: float) -> void:
-	if controller:
+	if controller and can_act:
 		controller.apply_horizontal_movement(input_x)
 
 func set_facing_direction(dir: float) -> void:
@@ -170,6 +188,9 @@ func get_current_attack() -> AttackData:
 func execute_attack(attack_data: AttackData) -> void:
 	if attack_controller:
 		attack_controller.start_attack(attack_data, self)
+
+func activate_hitbox(attack_data: AttackData) -> void:
+	if attack_controller:
 		attack_controller.enable_hitbox(attack_data, self)
 
 func deactivate_hitbox() -> void:

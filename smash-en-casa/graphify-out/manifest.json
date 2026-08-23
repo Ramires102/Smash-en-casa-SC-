@@ -1,0 +1,416 @@
+{
+  "ARCHITECTURE.md": {
+    "mtime": 1787250205.534407,
+    "seen": 1787439490.2508152,
+    "ast_hash": "81861aeed67b8565bd2976e4fd189f07",
+    "semantic_hash": ""
+  },
+  "implementation-plans/00-architecture-guardrails.md": {
+    "mtime": 1787250205.5577824,
+    "seen": 1787439490.2508233,
+    "ast_hash": "2884e4c1564a38b9fdc8c1bf496a7bb0",
+    "semantic_hash": ""
+  },
+  "implementation-plans/00-template.md": {
+    "mtime": 1787250205.5597925,
+    "seen": 1787439490.2508266,
+    "ast_hash": "e2b08749346f2c4ac716805845d3f176",
+    "semantic_hash": ""
+  },
+  "implementation-plans/01-core-input.md": {
+    "mtime": 1787250205.5607922,
+    "seen": 1787439490.250828,
+    "ast_hash": "c4f25c9d92745ec414eaa7a59b6e2a03",
+    "semantic_hash": ""
+  },
+  "implementation-plans/02-character-fsm.md": {
+    "mtime": 1787250205.5607922,
+    "seen": 1787439490.25083,
+    "ast_hash": "74df8a57b73516b79e7679c00e3c91be",
+    "semantic_hash": ""
+  },
+  "implementation-plans/03-combat-physics.md": {
+    "mtime": 1787250205.561792,
+    "seen": 1787439490.2508311,
+    "ast_hash": "7b5935378107433dff59d89dd151ed40",
+    "semantic_hash": ""
+  },
+  "implementation-plans/04-battle-flow.md": {
+    "mtime": 1787250205.561792,
+    "seen": 1787439490.2508323,
+    "ast_hash": "9796e9b8ee72c15025237ab210a3087b",
+    "semantic_hash": ""
+  },
+  "implementation-plans/05-data-driven-resources.md": {
+    "mtime": 1787250205.563298,
+    "seen": 1787439490.2508335,
+    "ast_hash": "055551ecd1f6eb62770cb207372c88c4",
+    "semantic_hash": ""
+  },
+  "implementation-plans/06-ui-flow.md": {
+    "mtime": 1787250205.5643075,
+    "seen": 1787439490.250835,
+    "ast_hash": "492458e6636916605c38fdcb2e069855",
+    "semantic_hash": ""
+  },
+  "implementation-plans/07-integration-polish.md": {
+    "mtime": 1787250205.5653052,
+    "seen": 1787439490.2508361,
+    "ast_hash": "8524e5fc7dc28e3d57df2c293c146168",
+    "semantic_hash": ""
+  },
+  "implementation-plans/ISSUE-BREAKDOWN-GRANULAR.md": {
+    "mtime": 1787250205.5653052,
+    "seen": 1787439490.2508373,
+    "ast_hash": "ed137ba81e5cc7a0b79e2059cd7aba70",
+    "semantic_hash": ""
+  },
+  "implementation-plans/ISSUE-MAP.md": {
+    "mtime": 1787250205.5663059,
+    "seen": 1787439490.2508388,
+    "ast_hash": "373d1697caf39f887f707dbe07f685a4",
+    "semantic_hash": ""
+  },
+  "implementation-plans/README.md": {
+    "mtime": 1787250205.567304,
+    "seen": 1787439490.2508397,
+    "ast_hash": "5bc5abdf14d756f157db34e43212c141",
+    "semantic_hash": ""
+  },
+  "implementation-plans/issues-ready/01-core-autoload-contract.md": {
+    "mtime": 1787250205.567304,
+    "seen": 1787439490.250841,
+    "ast_hash": "59f39d5a73bf1662cd1223da1e28c249",
+    "semantic_hash": ""
+  },
+  "implementation-plans/issues-ready/02-input-map-and-player-actions.md": {
+    "mtime": 1787250205.568304,
+    "seen": 1787439490.2508419,
+    "ast_hash": "2d2e311b8efa2cccfe5a6c542dccab7c",
+    "semantic_hash": ""
+  },
+  "implementation-plans/issues-ready/03-player-input-abstraction.md": {
+    "mtime": 1787250205.5694132,
+    "seen": 1787439490.2508428,
+    "ast_hash": "6a8905d280f1f45b165d8fc00788d7c2",
+    "semantic_hash": ""
+  },
+  "implementation-plans/issues-ready/04-character-scene-contract.md": {
+    "mtime": 1787250205.5704136,
+    "seen": 1787439490.2508442,
+    "ast_hash": "3020debd13b17df8e1d94469da5d2fb7",
+    "semantic_hash": ""
+  },
+  "implementation-plans/issues-ready/05-fsm-core-state-set.md": {
+    "mtime": 1787250205.5704136,
+    "seen": 1787439490.2508452,
+    "ast_hash": "72cdc259ba32618933bc244435a2f59a",
+    "semantic_hash": ""
+  },
+  "implementation-plans/issues-ready/06-attack-state-and-frame-windows.md": {
+    "mtime": 1787250205.5714126,
+    "seen": 1787439490.2508461,
+    "ast_hash": "a75a508ae8fcf02f4c63c8d225575195",
+    "semantic_hash": ""
+  },
+  "implementation-plans/issues-ready/07-hitbox-hurtbox-impact-contract.md": {
+    "mtime": 1787250205.572412,
+    "seen": 1787439490.2508473,
+    "ast_hash": "024bf8dc6b99c3aed9b82c32b6863b94",
+    "semantic_hash": ""
+  },
+  "implementation-plans/issues-ready/08-damage-percentage-application.md": {
+    "mtime": 1787250205.572412,
+    "seen": 1787439490.2508483,
+    "ast_hash": "232f72fdda50993a0f1ed57ad5eec0f2",
+    "semantic_hash": ""
+  },
+  "implementation-plans/issues-ready/09-knockback-and-hit-reaction.md": {
+    "mtime": 1787250205.5734117,
+    "seen": 1787439490.2508492,
+    "ast_hash": "891f84be842041028e967cfe6e2cfe58",
+    "semantic_hash": ""
+  },
+  "implementation-plans/issues-ready/10-stage-blastzones-and-spawns.md": {
+    "mtime": 1787250205.574512,
+    "seen": 1787439490.250851,
+    "ast_hash": "bcce2743044392b0f2bf7d3f166671d4",
+    "semantic_hash": ""
+  },
+  "implementation-plans/issues-ready/11-battlemanager-stocks-timer-winner.md": {
+    "mtime": 1787250205.574512,
+    "seen": 1787439490.2508519,
+    "ast_hash": "18a56a6a8029d073ec6bb4c580453f60",
+    "semantic_hash": ""
+  },
+  "implementation-plans/issues-ready/12-data-model-character-moveset-attack.md": {
+    "mtime": 1787250205.5755115,
+    "seen": 1787439490.2508528,
+    "ast_hash": "cb464de572d303525842f359a7ede6a3",
+    "semantic_hash": ""
+  },
+  "implementation-plans/issues-ready/13-character-instances-and-selection-pipeline.md": {
+    "mtime": 1787250205.5755115,
+    "seen": 1787439490.2508538,
+    "ast_hash": "16b01a21739a8a928a18570dce1d70b5",
+    "semantic_hash": ""
+  },
+  "implementation-plans/issues-ready/14-ui-mainloop-hud-pause-victory.md": {
+    "mtime": 1787250205.5765119,
+    "seen": 1787439490.250855,
+    "ast_hash": "09af0eef13a07d4eec90a608e11eef4b",
+    "semantic_hash": ""
+  },
+  "implementation-plans/issues-ready/15-integration-smoke-tests-and-hardening.md": {
+    "mtime": 1787250205.5775123,
+    "seen": 1787439490.2508562,
+    "ast_hash": "d86c040d85e68c82f6a1ea3df2e952f7",
+    "semantic_hash": ""
+  },
+  "implementation-plans/issues-ready/16-post-mvp-gacha-boundary.md": {
+    "mtime": 1787250205.578537,
+    "seen": 1787439490.250857,
+    "ast_hash": "3f345adbc660a6437d7b7e2bbf39bc49",
+    "semantic_hash": ""
+  },
+  "info/battle_battle.md": {
+    "mtime": 1785819468.191647,
+    "seen": 1787439490.2508585,
+    "ast_hash": "005a8706e54875b2a08bc3d655fe60d4",
+    "semantic_hash": ""
+  },
+  "info/battle_battle_manager.md": {
+    "mtime": 1785819468.1934712,
+    "seen": 1787439490.2508595,
+    "ast_hash": "803971345022a07c99b76cf14b87c447",
+    "semantic_hash": ""
+  },
+  "info/battle_spawn_manager.md": {
+    "mtime": 1785819468.193973,
+    "seen": 1787439490.2508605,
+    "ast_hash": "d450c37fcda683790f9e898687a16751",
+    "semantic_hash": ""
+  },
+  "info/battle_stage.md": {
+    "mtime": 1785819468.1947138,
+    "seen": 1787439490.2508616,
+    "ast_hash": "bfd1f1099d49dfd9b7931c685c139248",
+    "semantic_hash": ""
+  },
+  "info/characters_animation_controller.md": {
+    "mtime": 1786652574.1381223,
+    "seen": 1787439490.2508626,
+    "ast_hash": "6da49633b4cfaf1e683fa266dadfa949",
+    "semantic_hash": ""
+  },
+  "info/characters_character.md": {
+    "mtime": 1786652574.1391294,
+    "seen": 1787439490.2508638,
+    "ast_hash": "dac2527e6f947152da2a388dccbc6d82",
+    "semantic_hash": ""
+  },
+  "info/characters_components.md": {
+    "mtime": 1785819468.1962137,
+    "seen": 1787439490.250865,
+    "ast_hash": "2e2895592cd72f95feca463ae122aacb",
+    "semantic_hash": ""
+  },
+  "info/combat_damage_calculator.md": {
+    "mtime": 1785819468.197239,
+    "seen": 1787439490.250866,
+    "ast_hash": "e13367aeb24269bd65ad1bccbb29dc65",
+    "semantic_hash": ""
+  },
+  "info/combat_hitbox.md": {
+    "mtime": 1785819468.1985416,
+    "seen": 1787439490.250867,
+    "ast_hash": "9bc0fbd73587d9cd32c7c9fb02961f99",
+    "semantic_hash": ""
+  },
+  "info/combat_hurtbox.md": {
+    "mtime": 1785819468.1996932,
+    "seen": 1787439490.250868,
+    "ast_hash": "5b9ff596ae8cd3e358997641589bbdc3",
+    "semantic_hash": ""
+  },
+  "info/core_audio_manager.md": {
+    "mtime": 1785819468.2017765,
+    "seen": 1787439490.250869,
+    "ast_hash": "434888ac66492ec7d5a7fe7fecadb345",
+    "semantic_hash": ""
+  },
+  "info/core_autoloads.md": {
+    "mtime": 1787250205.579817,
+    "seen": 1787439490.25087,
+    "ast_hash": "ebb08d28d18e5982440707cf3be883dc",
+    "semantic_hash": ""
+  },
+  "info/core_events.md": {
+    "mtime": 1785819468.2027988,
+    "seen": 1787439490.2508712,
+    "ast_hash": "4679363b57c1635fe32e02aa390563a8",
+    "semantic_hash": ""
+  },
+  "info/core_game_manager.gd.md": {
+    "mtime": 1785819468.2038345,
+    "seen": 1787439490.2508724,
+    "ast_hash": "7c4fb3921940fe1bf26d077550bd692a",
+    "semantic_hash": ""
+  },
+  "info/core_input_manager.md": {
+    "mtime": 1787250205.579817,
+    "seen": 1787439490.2508743,
+    "ast_hash": "4a90700ad7acdc853ede6af90d3d076b",
+    "semantic_hash": ""
+  },
+  "info/physics_knockback_calculator.md": {
+    "mtime": 1785819468.2055519,
+    "seen": 1787439490.2508755,
+    "ast_hash": "7c9e9693c0f541258bb865076718f36f",
+    "semantic_hash": ""
+  },
+  "info/resources_attack_data.md": {
+    "mtime": 1785819468.2060542,
+    "seen": 1787439490.2508764,
+    "ast_hash": "1292316bace52a6f1a16f556f3e96f85",
+    "semantic_hash": ""
+  },
+  "info/resources_character_data.md": {
+    "mtime": 1785819468.2065442,
+    "seen": 1787439490.2508776,
+    "ast_hash": "0f83606f5b9964b34e4359e6da945cf8",
+    "semantic_hash": ""
+  },
+  "info/resources_moveset.md": {
+    "mtime": 1785819468.2065442,
+    "seen": 1787439490.2508788,
+    "ast_hash": "3e7765e4f3363efce27c51337e8ce381",
+    "semantic_hash": ""
+  },
+  "info/shared_constants.md": {
+    "mtime": 1785819468.207554,
+    "seen": 1787439490.2508798,
+    "ast_hash": "1176094f3ed07e06f4dc99a5b7bd58a0",
+    "semantic_hash": ""
+  },
+  "info/shared_helpers.md": {
+    "mtime": 1785819468.2085702,
+    "seen": 1787439490.2508807,
+    "ast_hash": "bcdfca2a20a932b0c73c654b9fc4e98f",
+    "semantic_hash": ""
+  },
+  "info/shared_utils.md": {
+    "mtime": 1785819468.20959,
+    "seen": 1787439490.250882,
+    "ast_hash": "312a733501a11a7b5e4e0b0a532edacc",
+    "semantic_hash": ""
+  },
+  "info/state_machine_state_machine.md": {
+    "mtime": 1785819468.2106,
+    "seen": 1787439490.2508829,
+    "ast_hash": "72d0332f7ebda01056002a73753d0a43",
+    "semantic_hash": ""
+  },
+  "info/state_machine_states.md": {
+    "mtime": 1785819468.211107,
+    "seen": 1787439490.2508838,
+    "ast_hash": "522e066e0a82ab331e6ce053011d59fe",
+    "semantic_hash": ""
+  },
+  "info/systems_camera_controller.md": {
+    "mtime": 1785819468.211601,
+    "seen": 1787439490.2508848,
+    "ast_hash": "aba978b3f7409bef3088b254cb1db7f9",
+    "semantic_hash": ""
+  },
+  "info/systems_input_buffer.md": {
+    "mtime": 1785819468.2126155,
+    "seen": 1787439490.250886,
+    "ast_hash": "c1e606d44987f565ddbf185647d2bfa2",
+    "semantic_hash": ""
+  },
+  "info/systems_screen_shake.md": {
+    "mtime": 1785819468.2147136,
+    "seen": 1787439490.250887,
+    "ast_hash": "6fbcaa4b9decec7f5e85fc1649b4d165",
+    "semantic_hash": ""
+  },
+  "info/ui_character_select.md": {
+    "mtime": 1785819468.2157128,
+    "seen": 1787439490.2508879,
+    "ast_hash": "05ee7a9cf0a892fbe5f05489debc8d61",
+    "semantic_hash": ""
+  },
+  "info/ui_hud.md": {
+    "mtime": 1785819468.2167144,
+    "seen": 1787439490.2508893,
+    "ast_hash": "fc471fd8146ca541f9caec147d85961b",
+    "semantic_hash": ""
+  },
+  "info/ui_main_menu.md": {
+    "mtime": 1785819468.2182522,
+    "seen": 1787439490.2508903,
+    "ast_hash": "2b5b90856f027d4c2fd88eeaa76f8653",
+    "semantic_hash": ""
+  },
+  "info/ui_pause_gacha_victory.md": {
+    "mtime": 1785819468.2187524,
+    "seen": 1787439490.2508914,
+    "ast_hash": "954bee3f98c298a5878905c9c37eb71a",
+    "semantic_hash": ""
+  },
+  "assets/models/CV - Rodrigo Espinoza Squef.pdf": {
+    "mtime": 1787250205.5369122,
+    "seen": 1787439490.2508924,
+    "ast_hash": "062607e90ea3480aead2dffe1a5ac081",
+    "semantic_hash": ""
+  },
+  "assets/images/jojo_menacing.png": {
+    "mtime": 1785819468.0757546,
+    "seen": 1787439490.2508936,
+    "ast_hash": "ef9a396949d8d5b03d063f3415fc4da6",
+    "semantic_hash": ""
+  },
+  "assets/images/single_menacing.png": {
+    "mtime": 1785819468.0788817,
+    "seen": 1787439490.2508945,
+    "ast_hash": "c1eb8973765567fb40a8268c55a35fbc",
+    "semantic_hash": ""
+  },
+  "characters/miyabi/miyabi_Unagi_Body_Map1_D.png": {
+    "mtime": 1787250230.7545202,
+    "seen": 1787439490.250896,
+    "ast_hash": "f8f4bfb96a3f31d0fd877eb8153b7152",
+    "semantic_hash": ""
+  },
+  "characters/miyabi/miyabi_Unagi_Body_Map1_M.png": {
+    "mtime": 1787250233.903135,
+    "seen": 1787439490.2508972,
+    "ast_hash": "0a3fbd1511cced53c53cbb8737a82590",
+    "semantic_hash": ""
+  },
+  "characters/miyabi/miyabi_Unagi_Body_Map2_D.png": {
+    "mtime": 1787250232.5244892,
+    "seen": 1787439490.2508981,
+    "ast_hash": "40ddd74ff2b984835378e10266801a5c",
+    "semantic_hash": ""
+  },
+  "characters/miyabi/miyabi_Unagi_Hairpin_M.png": {
+    "mtime": 1787250234.9400916,
+    "seen": 1787439490.2508993,
+    "ast_hash": "bec1779d44a04160f17bed9c9e167bee",
+    "semantic_hash": ""
+  },
+  "characters/miyabi/miyabi_Unagi_Weapon_M.png": {
+    "mtime": 1787250235.1077063,
+    "seen": 1787439490.2509003,
+    "ast_hash": "5690808ddc58a7f0a574b4be81509c53",
+    "semantic_hash": ""
+  },
+  "icon.svg": {
+    "mtime": 1785819468.1904104,
+    "seen": 1787439490.2509015,
+    "ast_hash": "a16f2eed1b4496c4abf03d329708ba09",
+    "semantic_hash": ""
+  }
+}

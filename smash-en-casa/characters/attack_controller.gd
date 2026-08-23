@@ -17,8 +17,16 @@ func get_attack_data_for_input(player_input: PlayerInput, is_on_floor: bool) -> 
 		return null
 		
 	if player_input.special_pressed:
+		if player_input.movement.y > 0.1 and current_moveset.special_up != null:
+			return current_moveset.special_up
+		elif player_input.movement.y < -0.1 and current_moveset.special_down != null:
+			return current_moveset.special_down
 		return current_moveset.special_neutral
 	elif not is_on_floor:
+		if player_input.movement.y > 0.1 and current_moveset.up_air != null:
+			return current_moveset.up_air
+		elif player_input.movement.y < -0.1 and current_moveset.down_air != null:
+			return current_moveset.down_air
 		return current_moveset.neutral_air
 	elif abs(player_input.movement.x) > 0.1:
 		return current_moveset.side_tilt

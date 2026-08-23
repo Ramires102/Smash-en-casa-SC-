@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="AttackData" load_steps=2 format=3 uid="uid://miyabi_special_n"]
+
+[ext_resource type="Script" path="res://resources/attack_data.gd" id="1_atk"]
+
+[resource]
+script = ExtResource("1_atk")
+attack_name = "Void Blade Focus"
+damage = 15.0
+base_knockback = 16.0
+knockback_scaling = 1.3
+angle_degrees = 45.0
+startup_frames = 8
+active_frames = 12
+recovery_frames = 16
+animation_name = "Special"

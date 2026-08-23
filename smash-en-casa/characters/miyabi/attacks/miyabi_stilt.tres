@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="AttackData" load_steps=2 format=3 uid="uid://miyabi_stilt"]
+
+[ext_resource type="Script" path="res://resources/attack_data.gd" id="1_atk"]
+
+[resource]
+script = ExtResource("1_atk")
+attack_name = "Forward Slash"
+damage = 10.0
+base_knockback = 12.0
+knockback_scaling = 1.1
+angle_degrees = 40.0
+startup_frames = 6
+active_frames = 8
+recovery_frames = 12
+animation_name = "Attack"

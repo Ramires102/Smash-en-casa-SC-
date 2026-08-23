@@ -1,7 +1,8 @@
-[gd_resource type="Resource" script_class="CharacterData" load_steps=3 format=3 uid="uid://c_miyabi_data"]
+[gd_resource type="Resource" script_class="CharacterData" load_steps=4 format=3 uid="uid://c_miyabi_data"]
 
 [ext_resource type="Script" path="res://resources/character_data.gd" id="1_chardata"]
-[ext_resource type="Resource" uid="uid://moveset_default" path="res://resources/instances/default_moveset.tres" id="2_mset"]
+[ext_resource type="Resource" uid="uid://miyabi_moveset" path="res://characters/miyabi/miyabi_moveset.tres" id="2_mset"]
+[ext_resource type="PackedScene" path="res://characters/miyabi/miyabi.glb" id="3_model"]
 
 [resource]
 script = ExtResource("1_chardata")
@@ -21,4 +22,7 @@ fall_speed = 1.6
 fast_fall_speed = 2.56
 pushbox_radius = 0.5
 character_color = Color(0.9, 0.2, 0.3, 1)
+model_scene = ExtResource("3_model")
+model_offset = Vector3(0.0, -0.9, 0.0)
+model_scale = 1.15
 moveset = ExtResource("2_mset")

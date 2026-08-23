@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="AttackData" load_steps=2 format=3 uid="uid://miyabi_utilt"]
+
+[ext_resource type="Script" path="res://resources/attack_data.gd" id="1_atk"]
+
+[resource]
+script = ExtResource("1_atk")
+attack_name = "Upward Slash"
+damage = 11.0
+base_knockback = 14.0
+knockback_scaling = 1.15
+angle_degrees = 80.0
+startup_frames = 5
+active_frames = 7
+recovery_frames = 11
+animation_name = "AttackAirUp"

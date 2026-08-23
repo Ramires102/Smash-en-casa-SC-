@@ -48,5 +48,17 @@ func _ready() -> void:
 	
 	battle_manager.setup_match(p1_character, p2_character, GameManager.stock_lives, GameManager.time_limit_seconds)
 
+	# Bloquear acciones de jugadores durante la cuenta regresiva
+	p1_character.can_act = false
+	p2_character.can_act = false
+
+	# Iniciar cuenta regresiva de 3 segundos
+	hud.countdown_finished.connect(func():
+		battle_manager.start_battle()
+		p1_character.can_act = true
+		p2_character.can_act = true
+	)
+	hud.start_countdown()
+
 func _on_match_finished(_winner_id: int) -> void:
 	get_tree().call_deferred("change_scene_to_file", "res://ui/victory.tscn")

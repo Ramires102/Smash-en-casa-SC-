@@ -22,13 +22,17 @@ func setup_match(p1: Character, p2: Character, initial_lives: int = 3, time_limi
 	p1_lives = initial_lives
 	p2_lives = initial_lives
 	current_time = time_limit
-	is_active = true
+	is_active = false
 
-	if stage:
+	if stage and not stage.blast_zone_entered.is_connected(_on_player_ko):
 		stage.blast_zone_entered.connect(_on_player_ko)
 
 	lives_updated.emit(1, p1_lives)
 	lives_updated.emit(2, p2_lives)
+	timer_updated.emit(current_time)
+
+func start_battle() -> void:
+	is_active = true
 
 func _process(delta: float) -> void:
 	if not is_active:
