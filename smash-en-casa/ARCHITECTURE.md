@@ -1,7 +1,6 @@
-Sí. Ahora que ya definimos que quieren **Godot 4 + 2.5D real con nodos 3D + arquitectura data-driven + FSM**, yo cerraría la arquitectura de una vez y dejaría de agregar sistemas por agregar. El objetivo tiene que ser: **limpia, defendible ante el profesor y suficientemente simple para terminarla en dos meses**.
 
 ## 1. Arquitectura general
-La dividiría en **7 módulos**:
+
 
 ```
 smash-en-casa/
@@ -53,7 +52,7 @@ CharacterData
 ---
 
 # 2. Estructura definitiva
-Yo dejaría el proyecto así:
+
 
 ```
 smash-en-casa/
@@ -142,12 +141,7 @@ smash-en-casa/
 │
 └── scenes/
     └── main.tscn
-```
-Hay una diferencia importante con lo que tenían antes:
 
-**`resources/` contiene datos. `assets/` contiene archivos artísticos. `characters/` contiene comportamiento.**
-
-No mezclamos las tres cosas.
 
 ---
 
