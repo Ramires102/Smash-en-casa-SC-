@@ -54,6 +54,8 @@ func _ready() -> void:
 
 	if initial_state:
 		current_state = initial_state
+		if current_state is State:
+			(current_state as State).dbg("enter_initial", {"state": current_state.name})
 		current_state.enter()
 
 func _ensure_compat_states() -> void:
@@ -89,6 +91,7 @@ func _physics_process(delta: float) -> void:
 		current_state.physics_update(delta)
 
 func transition_to(target_state_name: String, msg: Dictionary = {}) -> void:
+	var from_state_name: String = current_state.name if current_state else "None"
 	var state_key: String = target_state_name.to_lower()
 	if ACMD_ALIASES.has(state_key):
 		state_key = ACMD_ALIASES[state_key]
@@ -96,6 +99,14 @@ func transition_to(target_state_name: String, msg: Dictionary = {}) -> void:
 	if not states.has(state_key):
 		push_error("Estado inexistente: " + target_state_name)
 		return
+
+	if current_state is State:
+		(current_state as State).dbg("transition_request", {
+			"from": from_state_name,
+			"to_requested": target_state_name,
+			"to_resolved": states[state_key].name,
+			"msg": msg
+		})
 	
 	if current_state:
 		current_state.exit()

@@ -2,77 +2,95 @@ class_name AttackState
 extends State
 
 var current_attack_data: AttackData
-var attack_elapsed: float = 0.0
-var startup_duration: float = 0.0
-var active_duration: float = 0.0
-var total_duration: float = 0.0
-
-var _hitbox_activated: bool = false
-var _hitbox_deactivated: bool = false
+var frame_cursor: int = 0
+var startup_end_frame: int = 0
+var active_end_frame: int = 0
+var total_end_frame: int = 0
+var hitbox_is_active: bool = false
 
 func enter(_msg: Dictionary = {}) -> void:
 	current_attack_data = character.get_current_attack()
-	attack_elapsed = 0.0
-	_hitbox_activated = false
-	_hitbox_deactivated = false
+	frame_cursor = 0
+	hitbox_is_active = false
+	dbg("enter", {
+		"attack": current_attack_data.attack_name if current_attack_data else "None"
+	})
 	
 	var anim_name: String = "Attack"
 	if current_attack_data and current_attack_data.animation_name != "":
 		anim_name = current_attack_data.animation_name
+
+	if character and character.has_node("AnimationController"):
+		var anim_ctrl: Node = character.get_node("AnimationController")
+		if anim_ctrl.has_method("play_attack_animation"):
+			var total_duration_sec: float
+			if current_attack_data:
+				total_duration_sec = float(maxi(1, current_attack_data.startup_frames + current_attack_data.active_frames + current_attack_data.recovery_frames)) / 60.0
+			else:
+				total_duration_sec = 0.2
+			anim_ctrl.play_attack_animation(anim_name, total_duration_sec)
+		elif anim_ctrl.has_method("play_animation"):
+			anim_ctrl.play_animation(anim_name)
 		
 	if current_attack_data:
-		startup_duration = float(current_attack_data.startup_frames) / 60.0
-		active_duration = float(current_attack_data.active_frames) / 60.0
-		var recovery_duration: float = float(current_attack_data.recovery_frames) / 60.0
-		total_duration = startup_duration + active_duration + recovery_duration
-		
-		# Iniciar ataque (notificar a controladores), pero NO activar hitbox aún
-		if character:
-			character.execute_attack(current_attack_data)
+		startup_end_frame = maxi(0, current_attack_data.startup_frames)
+		active_end_frame = startup_end_frame + maxi(0, current_attack_data.active_frames)
+		total_end_frame = active_end_frame + maxi(0, current_attack_data.recovery_frames)
+		dbg("windows", {
+			"startup_end": startup_end_frame,
+			"active_end": active_end_frame,
+			"total_end": total_end_frame
+		})
+		character.execute_attack(current_attack_data)
 	else:
-		startup_duration = 0.06
-		active_duration = 0.10
-		total_duration = 0.28
+		startup_end_frame = 0
+		active_end_frame = 0
+		total_end_frame = 12
 
-	# Reproducir animación sincronizada con la duración del ataque
-	if character and character.has_node("AnimationController"):
-		var anim_ctrl: AnimationController = character.get_node("AnimationController")
-		anim_ctrl.play_attack_animation(anim_name, total_duration)
+	_update_hitbox_window()
 
 func physics_update(delta: float) -> void:
-	attack_elapsed += delta
+	frame_cursor += 1
+	_update_hitbox_window()
+	dbg_tick(delta, {
+		"frame": frame_cursor,
+		"hitbox_active": hitbox_is_active,
+		"vx": snapped(character.velocity.x, 0.001)
+	})
 	
 	# Manejo de tracción/fricción mientras ataca en el suelo
 	if character and character.is_on_floor():
 		var trac: float = character.controller.get_traction() if character.controller else 30.0
 		character.velocity.x = move_toward(character.velocity.x, 0.0, trac * delta)
-	
-	# Fase 2: Ventana Activa (Active frames) -> Activar Hitbox al terminar el startup
-	if not _hitbox_activated and attack_elapsed >= startup_duration:
-		_hitbox_activated = true
-		if character and current_attack_data:
-			character.activate_hitbox(current_attack_data)
-	
-	# Fase 3: Recuperación (Endlag) -> Desactivar Hitbox en cuanto termina la ventana activa
-	if _hitbox_activated and not _hitbox_deactivated and attack_elapsed >= (startup_duration + active_duration):
-		_hitbox_deactivated = true
-		if character:
-			character.deactivate_hitbox()
-			
-	# Fase 4: Fin de Ataque -> Transición de vuelta a Idle o Fall
-	if attack_elapsed >= total_duration:
-		if not _hitbox_deactivated:
-			if character:
-				character.deactivate_hitbox()
+
+	if frame_cursor >= total_end_frame:
 		if character.is_on_floor():
 			if abs(character.get_input_vector().x) > 0.1:
+				dbg("to_run", {"reason": "attack_finished_ground_move"})
 				state_machine.transition_to("Run")
 			else:
+				dbg("to_idle", {"reason": "attack_finished_ground_neutral"})
 				state_machine.transition_to("Idle")
 		else:
+			dbg("to_fall", {"reason": "attack_finished_air"})
 			state_machine.transition_to("Fall")
 
 func exit() -> void:
-	# Asegurar que el hitbox siempre se desactive al salir del estado
 	if character:
 		character.deactivate_hitbox()
+	hitbox_is_active = false
+	dbg("exit", {"frame": frame_cursor})
+
+func _update_hitbox_window() -> void:
+	if character == null or current_attack_data == null:
+		return
+
+	var should_be_active: bool = frame_cursor >= startup_end_frame and frame_cursor < active_end_frame
+	if should_be_active and not hitbox_is_active:
+		character.activate_hitbox(current_attack_data)
+		hitbox_is_active = true
+		dbg("hitbox_on", {"frame": frame_cursor})
+	elif not should_be_active and hitbox_is_active:
+		character.deactivate_hitbox()
+		hitbox_is_active = false
+		dbg("hitbox_off", {"frame": frame_cursor})
