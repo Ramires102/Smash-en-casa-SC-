@@ -1,3 +1,4 @@
+
 ## 1. Arquitectura general
 
 
@@ -51,6 +52,7 @@ CharacterData
 ---
 
 # 2. Estructura definitiva
+
 
 ```
 smash-en-casa/
@@ -139,12 +141,7 @@ smash-en-casa/
 │
 └── scenes/
     └── main.tscn
-```
-Hay una diferencia importante:
 
-**`resources/` contiene datos. `assets/` contiene archivos artísticos. `characters/` contiene comportamiento.**
-
-No mezclamos las tres cosas.
 
 ---
 
