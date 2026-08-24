@@ -8,7 +8,7 @@ Patrón **EventBus** global implementado como Autoload (`Events`). Permite la co
 1: extends Node
 
 # Combate y Jugador
-4: signal player_damaged(player_id: int, new_percentage: float, attack_data: Resource)
+4: signal player_damaged(player_id: int, new_percentage: float, impact: ImpactData)
 5: signal player_died(player_id: int)
 6: signal stock_lost(player_id: int, remaining_lives: int)
 7: signal game_over(winner_id: int)

@@ -13,3 +13,10 @@ extends Resource
 @export var hit_sfx: AudioStream
 @export var bonus_shield_damage: float = 0.0
 @export var is_aerial: bool = false
+
+# Configuración espacial de Hitbox estándar
+@export var hitbox_offset: Vector3 = Vector3(0.8, 0.0, 0.0)
+@export var hitbox_radius: float = 0.6
+
+# Soporte para ataques multi-hitbox / sweetspots
+@export var sub_hitboxes: Array[HitboxData] = []
