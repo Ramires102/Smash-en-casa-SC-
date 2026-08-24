@@ -176,7 +176,7 @@ func is_shield_pressed() -> bool:
 
 func update_facing_direction(input_x: float) -> void:
 	if controller and can_act:
-		controller.apply_horizontal_movement(input_x)
+		controller.set_facing_direction(input_x)
 
 func set_facing_direction(dir: float) -> void:
 	if controller:

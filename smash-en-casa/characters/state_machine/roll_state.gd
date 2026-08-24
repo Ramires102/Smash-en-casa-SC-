@@ -9,6 +9,7 @@ const ROLL_SPEED: float = 12.0
 func enter(msg: Dictionary = {}) -> void:
 	roll_dir = msg.get("dir", character.get_facing_direction())
 	roll_timer = ROLL_DURATION
+	dbg("enter", {"roll_dir": roll_dir, "roll_timer": snapped(roll_timer, 0.001)})
 	if character:
 		character.set_facing_direction(roll_dir)
 	if character and character.hurtbox:
@@ -17,6 +18,7 @@ func enter(msg: Dictionary = {}) -> void:
 		character.get_node("AnimationController").play_animation("Roll")
 
 func exit() -> void:
+	dbg("exit", {"vx": snapped(character.velocity.x, 0.001) if character else 0.0})
 	if character and character.hurtbox:
 		character.hurtbox.monitoring = true # Re-activa la Hurtbox al terminar
 	
@@ -34,11 +36,18 @@ func physics_update(delta: float) -> void:
 	roll_timer -= delta
 	if character:
 		character.velocity.x = roll_dir * ROLL_SPEED
+	dbg_tick(delta, {
+		"roll_timer": snapped(roll_timer, 0.001),
+		"vx": snapped(character.velocity.x, 0.001) if character else 0.0,
+		"roll_dir": roll_dir
+	})
 	
 	if roll_timer <= 0.0:
 		if character:
 			character.velocity.x = 0.0
 		if character and character.is_on_floor():
+			dbg("to_idle", {"reason": "roll_finished_ground"})
 			state_machine.transition_to("Idle")
 		else:
+			dbg("to_fall", {"reason": "roll_finished_air"})
 			state_machine.transition_to("Fall")

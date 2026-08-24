@@ -6,9 +6,9 @@
 [resource]
 script = ExtResource("1_chardata")
 character_name = "John Placeholder"
-run_speed = 3.85
-walk_speed = 1.375
-initial_dash_speed = 2.31
+run_speed = 2.35
+walk_speed = 0.3
+initial_dash_speed = 2.5
 traction = 0.138
 jump_velocity = 16.5
 short_hop_velocity = 12.5

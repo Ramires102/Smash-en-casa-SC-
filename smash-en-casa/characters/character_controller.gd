@@ -21,8 +21,13 @@ var smash_fast_fall_speed: float = 2.56
 # Escala para convertir unidades de Smash a unidades de Godot 3D
 const SPEED_SCALE: float = 6.0
 const GRAVITY_SCALE: float = 60.0
+const WALK_SPEED_MULT: float = 0.82
+const WALK_RUN_CAP_RATIO: float = 0.72
 
 var facing_direction: float = 1.0
+
+# Ajustes de control terrestre para evitar cambios bruscos de velocidad.
+const GROUND_ACCEL_MULT: float = 1.0
 
 func setup(data: CharacterData) -> void:
 	if data:
@@ -46,13 +51,24 @@ func get_run_speed() -> float:
 	return run_speed * SPEED_SCALE
 
 func get_walk_speed() -> float:
-	return walk_speed * SPEED_SCALE
+	var walk_target: float = walk_speed * SPEED_SCALE * WALK_SPEED_MULT
+	var run_cap: float = get_run_speed() * WALK_RUN_CAP_RATIO
+	return min(walk_target, run_cap)
 
 func get_initial_dash_speed() -> float:
 	return initial_dash_speed * SPEED_SCALE
 
 func get_traction() -> float:
 	return traction * SPEED_SCALE * 60.0 # Per-second traction for delta-based
+
+func get_ground_acceleration() -> float:
+	return get_traction() * GROUND_ACCEL_MULT
+
+func accelerate_ground_velocity(target_speed_x: float, delta: float, accel_multiplier: float = 1.0) -> void:
+	if character == null:
+		return
+	var accel: float = max(1.0, get_ground_acceleration() * accel_multiplier)
+	character.velocity.x = move_toward(character.velocity.x, target_speed_x, accel * delta)
 
 func get_jump_velocity() -> float:
 	return jump_velocity
@@ -79,10 +95,8 @@ func set_facing_direction(dir: float) -> void:
 			character.rotation_degrees.y = facing_angle if facing_direction > 0 else (-180.0 + facing_angle)
 
 func apply_horizontal_movement(input_x: float) -> void:
-	if character:
-		character.velocity.x = input_x * get_run_speed()
-		if input_x != 0.0:
-			set_facing_direction(sign(input_x))
+	if input_x != 0.0:
+		set_facing_direction(sign(input_x))
 
 func apply_jump() -> void:
 	if character:
