@@ -18,7 +18,7 @@ func _ready() -> void:
 	if countdown_container:
 		countdown_container.visible = false
 
-func _on_player_damaged(player_id: int, new_percentage: float, _attack_data: Resource) -> void:
+func _on_player_damaged(player_id: int, new_percentage: float, _impact: ImpactData) -> void:
 	update_player_percentage(player_id, new_percentage)
 
 func update_player_percentage(player_id: int, percentage: float) -> void:

@@ -52,20 +52,32 @@ func enter(_msg: Dictionary = {}) -> void:
 func physics_update(delta: float) -> void:
 	frame_cursor += 1
 	_update_hitbox_window()
+	
+	var input_vec: Vector2 = character.get_input_vector() if character else Vector2.ZERO
+	
+	# Manejo de físicas durante el ataque
+	if character and character.is_on_floor():
+		# En el suelo: fricción y tracción terrestre
+		var trac: float = character.controller.get_traction() if character.controller else 30.0
+		character.velocity.x = move_toward(character.velocity.x, 0.0, trac * delta)
+	elif character and character.controller:
+		# En el aire (ataque aéreo): control de inercia y drift aéreo auténtico
+		if abs(input_vec.x) > 0.1:
+			var target_vx: float = input_vec.x * character.controller.get_air_speed()
+			character.controller.accelerate_air_velocity(target_vx, delta)
+		else:
+			character.controller.apply_air_friction(delta)
+
 	dbg_tick(delta, {
 		"frame": frame_cursor,
 		"hitbox_active": hitbox_is_active,
-		"vx": snapped(character.velocity.x, 0.001)
+		"vx": snapped(character.velocity.x if character else 0.0, 0.001),
+		"vy": snapped(character.velocity.y if character else 0.0, 0.001)
 	})
-	
-	# Manejo de tracción/fricción mientras ataca en el suelo
-	if character and character.is_on_floor():
-		var trac: float = character.controller.get_traction() if character.controller else 30.0
-		character.velocity.x = move_toward(character.velocity.x, 0.0, trac * delta)
 
 	if frame_cursor >= total_end_frame:
-		if character.is_on_floor():
-			if abs(character.get_input_vector().x) > 0.1:
+		if character and character.is_on_floor():
+			if abs(input_vec.x) > 0.1:
 				dbg("to_run", {"reason": "attack_finished_ground_move"})
 				state_machine.transition_to("Run")
 			else:

@@ -9,15 +9,14 @@ func enter(_msg: Dictionary = {}) -> void:
 	dbg("enter", {"dodge_timer": snapped(dodge_timer, 0.001)})
 	if character:
 		character.velocity.x = 0.0
-	if character and character.hurtbox:
-		character.hurtbox.monitoring = false # Invulnerable en el sitio
+		character.set_hurtbox_state(Hurtbox.HurtboxState.INTANGIBLE)
 	if character and character.has_node("AnimationController"):
 		character.get_node("AnimationController").play_animation("Spotdodge")
 
 func exit() -> void:
 	dbg("exit")
-	if character and character.hurtbox:
-		character.hurtbox.monitoring = true
+	if character:
+		character.set_hurtbox_state(Hurtbox.HurtboxState.NORMAL)
 
 func physics_update(delta: float) -> void:
 	dodge_timer -= delta

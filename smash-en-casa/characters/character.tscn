@@ -1,4 +1,4 @@
-[gd_scene load_steps=29 format=3 uid="uid://c_character_base"]
+[gd_scene load_steps=31 format=3 uid="uid://c_character_base"]
 
 [ext_resource type="Script" path="res://characters/character.gd" id="1_char"]
 [ext_resource type="Script" path="res://characters/character_controller.gd" id="2_ctrl"]
@@ -16,6 +16,7 @@
 [ext_resource type="Script" path="res://characters/state_machine/hit_state.gd" id="14_hitst"]
 [ext_resource type="Script" path="res://characters/state_machine/death_state.gd" id="15_death"]
 [ext_resource type="Script" path="res://characters/state_machine/shield_state.gd" id="16_shield"]
+[ext_resource type="Script" path="res://combat/pushbox.gd" id="17_push"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_1"]
 radius = 0.5
@@ -50,7 +51,13 @@ size = Vector3(1.2, 1.2, 1.2)
 radius = 0.55
 height = 1.85
 
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_push"]
+radius = 0.52
+height = 1.8
+
 [node name="Character" type="CharacterBody3D"]
+collision_layer = 2
+collision_mask = 1
 script = ExtResource("1_char")
 
 [node name="Controller" type="Node" parent="." node_paths=PackedStringArray("character")]
@@ -129,6 +136,8 @@ visible = false
 mesh = SubResource("BoxMesh_torso")
 
 [node name="Hitbox" type="Area3D" parent="."]
+collision_layer = 8
+collision_mask = 4
 script = ExtResource("5_hit")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Hitbox"]
@@ -136,10 +145,20 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.8, 0, 0)
 shape = SubResource("BoxShape3D_hit")
 
 [node name="Hurtbox" type="Area3D" parent="."]
+collision_layer = 4
+collision_mask = 8
 script = ExtResource("6_hurt")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Hurtbox"]
 shape = SubResource("CapsuleShape3D_hurt")
+
+[node name="Pushbox" type="Area3D" parent="."]
+collision_layer = 16
+collision_mask = 16
+script = ExtResource("17_push")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Pushbox"]
+shape = SubResource("CapsuleShape3D_push")
 
 [node name="AnimationController" type="Node" parent="." node_paths=PackedStringArray("animation_player")]
 script = ExtResource("7_anim")

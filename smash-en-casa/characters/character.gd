@@ -119,6 +119,7 @@ func _apply_material_recursive(node: Node, mat: Material) -> void:
 		_apply_material_recursive(child, mat)
 
 var can_act: bool = true
+var is_fast_falling: bool = false
 
 func _physics_process(delta: float) -> void:
 	# Actualizar intenciones de input desacopladas para el frame actual
@@ -126,12 +127,21 @@ func _physics_process(delta: float) -> void:
 
 	if not is_on_floor():
 		velocity.y += get_gravity_value() * delta
+		var max_fall: float = get_terminal_fall_speed()
+		# En Godot 3D, Y positivo es arriba y negativo es abajo. Clampear velocidad de caída terminal.
+		if velocity.y < -max_fall:
+			velocity.y = -max_fall
+	else:
+		is_fast_falling = false
 
 	move_and_slide()
 	Helpers.constrain_to_2d_plane(self, Constants.Z_PLANE)
 
 func get_gravity_value() -> float:
-	return -30.0
+	return controller.get_gravity_value() if controller else -32.4
+
+func get_terminal_fall_speed() -> float:
+	return controller.get_terminal_fall_speed(is_fast_falling) if controller else 15.36
 
 # ── Consultas Desacopladas de Intenciones (PlayerInput) ──────────────────────
 func get_input_vector() -> Vector2:
@@ -223,38 +233,36 @@ func set_daze_effects_enabled(_enabled: bool) -> void:
 func update_daze_effects(_delta: float, _daze_timer: float) -> void:
 	pass
 
-func on_hit_received(attack_data: AttackData, attacker: Node3D) -> void:
-	var new_percent: float = stats.add_damage(attack_data.damage)
+func on_impact_received(impact: ImpactData) -> void:
+	var new_percent: float = stats.add_damage(impact.damage)
+	impact.target_percent_after = new_percent
 	percentage_changed.emit(new_percent)
-	Events.player_damaged.emit(player_id, new_percent, attack_data)
+	Events.player_damaged.emit(player_id, new_percent, impact)
 	
-	var attacker_facing: float = 1.0
-	if attacker and attacker.has_method("get_facing_direction"):
-		attacker_facing = attacker.get_facing_direction()
-	elif attacker:
-		attacker_facing = sign(global_position.x - attacker.global_position.x)
-		if attacker_facing == 0.0: attacker_facing = 1.0
-			
-	var knockback_vec: Vector3 = KnockbackCalculator.calculate_knockback_vector(
-		new_percent,
-		attack_data.damage,
-		stats.weight,
-		attack_data.base_knockback,
-		attack_data.knockback_scaling,
-		attack_data.angle_degrees,
-		attacker_facing
-	)
+	if impact.attack_data and impact.attack_data.hit_sfx:
+		AudioManager.play_sfx(impact.attack_data.hit_sfx)
 	
-	AudioManager.play_sfx(attack_data.hit_sfx)
-	state_machine.transition_to("Hit", {"knockback": knockback_vec})
+	state_machine.transition_to("Hit", {
+		"knockback": impact.knockback_vector,
+		"hitstun_frames": impact.hitstun_frames,
+		"hitlag_frames": impact.hitlag_frames,
+		"impact": impact
+	})
 
 func get_facing_direction() -> float:
 	return controller.facing_direction if controller else 1.0
+
+func set_hurtbox_state(new_state: Hurtbox.HurtboxState) -> void:
+	if hurtbox:
+		hurtbox.set_state(new_state)
 
 func reset_player(spawn_position: Vector3) -> void:
 	global_position = spawn_position
 	velocity = Vector3.ZERO
 	if stats: stats.reset()
+	if hurtbox:
+		hurtbox.clear_received_swings()
+		hurtbox.set_state(Hurtbox.HurtboxState.NORMAL)
 	shield_health = MAX_SHIELD_HP
 	percentage_changed.emit(0.0)
 	visible = true

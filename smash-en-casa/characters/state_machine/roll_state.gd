@@ -12,15 +12,14 @@ func enter(msg: Dictionary = {}) -> void:
 	dbg("enter", {"roll_dir": roll_dir, "roll_timer": snapped(roll_timer, 0.001)})
 	if character:
 		character.set_facing_direction(roll_dir)
-	if character and character.hurtbox:
-		character.hurtbox.monitoring = false # Invulnerable durante la rodada
+		character.set_hurtbox_state(Hurtbox.HurtboxState.INTANGIBLE)
 	if character and character.has_node("AnimationController"):
 		character.get_node("AnimationController").play_animation("Roll")
 
 func exit() -> void:
 	dbg("exit", {"vx": snapped(character.velocity.x, 0.001) if character else 0.0})
-	if character and character.hurtbox:
-		character.hurtbox.monitoring = true # Re-activa la Hurtbox al terminar
+	if character:
+		character.set_hurtbox_state(Hurtbox.HurtboxState.NORMAL)
 	
 	# Al terminar la rodada tras cruzar al enemigo, orientar automáticamente la mirada hacia el rival
 	if character:

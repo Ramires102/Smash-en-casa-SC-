@@ -23,6 +23,6 @@ fast_fall_speed = 2.56
 pushbox_radius = 0.5
 character_color = Color(0.9, 0.2, 0.3, 1)
 model_scene = ExtResource("3_model")
-model_offset = Vector3(0.0, -0.9, 0.0)
+model_offset = Vector3(0.0, -0.9, 0.25)
 model_scale = 1.15
 moveset = ExtResource("2_mset")

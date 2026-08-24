@@ -4,7 +4,7 @@ extends Node
 # EventBus Singleton - Sistema global de señales desacopladas
 
 @warning_ignore("unused_signal")
-signal player_damaged(player_id: int, new_percentage: float, attack_data: Resource)
+signal player_damaged(player_id: int, new_percentage: float, impact: ImpactData)
 @warning_ignore("unused_signal")
 signal player_died(player_id: int)
 @warning_ignore("unused_signal")

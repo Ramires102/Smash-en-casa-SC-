@@ -1,7 +1,5 @@
-Sí. Ahora que ya definimos que quieren **Godot 4 + 2.5D real con nodos 3D + arquitectura data-driven + FSM**, yo cerraría la arquitectura de una vez y dejaría de agregar sistemas por agregar. El objetivo tiene que ser: **limpia, defendible ante el profesor y suficientemente simple para terminarla en dos meses**.
-
 ## 1. Arquitectura general
-La dividiría en **7 módulos**:
+
 
 ```
 smash-en-casa/
@@ -53,7 +51,6 @@ CharacterData
 ---
 
 # 2. Estructura definitiva
-Yo dejaría el proyecto así:
 
 ```
 smash-en-casa/
@@ -143,7 +140,7 @@ smash-en-casa/
 └── scenes/
     └── main.tscn
 ```
-Hay una diferencia importante con lo que tenían antes:
+Hay una diferencia importante:
 
 **`resources/` contiene datos. `assets/` contiene archivos artísticos. `characters/` contiene comportamiento.**
 
@@ -209,8 +206,6 @@ El mismo `Character` sirve para Gogeta y Sakuya.
 ---
 
 # 4. CharacterData
-Yo lo haría aproximadamente así conceptualmente:
-
 ```
 CharacterData
 │
@@ -504,9 +499,9 @@ Así funciona independientemente de qué personajes estén peleando.
 ---
 
 # 12. Input
-Acá también hay que evitar una trampa.
 
-No hagan:
+
+No hacemos:
 
 ```
 if Input.is_key_pressed(KEY_A):
@@ -731,8 +726,8 @@ P2 stocks -= 1
 
 ---
 
-# 17. ¿Y el Gacha?
-No lo metería dentro de `core`.
+# 17. El Gacha
+No va dentro de `core`.
 
 Cuando llegue el momento, haría:
 
@@ -775,222 +770,8 @@ assets/
 ├── vfx/
 └── ui/
 ```
-**No metan `.gltf`, `.dds`, sonidos, etc. dentro de `resources/`.**
+**No metemos `.gltf`, `.dds`, sonidos, etc. dentro de `resources/`.**
 
 `resources/` = definición lógica.
 
 `assets/` = contenido.
-
----
-
-# 19. Cómo deberían trabajar los dos
-Esto es muy importante porque son dos personas.
-
-Yo dividiría el trabajo **por subsistemas**, no "vos hacé a Miyabi y yo Gogeta".
-
-### Vos
-Como tenés más afinidad con arquitectura/backend/RE:
-
-```
-Core
-Resources
-FSM
-Combat
-Physics
-Battle
-Input
-```
-
-### Tu compañero
-
-```
-Character models
-Animations
-VFX
-Stage
-UI
-Character Select
-```
-Y ambos integran.
-
-Eso evita que uno termine esperando al otro.
-
----
-
-# 20. Orden real de desarrollo
-Y acá haría un cambio respecto a su plan original.
-
-**No desarrollen todos los archivos de la arquitectura antes de tener un personaje.**
-
-Construyan verticalmente.
-
-### Fase 1 — Prototipo
-
-```
-CharacterBody3D
-      +
-movimiento
-      +
-salto
-      +
-Stage
-      +
-Camera
-```
-Hasta poder correr y saltar.
-
----
-
-### Fase 2 — Primer golpe
-
-```
-Hitbox
-+
-Hurtbox
-+
-Damage
-+
-Knockback
-```
-Ahora dos cubos pueden pegarse.
-
-**Si esto funciona, ya tienen el corazón del juego.**
-
----
-
-### Fase 3 — FSM
-Meter:
-
-```
-Idle
-Run
-Jump
-Fall
-Attack
-Hit
-Death
-```
-
----
-
-### Fase 4 — Data Driven
-Reemplazan las configuraciones hardcodeadas:
-
-```
-if character == "Miyabi"
-```
-por:
-
-```
-CharacterData
-```
-
----
-
-### Fase 5 — Primer personaje real
-Ahora sí:
-
-```
-Miyabi
-```
-con modelo + animaciones.
-
----
-
-### Fase 6 — Segundo y tercero
-Ahí el sistema debería permitir que simplemente hagan:
-
-```
-GogetaData.tres
-SakuyaData.tres
-```
-y agreguen sus assets.
-
----
-
-### Fase 7 — UI
-
-```
-Character Select
-HUD
-Victory
-Pause
-```
-
----
-
-### Fase 8 — Gacha
-Último.
-
----
-
-# 21. Y el criterio más importante
-Yo pondría una regla para ustedes:
-
-> **Si una abstracción no resuelve un problema actual, no la agregamos.**
-Por ejemplo, no necesitan ahora:
-
-- ReplaySystem ❌
-- NetworkManager ❌
-- ComboManager ❌
-- ParticleManager ❌
-- SaveManager complejo ❌
-- EventBus gigantesco ❌
-En cambio:
-
-- `CharacterData` ✅
-- `MoveSet` ✅
-- `AttackData` ✅
-- FSM ✅
-- Hitbox/Hurtbox ✅
-- `BattleManager` ✅
-- `KnockbackCalculator` ✅
-- `InputBuffer` ✅
-sí resuelven problemas reales del juego.
-
----
-
-## En una frase, la arquitectura
-Si el profesor les pregunta **"¿cómo está diseñado el juego?"**, conceptualmente deberían poder dibujar esto:
-
-```
-                 ┌───────────────┐
-                 │  GameManager  │
-                 └───────┬───────┘
-                         │
-                selección/configuración
-                         │
-                         ▼
-                  ┌─────────────┐
-                  │   Battle    │
-                  └──────┬──────┘
-                         │
-          ┌──────────────┼──────────────┐
-          ▼              ▼              ▼
-      Character       BattleManager    Stage
-          │
-     ┌────┴─────┐
-     ▼          ▼
-   FSM       Animation
-     │
-     ▼
-   Combat
-     │
- ┌───┴────┐
- ▼        ▼
-Hitbox  Hurtbox
-     │
-     ▼
- Damage + Knockback
-
-             DATA
-              │
-       ┌──────┴──────┐
-       ▼             ▼
- CharacterData    AttackData
-       │
-    MoveSet
-```
-Y eso es una arquitectura **coherente, escalable y, sobre todo, implementable en dos meses**.
-
-La clave es que **`CharacterData` representa qué es un personaje, `Character` representa una instancia viva de ese personaje, `AttackData` representa qué es un ataque, la FSM decide qué está haciendo el personaje, Combat resuelve las interacciones físicas y `BattleManager` decide qué significa eso para la partida**. Esa separación es el núcleo de todo el proyecto.

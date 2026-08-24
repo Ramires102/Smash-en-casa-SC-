@@ -54,7 +54,8 @@ func physics_update(delta: float) -> void:
 
 	var run_spd: float = character.controller.get_run_speed() if character.controller else 10.0
 	var target_speed_x: float = sign(input_vec.x) * run_spd
-	character.velocity.x = target_speed_x
+	if character and character.controller:
+		character.controller.accelerate_ground_velocity(target_speed_x, delta, 1.2)
 	character.update_facing_direction(input_vec.x)
 	dbg("run_speed_eval", {
 		"run_spd": snapped(run_spd, 0.001),
