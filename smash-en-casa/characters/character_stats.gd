@@ -16,9 +16,10 @@ func setup(data: CharacterData) -> void:
 	percentage_changed.emit(damage_percentage)
 
 func add_damage(amount: float) -> float:
-	damage_percentage = clamp(damage_percentage + amount, 0.0, max_percentage)
+	damage_percentage = DamageCalculator.apply_damage(damage_percentage, amount)
 	percentage_changed.emit(damage_percentage)
 	return damage_percentage
+
 
 func reset() -> void:
 	damage_percentage = 0.0
