@@ -1,0 +1,15 @@
+[remap]
+
+importer="ogg_vorbis"
+type="AudioStreamOGGVorbis"
+path="res://.import/accurate_fox_victory.ogg-3f4e05992a7e1b26a636c6a0cf5157d3.oggstr"
+
+[deps]
+
+source_file="res://ASSETS/Wolf/sounds/accurate_fox_victory.ogg"
+dest_files=[ "res://.import/accurate_fox_victory.ogg-3f4e05992a7e1b26a636c6a0cf5157d3.oggstr" ]
+
+[params]
+
+loop=true
+loop_offset=0

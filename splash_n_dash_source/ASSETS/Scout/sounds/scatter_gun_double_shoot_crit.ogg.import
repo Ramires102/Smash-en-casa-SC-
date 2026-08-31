@@ -1,0 +1,15 @@
+[remap]
+
+importer="ogg_vorbis"
+type="AudioStreamOGGVorbis"
+path="res://.import/scatter_gun_double_shoot_crit.ogg-e08f48a23116726fbd400107bede7127.oggstr"
+
+[deps]
+
+source_file="res://ASSETS/Scout/sounds/scatter_gun_double_shoot_crit.ogg"
+dest_files=[ "res://.import/scatter_gun_double_shoot_crit.ogg-e08f48a23116726fbd400107bede7127.oggstr" ]
+
+[params]
+
+loop=true
+loop_offset=0

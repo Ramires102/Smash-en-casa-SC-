@@ -1,0 +1,15 @@
+[remap]
+
+importer="ogg_vorbis"
+type="AudioStreamOGGVorbis"
+path="res://.import/bat_baseball_hit1.ogg-692577083eb4c7dd4b3506c2052e4f70.oggstr"
+
+[deps]
+
+source_file="res://ASSETS/Scout/sounds/bat_baseball_hit1.ogg"
+dest_files=[ "res://.import/bat_baseball_hit1.ogg-692577083eb4c7dd4b3506c2052e4f70.oggstr" ]
+
+[params]
+
+loop=true
+loop_offset=0

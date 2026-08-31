@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="AttackData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/attack_data.gd" id="1_atk"]
+
+[resource]
+script = ExtResource("1_atk")
+attack_name = "Misdirection (Vanishing Slash)"
+damage = 11.5
+base_knockback = 28.0
+knockback_scaling = 105.0
+angle_degrees = 65.0
+startup_frames = 4
+active_frames = 6
+recovery_frames = 14
+animation_name = "SpecialSide"
+hitbox_offset = Vector3(1.4, 0.1, 0.0)
+hitbox_radius = 0.85
+combo_next = null
+combo_window_frames = 0
+self_impulse = Vector3(14.0, 1.5, 0.0)
+self_impulse_frame = 4
+disable_gravity_during_active = true
+sub_hitboxes = []
+spawns_projectile = false
+is_time_stop = false

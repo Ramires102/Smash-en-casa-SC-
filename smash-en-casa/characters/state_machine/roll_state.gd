@@ -4,7 +4,7 @@ extends State
 var roll_timer: float = 0.0
 var roll_dir: float = 1.0
 const ROLL_DURATION: float = 0.4
-const ROLL_SPEED: float = 12.0
+const ROLL_SPEED: float = 340.0
 
 func enter(msg: Dictionary = {}) -> void:
 	roll_dir = msg.get("dir", character.get_facing_direction())

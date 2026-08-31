@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="AttackData" load_steps=3 format=3 uid="uid://john_jab2"]
+
+[ext_resource type="Script" path="res://resources/attack_data.gd" id="1_atk"]
+[ext_resource type="Resource" uid="uid://john_jab3" path="res://resources/instances/john_placeholder/john_jab3.tres" id="2_jab3"]
+
+[resource]
+script = ExtResource("1_atk")
+attack_name = "ORA ORA Flurry"
+damage = 3.5
+base_knockback = 8.0
+knockback_scaling = 40.0
+angle_degrees = 32.0
+startup_frames = 2
+active_frames = 4
+recovery_frames = 7
+animation_name = "AttackNeutral2"
+hitbox_offset = Vector3(0.9, 0.0, 0.0)
+hitbox_radius = 0.7
+combo_next = ExtResource("2_jab3")
+combo_window_frames = 10
+self_impulse = Vector3(0.35, 0.0, 0.0)
+self_impulse_frame = 2
+disable_gravity_during_active = false

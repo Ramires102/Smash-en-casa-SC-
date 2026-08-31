@@ -5,9 +5,10 @@
 [ext_resource type="Script" path="res://battle/spawn_manager.gd" id="3_spawn"]
 [ext_resource type="Script" path="res://battle/battle_manager.gd" id="4_bmgr"]
 [ext_resource type="Script" path="res://systems/camera_controller.gd" id="5_cam"]
-[ext_resource type="Script" path="res://systems/screen_shake.gd" id="6_shake"]
+
 [ext_resource type="PackedScene" uid="uid://c_hud_scene" path="res://ui/hud.tscn" id="7_hud"]
 [ext_resource type="PackedScene" uid="uid://c_pause_scene" path="res://ui/pause.tscn" id="8_pause"]
+[ext_resource type="PackedScene" uid="uid://c_timestop_overlay" path="res://effects/time_stop_overlay.tscn" id="9_ts"]
 
 [node name="Battle" type="Node3D"]
 script = ExtResource("1_battle")
@@ -27,9 +28,9 @@ spawn_manager = NodePath("../SpawnManager")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 16)
 script = ExtResource("5_cam")
 
-[node name="ScreenShake" type="Node" parent="." node_paths=PackedStringArray("camera")]
-script = ExtResource("6_shake")
-camera = NodePath("../CameraController")
+
+
+[node name="TimeStopOverlay" parent="." instance=ExtResource("9_ts")]
 
 [node name="CanvasLayer" type="CanvasLayer" parent="."]
 

@@ -1,18 +1,18 @@
 [gd_resource type="Resource" script_class="CharacterData" load_steps=3 format=3 uid="uid://c_sakuya_data"]
 
 [ext_resource type="Script" path="res://resources/character_data.gd" id="1_chardata"]
-[ext_resource type="Resource" uid="uid://moveset_default" path="res://resources/instances/default_moveset.tres" id="2_mset"]
+[ext_resource type="Resource" path="res://resources/instances/sakuya_prism_moveset.tres" id="2_mset"]
 
 [resource]
 script = ExtResource("1_chardata")
 character_name = "Sakuya"
-run_speed = 2.077
+run_speed = 2.22
 walk_speed = 1.22
-initial_dash_speed = 1.87
+initial_dash_speed = 2.02
 traction = 0.09
 jump_velocity = 16.0
 short_hop_velocity = 12.0
-air_speed = 1.1
+air_speed = 1.18
 air_acceleration = 0.05
 air_friction = 0.01
 weight = 80.0

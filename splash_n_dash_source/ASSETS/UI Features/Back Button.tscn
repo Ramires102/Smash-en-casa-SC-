@@ -1,0 +1,40 @@
+[gd_scene load_steps=5 format=2]
+
+[ext_resource path="res://ASSETS/UI Features/arrow_big_left.png" type="Texture" id=1]
+[ext_resource path="res://ASSETS/UI Features/arrow_big_down_pressed.png" type="Texture" id=2]
+[ext_resource path="res://ASSETS/UI Features/TextureRect.gd" type="Script" id=3]
+
+[sub_resource type="RectangleShape2D" id=1]
+extents = Vector2( 94.1078, 69.0214 )
+
+[node name="Control" type="GridContainer"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+margin_right = -1669.0
+margin_bottom = -952.0
+rect_min_size = Vector2( 251, 128 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="TextureRect" type="TextureButton" parent="."]
+margin_right = 251.0
+margin_bottom = 128.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+texture_normal = ExtResource( 1 )
+texture_hover = ExtResource( 2 )
+expand = true
+stretch_mode = 3
+script = ExtResource( 3 )
+path = "res://TitleScreen.tscn"
+
+[node name="ArrowArea2D" type="Area2D" parent="TextureRect"]
+position = Vector2( 125, 64 )
+collision_layer = 65536
+collision_mask = 524288
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="TextureRect/ArrowArea2D"]
+shape = SubResource( 1 )
+
+[connection signal="pressed" from="TextureRect" to="TextureRect" method="_on_TextureRect_pressed"]

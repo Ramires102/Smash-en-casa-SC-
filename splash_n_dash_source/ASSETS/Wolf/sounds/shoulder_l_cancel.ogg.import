@@ -1,0 +1,15 @@
+[remap]
+
+importer="ogg_vorbis"
+type="AudioStreamOGGVorbis"
+path="res://.import/shoulder_l_cancel.ogg-3a6dc891e9039a6c177c116b1db8591c.oggstr"
+
+[deps]
+
+source_file="res://ASSETS/Wolf/sounds/shoulder_l_cancel.ogg"
+dest_files=[ "res://.import/shoulder_l_cancel.ogg-3a6dc891e9039a6c177c116b1db8591c.oggstr" ]
+
+[params]
+
+loop=true
+loop_offset=0

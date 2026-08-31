@@ -1,0 +1,15 @@
+[remap]
+
+importer="ogg_vorbis"
+type="AudioStreamOGGVorbis"
+path="res://.import/Killsound_retro.ogg-c96c3145ce911c2f7ad6a814e881dc5b.oggstr"
+
+[deps]
+
+source_file="res://ASSETS/Scout/sounds/Killsound_retro.ogg"
+dest_files=[ "res://.import/Killsound_retro.ogg-c96c3145ce911c2f7ad6a814e881dc5b.oggstr" ]
+
+[params]
+
+loop=true
+loop_offset=0

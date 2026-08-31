@@ -1,0 +1,290 @@
+[gd_scene load_steps=14 format=2]
+
+[ext_resource path="res://ASSETS/Fonts/Slackey.ttf" type="DynamicFontData" id=1]
+[ext_resource path="res://ASSETS/Fox/portrait.png" type="Texture" id=2]
+[ext_resource path="res://ASSETS/TitleScreen/Background/Shifting Shader.tscn" type="PackedScene" id=3]
+[ext_resource path="res://ASSETS/ResultsScreen/ResultsScreen.gd" type="Script" id=4]
+[ext_resource path="res://ASSETS/StageSelect/Clock.tscn" type="PackedScene" id=5]
+[ext_resource path="res://ASSETS/ResultsScreen/PlayerResultBox.tscn" type="PackedScene" id=6]
+[ext_resource path="res://ASSETS/Wolf/portrait.png" type="Texture" id=7]
+[ext_resource path="res://ASSETS/Mario/portrait.png" type="Texture" id=8]
+[ext_resource path="res://ASSETS/Videos/Super Smash Bros. Melee - Trophy Tussle Stage Background-2.webm" type="VideoStream" id=9]
+
+[sub_resource type="Animation" id=1]
+resource_name = "FadeOut"
+tracks/0/type = "value"
+tracks/0/path = NodePath("AnimationPlayer/ColorRect:color")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 1 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 0,
+"values": [ Color( 0, 0, 0, 0 ), Color( 0, 0, 0, 1 ) ]
+}
+
+[sub_resource type="Animation" id=2]
+resource_name = "Left"
+length = 6.0
+tracks/0/type = "value"
+tracks/0/path = NodePath("AnimationPlayer/Whole Screen/Whole Screen/Left Side/Gap/Label:self_modulate")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 3 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 0,
+"values": [ Color( 1, 1, 1, 0 ), Color( 1, 1, 1, 1 ) ]
+}
+tracks/1/type = "value"
+tracks/1/path = NodePath("AnimationPlayer/Whole Screen/Whole Screen/Left Side/Winner Image/Winner_img:self_modulate")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray( 0, 3, 3.5, 4.7, 5.25 ),
+"transitions": PoolRealArray( 1, 1, 1, 1, 1 ),
+"update": 0,
+"values": [ Color( 0, 0, 0, 0 ), Color( 0, 0, 0, 0 ), Color( 0, 0, 0, 1 ), Color( 0, 0, 0, 1 ), Color( 1, 1, 1, 1 ) ]
+}
+tracks/2/type = "value"
+tracks/2/path = NodePath("AnimationPlayer/Whole Screen/Whole Screen/Left Side/WinnerName/Winner_Text:self_modulate")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/keys = {
+"times": PoolRealArray( 0, 0.001, 4.7, 5.25 ),
+"transitions": PoolRealArray( 1, 1, 1, 1 ),
+"update": 0,
+"values": [ Color( 1, 1, 1, 0 ), Color( 1, 1, 1, 0 ), Color( 1, 1, 1, 0 ), Color( 1, 1, 1, 1 ) ]
+}
+tracks/3/type = "value"
+tracks/3/path = NodePath("AnimationPlayer/Whole Screen/Whole Screen/Right Side/1st/PlayerResultBox:modulate")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/keys = {
+"times": PoolRealArray( 0, 3, 3.5, 4.7, 5.25 ),
+"transitions": PoolRealArray( 1, 1, 1, 1, 1 ),
+"update": 0,
+"values": [ Color( 1, 1, 1, 0 ), Color( 0, 0, 0, 0 ), Color( 0, 0, 0, 1 ), Color( 0, 0, 0, 1 ), Color( 1, 1, 1, 1 ) ]
+}
+tracks/4/type = "value"
+tracks/4/path = NodePath("AnimationPlayer/Whole Screen/Whole Screen/Right Side/2nd/PlayerResultBox:modulate")
+tracks/4/interp = 1
+tracks/4/loop_wrap = true
+tracks/4/imported = false
+tracks/4/enabled = true
+tracks/4/keys = {
+"times": PoolRealArray( 0, 3, 3.5, 4.7, 5.25 ),
+"transitions": PoolRealArray( 1, 1, 1, 1, 1 ),
+"update": 0,
+"values": [ Color( 1, 1, 1, 0 ), Color( 0, 0, 0, 0 ), Color( 0, 0, 0, 1 ), Color( 0, 0, 0, 1 ), Color( 1, 1, 1, 1 ) ]
+}
+tracks/5/type = "value"
+tracks/5/path = NodePath("AnimationPlayer/Whole Screen/Whole Screen/Right Side/1st/PlayerResultBox/MarginContainer2/PlayerNo:modulate")
+tracks/5/interp = 1
+tracks/5/loop_wrap = true
+tracks/5/imported = false
+tracks/5/enabled = true
+tracks/5/keys = {
+"times": PoolRealArray( 0, 4.7, 5.25 ),
+"transitions": PoolRealArray( 1, 1, 1 ),
+"update": 0,
+"values": [ Color( 1, 1, 1, 0 ), Color( 1, 1, 1, 0 ), Color( 1, 1, 1, 1 ) ]
+}
+tracks/6/type = "value"
+tracks/6/path = NodePath("AnimationPlayer/Whole Screen/Whole Screen/Right Side/2nd/PlayerResultBox/MarginContainer2/PlayerNo:modulate")
+tracks/6/interp = 1
+tracks/6/loop_wrap = true
+tracks/6/imported = false
+tracks/6/enabled = true
+tracks/6/keys = {
+"times": PoolRealArray( 0, 4.7, 5.25 ),
+"transitions": PoolRealArray( 1, 1, 1 ),
+"update": 0,
+"values": [ Color( 1, 1, 1, 0 ), Color( 1, 1, 1, 0 ), Color( 1, 1, 1, 1 ) ]
+}
+
+[sub_resource type="DynamicFont" id=3]
+size = 72
+outline_size = 4
+outline_color = Color( 0, 0, 0, 1 )
+font_data = ExtResource( 1 )
+
+[sub_resource type="DynamicFont" id=4]
+size = 150
+outline_size = 4
+outline_color = Color( 0, 0, 0, 1 )
+extra_spacing_top = -32
+extra_spacing_bottom = -32
+font_data = ExtResource( 1 )
+
+[node name="ResultsScreen" type="Control"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+rect_pivot_offset = Vector2( -1459.16, -52.0932 )
+script = ExtResource( 4 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+FOX = ExtResource( 2 )
+WOLF = ExtResource( 7 )
+MARIO = ExtResource( 8 )
+
+[node name="Shifting Shader3" parent="." instance=ExtResource( 3 )]
+visible = false
+
+[node name="VideoPlayer" type="VideoPlayer" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+stream = ExtResource( 9 )
+volume_db = -80.0
+autoplay = true
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+autoplay = "Left"
+anims/FadeOut = SubResource( 1 )
+anims/Left = SubResource( 2 )
+
+[node name="Whole Screen" type="MarginContainer" parent="AnimationPlayer"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="Whole Screen" type="HBoxContainer" parent="AnimationPlayer/Whole Screen"]
+margin_right = 1920.0
+margin_bottom = 1080.0
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="Left Side" type="VBoxContainer" parent="AnimationPlayer/Whole Screen/Whole Screen"]
+margin_right = 958.0
+margin_bottom = 1080.0
+size_flags_horizontal = 3
+
+[node name="Gap" type="VBoxContainer" parent="AnimationPlayer/Whole Screen/Whole Screen/Left Side"]
+margin_right = 958.0
+margin_bottom = 101.0
+rect_min_size = Vector2( 0, 100 )
+
+[node name="Label" type="Label" parent="AnimationPlayer/Whole Screen/Whole Screen/Left Side/Gap"]
+margin_right = 958.0
+margin_bottom = 101.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+custom_fonts/font = SubResource( 3 )
+text = "The winner is..."
+align = 1
+
+[node name="Winner Image" type="HBoxContainer" parent="AnimationPlayer/Whole Screen/Whole Screen/Left Side"]
+margin_top = 105.0
+margin_right = 958.0
+margin_bottom = 876.0
+size_flags_vertical = 3
+alignment = 1
+
+[node name="Winner_img" type="TextureRect" parent="AnimationPlayer/Whole Screen/Whole Screen/Left Side/Winner Image"]
+margin_right = 958.0
+margin_bottom = 771.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+texture = ExtResource( 7 )
+stretch_mode = 6
+
+[node name="WinnerName" type="HBoxContainer" parent="AnimationPlayer/Whole Screen/Whole Screen/Left Side"]
+margin_top = 880.0
+margin_right = 958.0
+margin_bottom = 1080.0
+rect_min_size = Vector2( 0, 200 )
+size_flags_horizontal = 3
+
+[node name="Winner_Text" type="Label" parent="AnimationPlayer/Whole Screen/Whole Screen/Left Side/WinnerName"]
+margin_right = 958.0
+margin_bottom = 200.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+custom_fonts/font = SubResource( 4 )
+text = "FOX"
+align = 1
+valign = 1
+
+[node name="Right Side" type="VBoxContainer" parent="AnimationPlayer/Whole Screen/Whole Screen"]
+margin_left = 962.0
+margin_right = 1920.0
+margin_bottom = 1080.0
+size_flags_horizontal = 3
+custom_constants/separation = 70
+alignment = 2
+
+[node name="1st" type="HBoxContainer" parent="AnimationPlayer/Whole Screen/Whole Screen/Right Side"]
+margin_top = 226.0
+margin_right = 958.0
+margin_bottom = 476.0
+rect_min_size = Vector2( 0, 250 )
+
+[node name="PlayerResultBox" parent="AnimationPlayer/Whole Screen/Whole Screen/Right Side/1st" instance=ExtResource( 6 )]
+id = 1
+
+[node name="2nd" type="HBoxContainer" parent="AnimationPlayer/Whole Screen/Whole Screen/Right Side"]
+margin_top = 546.0
+margin_right = 958.0
+margin_bottom = 796.0
+rect_min_size = Vector2( 0, 250 )
+alignment = 2
+
+[node name="PlayerResultBox" parent="AnimationPlayer/Whole Screen/Whole Screen/Right Side/2nd" instance=ExtResource( 6 )]
+grow_horizontal = 0
+rect_pivot_offset = Vector2( -0.00866699, 0.859436 )
+size_flags_horizontal = 1
+id = 2
+
+[node name="Time" type="VBoxContainer" parent="AnimationPlayer/Whole Screen/Whole Screen/Right Side"]
+margin_top = 866.0
+margin_right = 958.0
+margin_bottom = 1080.0
+
+[node name="HBoxContainer3" type="HBoxContainer" parent="AnimationPlayer/Whole Screen/Whole Screen/Right Side/Time"]
+margin_right = 958.0
+margin_bottom = 214.0
+rect_min_size = Vector2( 0, 64 )
+alignment = 2
+
+[node name="ColorRect4" type="ColorRect" parent="AnimationPlayer/Whole Screen/Whole Screen/Right Side/Time/HBoxContainer3"]
+visible = false
+margin_right = 647.0
+margin_bottom = 64.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+color = Color( 0.137255, 0.309804, 0.635294, 1 )
+
+[node name="MarginContainer" parent="AnimationPlayer/Whole Screen/Whole Screen/Right Side/Time/HBoxContainer3" instance=ExtResource( 5 )]
+margin_left = 351.0
+margin_right = 958.0
+margin_bottom = 214.0
+custom_constants/margin_right = 300
+custom_constants/margin_bottom = 150
+
+[node name="ColorRect" type="ColorRect" parent="AnimationPlayer"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color( 0, 0, 0, 0 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[editable path="AnimationPlayer/Whole Screen/Whole Screen/Right Side/1st/PlayerResultBox"]
+[editable path="AnimationPlayer/Whole Screen/Whole Screen/Right Side/2nd/PlayerResultBox"]

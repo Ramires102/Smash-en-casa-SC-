@@ -1,0 +1,558 @@
+[gd_scene load_steps=36 format=2]
+
+[ext_resource path="res://ASSETS/StageSelect/StageSelecteScreen.gd" type="Script" id=1]
+[ext_resource path="res://ASSETS/TitleScreen/Background/Shifting Shader.tscn" type="PackedScene" id=2]
+[ext_resource path="res://ASSETS/StageSelect/TRIANGLWWWWW2123.png" type="Texture" id=3]
+[ext_resource path="res://ASSETS/StageSelect/TRIANGLWWWWW.png" type="Texture" id=4]
+[ext_resource path="res://ASSETS/StageSelect/StageSelectArea.tscn" type="PackedScene" id=5]
+[ext_resource path="res://ASSETS/StageSelect/Clock.tscn" type="PackedScene" id=6]
+[ext_resource path="res://ASSETS/CSS/Boundaries.tscn" type="PackedScene" id=7]
+[ext_resource path="res://ASSETS/UI Features/Back Button.tscn" type="PackedScene" id=9]
+[ext_resource path="res://ASSETS/UI Features/Gamemode.tscn" type="PackedScene" id=10]
+[ext_resource path="res://ASSETS/Fonts/tf2build.ttf" type="DynamicFontData" id=11]
+[ext_resource path="res://ASSETS/StageSelect/Stage Select Menu/Banner.png" type="Texture" id=12]
+[ext_resource path="res://ASSETS/StageSelect/StageSelectePreview.tscn" type="PackedScene" id=13]
+[ext_resource path="res://ASSETS/CSS/Hand/handopen.png" type="Texture" id=14]
+[ext_resource path="res://ASSETS/CSS/Hand.tscn" type="PackedScene" id=15]
+[ext_resource path="res://ASSETS/CSS/Hand/handgrab.png" type="Texture" id=16]
+[ext_resource path="res://ASSETS/CSS/Hand/handpoint.png" type="Texture" id=17]
+[ext_resource path="res://ASSETS/Shaders/Colour Changer.shader" type="Shader" id=18]
+[ext_resource path="res://ASSETS/HUD/Character HUD.tscn" type="PackedScene" id=19]
+
+[sub_resource type="Shader" id=1]
+code = "shader_type canvas_item;
+
+uniform float screen_height = 280.0;
+
+void fragment() {
+	float diff_x = 0.07 * sin((50.0 * UV.y)+(2.0 * TIME));
+	COLOR = texture(TEXTURE, vec2(UV.x + diff_x, UV.y));
+	COLOR = mix(COLOR, vec4(0.0), float(int(UV.y * screen_height) % 2));
+}"
+
+[sub_resource type="ShaderMaterial" id=2]
+shader = SubResource( 1 )
+shader_param/screen_height = 270.0
+
+[sub_resource type="Shader" id=3]
+code = "shader_type canvas_item;
+
+uniform float screen_height = 280.0;
+
+void fragment() {
+	float diff_x = -0.05 * sin((50.0 * UV.y)+(2.0 * TIME));
+	COLOR = texture(TEXTURE, vec2(UV.x + diff_x, UV.y));
+	COLOR = mix(vec4(0.0),COLOR, float(int(UV.y * screen_height) % 2));
+}"
+
+[sub_resource type="ShaderMaterial" id=4]
+shader = SubResource( 3 )
+shader_param/screen_height = 270.0
+
+[sub_resource type="Animation" id=5]
+resource_name = "Hue Shifting"
+length = 5.0
+step = 0.5
+tracks/0/type = "value"
+tracks/0/path = NodePath("ColorRect:color")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 1, 2, 3, 4, 5 ),
+"transitions": PoolRealArray( 1, 1, 1, 1, 1, 1 ),
+"update": 0,
+"values": [ Color( 0.721569, 0.294118, 0.266667, 1 ), Color( 0.67451, 0.2, 1, 1 ), Color( 0.2, 0.717647, 1, 1 ), Color( 0.2, 1, 0.454902, 1 ), Color( 1, 0.94902, 0.2, 1 ), Color( 0.721569, 0.294118, 0.266667, 1 ) ]
+}
+tracks/1/type = "value"
+tracks/1/path = NodePath("WobbleOne:modulate")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray( 0, 1, 2, 3, 4, 5 ),
+"transitions": PoolRealArray( 1, 8.28211, 8.28211, 8.28211, 8.28211, 1 ),
+"update": 0,
+"values": [ Color( 1, 1, 1, 1 ), Color( 0.67451, 0.2, 1, 1 ), Color( 0.2, 0.717647, 1, 1 ), Color( 0.2, 1, 0.454902, 1 ), Color( 1, 0.94902, 0.2, 1 ), Color( 1, 1, 1, 1 ) ]
+}
+tracks/2/type = "value"
+tracks/2/path = NodePath("WobbleTwo:modulate")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/keys = {
+"times": PoolRealArray( 0, 1, 2, 3, 4, 5 ),
+"transitions": PoolRealArray( 1, 8.28211, 8.28211, 8.28211, 8.28211, 1 ),
+"update": 0,
+"values": [ Color( 1, 1, 1, 1 ), Color( 0.67451, 0.2, 1, 1 ), Color( 0.2, 0.717647, 1, 1 ), Color( 0.2, 1, 0.454902, 1 ), Color( 1, 0.94902, 0.2, 1 ), Color( 1, 1, 1, 1 ) ]
+}
+
+[sub_resource type="Shader" id=6]
+code = "shader_type canvas_item;
+
+uniform vec4 line_color : hint_color = vec4(1);
+uniform float line_thickness : hint_range(0, 10) = 1.0;
+
+void fragment() {
+	vec2 size = TEXTURE_PIXEL_SIZE * line_thickness;
+	
+	float outline = texture(TEXTURE, UV + vec2(-size.x, 0)).a;
+	outline += texture(TEXTURE, UV + vec2(0, size.y)).a;
+	outline += texture(TEXTURE, UV + vec2(size.x, 0)).a;
+	outline += texture(TEXTURE, UV + vec2(0, -size.y)).a;
+	outline += texture(TEXTURE, UV + vec2(-size.x, size.y)).a;
+	outline += texture(TEXTURE, UV + vec2(size.x, size.y)).a;
+	outline += texture(TEXTURE, UV + vec2(-size.x, -size.y)).a;
+	outline += texture(TEXTURE, UV + vec2(size.x, -size.y)).a;
+	outline = min(outline, 1.0);
+	
+	vec4 color = texture(TEXTURE, UV);
+	COLOR = mix(color, line_color, outline - color.a);
+}"
+
+[sub_resource type="ShaderMaterial" id=7]
+shader = SubResource( 6 )
+shader_param/line_color = Color( 0, 0, 0, 1 )
+shader_param/line_thickness = 10.0
+
+[sub_resource type="Shader" id=8]
+code = "shader_type canvas_item;
+
+uniform vec4 line_color : hint_color = vec4(1);
+uniform float line_thickness : hint_range(0, 10) = 1.0;
+
+void fragment() {
+	vec2 size = TEXTURE_PIXEL_SIZE * line_thickness;
+	
+	float outline = texture(TEXTURE, UV + vec2(-size.x, 0)).a;
+	outline += texture(TEXTURE, UV + vec2(0, size.y)).a;
+	outline += texture(TEXTURE, UV + vec2(size.x, 0)).a;
+	outline += texture(TEXTURE, UV + vec2(0, -size.y)).a;
+	outline += texture(TEXTURE, UV + vec2(-size.x, size.y)).a;
+	outline += texture(TEXTURE, UV + vec2(size.x, size.y)).a;
+	outline += texture(TEXTURE, UV + vec2(-size.x, -size.y)).a;
+	outline += texture(TEXTURE, UV + vec2(size.x, -size.y)).a;
+	outline = min(outline, 1.0);
+	
+	vec4 color = texture(TEXTURE, UV);
+	COLOR = mix(color, line_color, outline - color.a);
+}"
+
+[sub_resource type="ShaderMaterial" id=9]
+shader = SubResource( 8 )
+shader_param/line_color = Color( 0, 0, 0, 1 )
+shader_param/line_thickness = 6.571
+
+[sub_resource type="DynamicFont" id=10]
+size = 61
+outline_size = 5
+outline_color = Color( 0.184314, 0.0392157, 0.14902, 1 )
+use_filter = true
+extra_spacing_top = 7
+extra_spacing_bottom = -7
+font_data = ExtResource( 11 )
+
+[sub_resource type="ShaderMaterial" id=11]
+resource_local_to_scene = true
+shader = ExtResource( 18 )
+shader_param/original_0 = Color( 0.67451, 0.196078, 0.196078, 1 )
+shader_param/original_1 = Color( 0, 0, 0, 1 )
+shader_param/original_2 = Color( 0, 0, 0, 1 )
+shader_param/original_3 = Color( 0, 0, 0, 1 )
+shader_param/original_4 = Color( 0, 0, 0, 1 )
+shader_param/replace_0 = Color( 0.396775, 0.364706, 0.984314, 1 )
+shader_param/replace_1 = Color( 0, 0, 0, 1 )
+shader_param/replace_2 = Color( 0, 0, 0, 1 )
+shader_param/replace_3 = Color( 0, 0, 0, 1 )
+shader_param/replace_4 = Color( 0, 0, 0, 1 )
+
+[sub_resource type="Shader" id=12]
+code = "shader_type canvas_item;
+
+
+uniform vec4 original_0: hint_color;
+uniform vec4 original_1: hint_color;
+uniform vec4 original_2: hint_color;
+uniform vec4 original_3: hint_color;
+uniform vec4 original_4: hint_color;
+uniform vec4 replace_0: hint_color;
+uniform vec4 replace_1: hint_color;
+uniform vec4 replace_2: hint_color;
+uniform vec4 replace_3: hint_color;
+uniform vec4 replace_4: hint_color;
+
+const float precision = 0.1;
+
+
+vec4 swap_color(vec4 color){
+	vec4 original_colors[5] = vec4[5] (original_0, original_1, original_2, original_3, original_4);
+	vec4 replace_colors[5] = vec4[5] (replace_0, replace_1, replace_2, replace_3, replace_4);
+	for (int i = 0; i < 5; i ++) {
+		if (distance(color, original_colors[i]) <= precision){
+			return replace_colors[i];
+		}
+	}
+	return color;
+}
+
+
+void fragment() {
+	COLOR = swap_color(texture(TEXTURE, UV));
+}"
+
+[sub_resource type="ShaderMaterial" id=13]
+resource_local_to_scene = true
+shader = SubResource( 12 )
+shader_param/original_0 = Color( 0.984314, 0.380392, 0.364706, 1 )
+shader_param/original_1 = Color( 0, 0, 0, 1 )
+shader_param/original_2 = Color( 0, 0, 0, 1 )
+shader_param/original_3 = Color( 0, 0, 0, 1 )
+shader_param/original_4 = Color( 0, 0, 0, 1 )
+shader_param/replace_0 = Color( 0.396775, 0.364706, 0.984314, 1 )
+shader_param/replace_1 = Color( 0, 0, 0, 1 )
+shader_param/replace_2 = Color( 0, 0, 0, 1 )
+shader_param/replace_3 = Color( 0, 0, 0, 1 )
+shader_param/replace_4 = Color( 0, 0, 0, 1 )
+
+[sub_resource type="GDScript" id=14]
+script/source = "extends Node2D
+
+var velocity: Vector2
+var speed = 1000
+
+
+onready var HandSprite = get_node(\"HandSprite\")
+onready var Detector = get_node(\"HandArea\")
+
+func _process(delta):
+	var input := Vector2.ZERO
+	
+	input = Vector2((Input.get_action_strength(\"right_1\") + Input.get_action_strength(\"right_2\")) - (Input.get_action_strength(\"left_1\") + Input.get_action_strength(\"left_2\")),(Input.get_action_strength(\"down_1\") + Input.get_action_strength(\"down_2\")) - (Input.get_action_strength(\"up_1\") + Input.get_action_strength(\"up_2\")))
+	#input.y = (Input.get_action_strength(\"down_1\") + Input.get_action_strength(\"down_2\")) - (Input.get_action_strength(\"up_1\") + Input.get_action_strength(\"up_2\"))
+	#input = input.normalized()
+	
+	if input != Vector2.ZERO:
+		global_position += (input * speed*delta)
+	#print (global_position)
+	var dec = Detector.get_overlapping_areas()
+	for b in dec:
+		if b.name == \"ArrowArea2D\":
+			HandSprite.play('HandPoint')
+	if Input.is_action_just_pressed(\"ui_select_1\") or Input.is_action_just_pressed(\"ui_select_2\"):
+		for b in dec:
+			if b.name == \"StageArea\":
+				if HandSprite.animation == \"HandPoint\":
+					b.get_parent().emit_signal(\"pressed\")
+			elif b.name == \"ArrowArea2D\":
+				b.get_parent().emit_signal(\"pressed\")
+			else:
+				pass
+	else:
+		pass
+
+func _on_HandArea_area_entered(area):
+	if area.name == \"ArrowArea2D\":
+		HandSprite.play('HandPoint')
+	elif area.name == \"StageArea\":
+		HandSprite.play('HandPoint')
+
+
+
+func _on_HandArea_area_exited(area):
+	if area.name == \"ArrowArea2D\":
+		HandSprite.play('HandOpen')
+	elif area.name == \"StageArea\":
+		HandSprite.play('HandOpen')
+
+"
+
+[sub_resource type="SpriteFrames" id=15]
+animations = [ {
+"frames": [ ExtResource( 16 ) ],
+"loop": false,
+"name": "HandGrab",
+"speed": 1.0
+}, {
+"frames": [ ExtResource( 14 ) ],
+"loop": false,
+"name": "HandOpen",
+"speed": 1.0
+}, {
+"frames": [ ExtResource( 17 ) ],
+"loop": false,
+"name": "HandPoint",
+"speed": 1.0
+} ]
+
+[sub_resource type="CircleShape2D" id=16]
+radius = 29.175
+
+[sub_resource type="DynamicFont" id=17]
+size = 32
+outline_size = 5
+outline_color = Color( 0, 0, 0, 1 )
+font_data = ExtResource( 11 )
+
+[node name="StageSelecteScreen" type="Control"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource( 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="Shaders" type="Control" parent="."]
+pause_mode = 2
+anchor_right = 1.0
+anchor_bottom = 1.0
+__meta__ = {
+"_edit_lock_": true,
+"_edit_use_anchors_": false
+}
+
+[node name="Shifting Shader2" parent="Shaders" instance=ExtResource( 2 )]
+
+[node name="ColorRect" parent="Shaders/Shifting Shader2" index="0"]
+color = Color( 0.450306, 0.333333, 0.658824, 1 )
+
+[node name="WobbleOne" parent="Shaders/Shifting Shader2" index="1"]
+modulate = Color( 1, 1, 1, 0.5 )
+self_modulate = Color( 0.658824, 0.333333, 0.501164, 1 )
+material = SubResource( 2 )
+texture = ExtResource( 4 )
+expand = true
+flip_h = true
+
+[node name="WobbleTwo" parent="Shaders/Shifting Shader2" index="2"]
+modulate = Color( 1, 1, 1, 0.5 )
+self_modulate = Color( 0.658824, 0.333333, 0.501164, 1 )
+material = SubResource( 4 )
+texture = ExtResource( 4 )
+expand = true
+flip_h = true
+
+[node name="AnimationPlayer" parent="Shaders/Shifting Shader2" index="3"]
+"anims/Hue Shifting" = SubResource( 5 )
+
+[node name="Shifting Shader" parent="Shaders" instance=ExtResource( 2 )]
+
+[node name="ColorRect" parent="Shaders/Shifting Shader" index="0"]
+visible = false
+color = Color( 0.364706, 0.337255, 0.686275, 1 )
+
+[node name="WobbleOne" parent="Shaders/Shifting Shader" index="1"]
+self_modulate = Color( 0.658824, 0.333333, 0.501164, 1 )
+texture = ExtResource( 3 )
+
+[node name="WobbleTwo" parent="Shaders/Shifting Shader" index="2"]
+self_modulate = Color( 0.658824, 0.333333, 0.501164, 1 )
+texture = ExtResource( 3 )
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+margin_right = 5.0
+rect_min_size = Vector2( 1920, 1080 )
+size_flags_horizontal = 3
+size_flags_vertical = 3
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="Options" type="MarginContainer" parent="VBoxContainer"]
+margin_right = 1925.0
+margin_bottom = 128.0
+rect_min_size = Vector2( 1920, 128 )
+size_flags_horizontal = 3
+
+[node name="ColorRect" type="TextureRect" parent="VBoxContainer/Options"]
+self_modulate = Color( 0.744823, 0.546066, 0.925781, 1 )
+material = SubResource( 7 )
+margin_right = 1925.0
+margin_bottom = 128.0
+texture = ExtResource( 12 )
+stretch_mode = 1
+
+[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/Options"]
+margin_right = 1925.0
+margin_bottom = 128.0
+rect_min_size = Vector2( 1920, 128 )
+
+[node name="HBoxContainer2" type="HBoxContainer" parent="VBoxContainer/Options/VBoxContainer"]
+material = SubResource( 9 )
+margin_right = 1925.0
+margin_bottom = 128.0
+alignment = 1
+
+[node name="HBoxContainer2" type="HBoxContainer" parent="VBoxContainer/Options/VBoxContainer/HBoxContainer2"]
+margin_left = 584.0
+margin_right = 835.0
+margin_bottom = 128.0
+
+[node name="Control" parent="VBoxContainer/Options/VBoxContainer/HBoxContainer2/HBoxContainer2" instance=ExtResource( 9 )]
+anchor_right = 0.0
+anchor_bottom = 0.0
+margin_right = 251.0
+margin_bottom = 128.0
+
+[node name="TextureRect" parent="VBoxContainer/Options/VBoxContainer/HBoxContainer2/HBoxContainer2/Control" index="0"]
+path = "res://CSS.tscn"
+fade = true
+
+[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer/Options/VBoxContainer/HBoxContainer2"]
+margin_left = 839.0
+margin_right = 1341.0
+margin_bottom = 128.0
+alignment = 2
+
+[node name="Control3" parent="VBoxContainer/Options/VBoxContainer/HBoxContainer2/HBoxContainer" instance=ExtResource( 10 )]
+anchor_right = 0.0
+anchor_bottom = 0.0
+margin_right = 502.0
+margin_bottom = 128.0
+
+[node name="Label" parent="VBoxContainer/Options/VBoxContainer/HBoxContainer2/HBoxContainer/Control3" index="0"]
+margin_bottom = 128.0
+custom_fonts/font = SubResource( 10 )
+text = "Stage
+Select"
+
+[node name="Stages" type="MarginContainer" parent="VBoxContainer"]
+margin_top = 132.0
+margin_right = 1925.0
+margin_bottom = 948.0
+rect_min_size = Vector2( 1920, 774 )
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="ColorRect" type="ColorRect" parent="VBoxContainer/Stages"]
+visible = false
+margin_right = 1925.0
+margin_bottom = 816.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+color = Color( 0.333333, 0.50625, 0.658824, 1 )
+
+[node name="Stages" type="HBoxContainer" parent="VBoxContainer/Stages"]
+margin_top = 21.0
+margin_right = 1920.0
+margin_bottom = 795.0
+rect_min_size = Vector2( 1920, 774 )
+size_flags_horizontal = 0
+size_flags_vertical = 4
+custom_constants/separation = -20
+alignment = 2
+
+[node name="Stage Preview" type="VBoxContainer" parent="VBoxContainer/Stages/Stages"]
+margin_left = 64.0
+margin_right = 1040.0
+margin_bottom = 774.0
+rect_min_size = Vector2( 960, 0 )
+alignment = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer/Stages/Stages/Stage Preview"]
+margin_top = 70.0
+margin_right = 976.0
+margin_bottom = 774.0
+size_flags_horizontal = 3
+alignment = 2
+
+[node name="Stage Preview" parent="VBoxContainer/Stages/Stages/Stage Preview/HBoxContainer" instance=ExtResource( 13 )]
+
+[node name="Stage Selection" type="VBoxContainer" parent="VBoxContainer/Stages/Stages"]
+margin_left = 1020.0
+margin_right = 1920.0
+margin_bottom = 774.0
+rect_min_size = Vector2( 900, 0 )
+size_flags_vertical = 3
+
+[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer/Stages/Stages/Stage Selection"]
+margin_right = 900.0
+margin_bottom = 704.0
+alignment = 1
+
+[node name="MarginContainer" parent="VBoxContainer/Stages/Stages/Stage Selection/HBoxContainer" instance=ExtResource( 5 )]
+margin_left = 72.0
+margin_right = 828.0
+
+[node name="HBoxContainer2" type="HBoxContainer" parent="VBoxContainer/Stages/Stages/Stage Selection"]
+margin_top = 708.0
+margin_right = 900.0
+margin_bottom = 772.0
+alignment = 2
+
+[node name="MarginContainer" parent="VBoxContainer/Stages/Stages/Stage Selection/HBoxContainer2" instance=ExtResource( 6 )]
+margin_left = 644.0
+margin_right = 900.0
+custom_constants/margin_left = -150
+
+[node name="Player Info" type="MarginContainer" parent="VBoxContainer"]
+margin_top = 952.0
+margin_right = 1925.0
+margin_bottom = 1080.0
+rect_min_size = Vector2( 1920, 128 )
+size_flags_horizontal = 3
+
+[node name="ColorRect" type="ColorRect" parent="VBoxContainer/Player Info"]
+visible = false
+margin_right = 1925.0
+margin_bottom = 128.0
+color = Color( 0, 0, 0, 1 )
+
+[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer/Player Info"]
+margin_right = 1925.0
+margin_bottom = 128.0
+size_flags_horizontal = 3
+custom_constants/separation = 30
+alignment = 1
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="Character HUD" parent="VBoxContainer/Player Info/HBoxContainer" instance=ExtResource( 19 )]
+material = SubResource( 11 )
+margin_left = 498.0
+margin_top = 16.0
+margin_right = 947.0
+margin_bottom = 111.0
+size_flags_vertical = 4
+
+[node name="Character HUD2" parent="VBoxContainer/Player Info/HBoxContainer" instance=ExtResource( 19 )]
+material = SubResource( 13 )
+margin_left = 977.0
+margin_top = 16.0
+margin_right = 1426.0
+margin_bottom = 111.0
+size_flags_vertical = 4
+id = 2
+
+[node name="Hand" parent="." instance=ExtResource( 15 )]
+position = Vector2( 869.743, 614.346 )
+script = SubResource( 14 )
+
+[node name="HandSprite" parent="Hand" index="0"]
+frames = SubResource( 15 )
+
+[node name="CollisionShape2D" parent="Hand/HandArea" index="0"]
+position = Vector2( 6.30673, -15.5566 )
+shape = SubResource( 16 )
+
+[node name="Label2" parent="Hand/HandArea" index="1"]
+modulate = Color( 0.541176, 0.541176, 0.541176, 1 )
+custom_fonts/font = SubResource( 17 )
+text = "all"
+
+[node name="Boundaries" parent="." instance=ExtResource( 7 )]
+
+[connection signal="stage_hovered" from="VBoxContainer/Stages/Stages/Stage Selection/HBoxContainer/MarginContainer/VBoxContainer/Middle/ItemList/VBoxContainer/HBoxContainer/TextureRect" to="VBoxContainer/Stages/Stages/Stage Preview/HBoxContainer/Stage Preview" method="_on_TextureRect_stage_hovered"]
+[connection signal="stage_selected" from="VBoxContainer/Stages/Stages/Stage Selection/HBoxContainer/MarginContainer/VBoxContainer/Middle/ItemList/VBoxContainer/HBoxContainer/TextureRect" to="VBoxContainer/Stages/Stages/Stage Preview/HBoxContainer/Stage Preview" method="_on_TextureRect_stage_selected"]
+
+[editable path="Shaders/Shifting Shader2"]
+[editable path="Shaders/Shifting Shader"]
+[editable path="VBoxContainer/Options/VBoxContainer/HBoxContainer2/HBoxContainer2/Control"]
+[editable path="VBoxContainer/Options/VBoxContainer/HBoxContainer2/HBoxContainer/Control3"]
+[editable path="VBoxContainer/Stages/Stages/Stage Selection/HBoxContainer/MarginContainer"]
+[editable path="Hand"]

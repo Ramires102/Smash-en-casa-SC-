@@ -1,15 +1,20 @@
-[gd_resource type="Resource" script_class="AttackData" load_steps=2 format=3 uid="uid://miyabi_jab"]
+[gd_resource type="Resource" script_class="AttackData" load_steps=3 format=3 uid="uid://miyabi_jab"]
 
 [ext_resource type="Script" path="res://resources/attack_data.gd" id="1_atk"]
+[ext_resource type="Resource" uid="uid://miyabi_jab2" path="res://characters/miyabi/attacks/miyabi_jab2.tres" id="2_jab2"]
 
 [resource]
 script = ExtResource("1_atk")
 attack_name = "Miyabi Slash"
-damage = 9.0
-base_knockback = 10.0
-knockback_scaling = 1.0
-angle_degrees = 45.0
-startup_frames = 4
-active_frames = 8
-recovery_frames = 10
+damage = 3.0
+base_knockback = 6.0
+knockback_scaling = 55.0
+angle_degrees = 75.0
+startup_frames = 3
+active_frames = 6
+recovery_frames = 12
 animation_name = "Attack"
+hitbox_offset = Vector3(0.8, 0.0, 0.0)
+hitbox_radius = 0.6
+combo_next = ExtResource("2_jab2")
+combo_window_frames = 14

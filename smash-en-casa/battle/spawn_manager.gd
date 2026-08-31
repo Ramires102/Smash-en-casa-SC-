@@ -14,7 +14,7 @@ func set_initial_transform(instance: Character, player_id: int) -> void:
 	if stage:
 		instance.global_position = stage.get_spawn_position(player_id)
 	else:
-		instance.global_position = Vector3(-4 if player_id == 1 else 4, 3, 0)
+		instance.global_position = Vector2(-140.0 if player_id == 1 else 140.0, -80.0)
 	
 	var initial_facing: float = 1.0 if player_id == 1 else -1.0
 	instance.set_facing_direction(initial_facing)
@@ -23,4 +23,4 @@ func respawn_player(character: Character) -> void:
 	if stage:
 		character.reset_player(stage.get_spawn_position(character.player_id))
 	else:
-		character.reset_player(Vector3(-4 if character.player_id == 1 else 4, 3, 0))
+		character.reset_player(Vector2(-140.0 if character.player_id == 1 else 140.0, -80.0))

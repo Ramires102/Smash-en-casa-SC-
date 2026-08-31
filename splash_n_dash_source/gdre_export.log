@@ -1,0 +1,83 @@
+GDRE Tools v2.6.4
+Windows 10.0.19044, headless
+Opening file: C:/Users/IK/Downloads/Splash N Dash.exe
+Multiple passing candidates for bytecode version 13:
+3.5.0-stable (a7aad78), 3.2.0-stable (5565f55)
+Choosing only one that matches engine version: 3.2.0-stable (5565f55).
+ERROR: res://ASSETS/Effects/Hit Effects/Slash 2/._Slash 207.png.import: no destination files found in import data
+   at: ImportInfoModern::_load (modules\gdsdecomp\utility\import_info.cpp:693)
+ERROR: res://ASSETS/Fox/sounds/._fox_ledge.ogg.import: no destination files found in import data
+   at: ImportInfoModern::_load (modules\gdsdecomp\utility\import_info.cpp:693)
+ERROR: res://ASSETS/Fox/sounds/._fox_ledge_sfx.ogg.import: no destination files found in import data
+   at: ImportInfoModern::_load (modules\gdsdecomp\utility\import_info.cpp:693)
+ERROR: res://ASSETS/Fox/sounds/._fox_normal.ogg.import: no destination files found in import data
+   at: ImportInfoModern::_load (modules\gdsdecomp\utility\import_info.cpp:693)
+ERROR: res://ASSETS/Fox/sounds/._fox_trummel_codec.ogg.import: no destination files found in import data
+   at: ImportInfoModern::_load (modules\gdsdecomp\utility\import_info.cpp:693)
+ERROR: res://ASSETS/Fox/sounds/._stick_click.ogg.import: no destination files found in import data
+   at: ImportInfoModern::_load (modules\gdsdecomp\utility\import_info.cpp:693)
+ERROR: res://ASSETS/Fox/sounds/._stick_flick.ogg.import: no destination files found in import data
+   at: ImportInfoModern::_load (modules\gdsdecomp\utility\import_info.cpp:693)
+ERROR: res://ASSETS/Fox/sounds/._stick_release.ogg.import: no destination files found in import data
+   at: ImportInfoModern::_load (modules\gdsdecomp\utility\import_info.cpp:693)
+ERROR: res://ASSETS/Fox/sounds/._stick_tap_l.ogg.import: no destination files found in import data
+   at: ImportInfoModern::_load (modules\gdsdecomp\utility\import_info.cpp:693)
+ERROR: res://ASSETS/Fox/sounds/._stick_tap_r.ogg.import: no destination files found in import data
+   at: ImportInfoModern::_load (modules\gdsdecomp\utility\import_info.cpp:693)
+ERROR: res://ASSETS/Fox/sprites/._bair_strip4.png.import: no destination files found in import data
+   at: ImportInfoModern::_load (modules\gdsdecomp\utility\import_info.cpp:693)
+ERROR: res://ASSETS/Smashville/._1.png.import: no destination files found in import data
+   at: ImportInfoModern::_load (modules\gdsdecomp\utility\import_info.cpp:693)
+ERROR: res://ASSETS/UI Features/._ico_time_60.png.import: no destination files found in import data
+   at: ImportInfoModern::_load (modules\gdsdecomp\utility\import_info.cpp:693)
+ERROR: res://ASSETS/UI Features/._label_bg.png.import: no destination files found in import data
+   at: ImportInfoModern::_load (modules\gdsdecomp\utility\import_info.cpp:693)
+ERROR: res://ASSETS/Wolf/sprites/._airdodge_strip6.png.import: no destination files found in import data
+   at: ImportInfoModern::_load (modules\gdsdecomp\utility\import_info.cpp:693)
+ERROR: res://ASSETS/Wolf/sprites/._idle_strip10.png.import: no destination files found in import data
+   at: ImportInfoModern::_load (modules\gdsdecomp\utility\import_info.cpp:693)
+ERROR: res://ASSETS/Wolf/sprites/._intro_strip10.png.import: no destination files found in import data
+   at: ImportInfoModern::_load (modules\gdsdecomp\utility\import_info.cpp:693)
+ERROR: res://ASSETS/Wolf/sprites/._jab_strip6.png.import: no destination files found in import data
+   at: ImportInfoModern::_load (modules\gdsdecomp\utility\import_info.cpp:693)
+ERROR: res://ASSETS/Wolf/sprites/._nspecial_strip2.png.import: no destination files found in import data
+   at: ImportInfoModern::_load (modules\gdsdecomp\utility\import_info.cpp:693)
+ERROR: res://ASSETS/Wolf/sprites/._uair_strip4.png.import: no destination files found in import data
+   at: ImportInfoModern::_load (modules\gdsdecomp\utility\import_info.cpp:693)
+ERROR: res://ASSETS/Wolf/sprites/._ustrong_strip6.png.import: no destination files found in import data
+   at: ImportInfoModern::_load (modules\gdsdecomp\utility\import_info.cpp:693)
+ERROR: res://ASSETS/Wolf/sprites/._utilt_strip3.png.import: no destination files found in import data
+   at: ImportInfoModern::_load (modules\gdsdecomp\utility\import_info.cpp:693)
+Loaded 1106 imported files
+Detected Engine Version: 3.4.4
+Detected Bytecode Revision: 3.2.0-stable (5565f55)
+Successfully loaded PCK!
+Version: 3.4.4
+Verified 2362 files, no errors detected!
+Extracted 2362 files, no errors detected!
+Saved project config.
+
+
+********************************EXPORT REPORT********************************
+
+Totals:                                 
+Decompiled scripts:                     81
+Scripts not decompiled:                 0
+Imported resources for export session:  1106
+Successfully converted:                 1106
+Lossy:                                  1
+Rewrote metadata:                       0
+Non-importable conversions:             0
+Not converted:                          0
+Failed conversions:                     0
+-------------
+
+
+
+------------------------------------------------------------------------------------
+
+Use Godot editor version 3.4.4 to edit the project.
+
+*******************************************************************************
+
+Recovery finished in 03m38s

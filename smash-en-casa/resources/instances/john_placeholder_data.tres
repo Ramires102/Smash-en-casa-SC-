@@ -1,7 +1,7 @@
 [gd_resource type="Resource" script_class="CharacterData" load_steps=3 format=3 uid="uid://c_john_placeholder_data"]
 
 [ext_resource type="Script" path="res://resources/character_data.gd" id="1_chardata"]
-[ext_resource type="Resource" uid="uid://moveset_default" path="res://resources/instances/default_moveset.tres" id="2_mset"]
+[ext_resource type="Resource" uid="uid://john_moveset" path="res://resources/instances/john_moveset.tres" id="2_mset"]
 
 [resource]
 script = ExtResource("1_chardata")

@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="AttackData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/attack_data.gd" id="1_atk"]
+
+[resource]
+script = ExtResource("1_atk")
+attack_name = "5AAAA (Knife Slash Finisher)"
+damage = 8.0
+base_knockback = 30.0
+knockback_scaling = 90.0
+angle_degrees = 38.0
+startup_frames = 17
+active_frames = 3
+recovery_frames = 25
+animation_name = "AttackSideTilt"
+hitbox_offset = Vector3(1.05, 0.15, 0.0)
+hitbox_radius = 0.68
+combo_next = null
+combo_window_frames = 0
+self_impulse = Vector3(3.0, 0.0, 0.0)
+self_impulse_frame = 17
+disable_gravity_during_active = false
+sub_hitboxes = []
+spawns_projectile = false
+is_time_stop = false

@@ -1,0 +1,466 @@
+[gd_scene load_steps=17 format=2]
+
+[ext_resource path="res://ASSETS/Fonts/tf2build.ttf" type="DynamicFontData" id=1]
+[ext_resource path="res://ASSETS/UI Features/Countdown Timer.gd" type="Script" id=2]
+[ext_resource path="res://ASSETS/UI Features/PauseMatchEnd.gd" type="Script" id=3]
+
+[sub_resource type="Animation" id=1]
+resource_name = "1"
+tracks/0/type = "value"
+tracks/0/path = NodePath("Countdown Timer/1:visible")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 1 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 1,
+"values": [ true, false ]
+}
+tracks/1/type = "value"
+tracks/1/path = NodePath("Countdown Timer/1:rect_scale")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray( 0, 1 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 0,
+"values": [ Vector2( 1, 1 ), Vector2( 2, 2 ) ]
+}
+tracks/2/type = "value"
+tracks/2/path = NodePath("Countdown Timer/1:modulate")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/keys = {
+"times": PoolRealArray( 0, 1 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 0,
+"values": [ Color( 1, 1, 1, 1 ), Color( 1, 1, 1, 0 ) ]
+}
+
+[sub_resource type="Animation" id=2]
+resource_name = "2"
+tracks/0/type = "value"
+tracks/0/path = NodePath("Countdown Timer/2:visible")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 1 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 1,
+"values": [ true, false ]
+}
+tracks/1/type = "value"
+tracks/1/path = NodePath("Countdown Timer/2:rect_scale")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray( 0, 1 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 0,
+"values": [ Vector2( 1, 1 ), Vector2( 2, 2 ) ]
+}
+tracks/2/type = "value"
+tracks/2/path = NodePath("Countdown Timer/2:modulate")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/keys = {
+"times": PoolRealArray( 0, 1 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 0,
+"values": [ Color( 1, 1, 1, 1 ), Color( 1, 1, 1, 0 ) ]
+}
+
+[sub_resource type="Animation" id=3]
+tracks/0/type = "value"
+tracks/0/path = NodePath("Countdown Timer/3:visible")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 1 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 1,
+"values": [ true, false ]
+}
+tracks/1/type = "value"
+tracks/1/path = NodePath("Countdown Timer/3:rect_scale")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray( 0, 1 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 0,
+"values": [ Vector2( 1, 1 ), Vector2( 2, 2 ) ]
+}
+tracks/2/type = "value"
+tracks/2/path = NodePath("Countdown Timer/3:modulate")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/keys = {
+"times": PoolRealArray( 0, 1 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 0,
+"values": [ Color( 1, 1, 1, 1 ), Color( 1, 1, 1, 0 ) ]
+}
+
+[sub_resource type="Animation" id=4]
+resource_name = "4"
+tracks/0/type = "value"
+tracks/0/path = NodePath("Countdown Timer/4:visible")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 1 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 1,
+"values": [ true, false ]
+}
+tracks/1/type = "value"
+tracks/1/path = NodePath("Countdown Timer/4:modulate")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray( 0, 1 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 0,
+"values": [ Color( 1, 1, 1, 1 ), Color( 1, 1, 1, 0 ) ]
+}
+tracks/2/type = "value"
+tracks/2/path = NodePath("Countdown Timer/4:rect_scale")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/keys = {
+"times": PoolRealArray( 0, 1 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 0,
+"values": [ Vector2( 1, 1 ), Vector2( 2, 2 ) ]
+}
+
+[sub_resource type="Animation" id=5]
+resource_name = "5"
+tracks/0/type = "value"
+tracks/0/path = NodePath("Countdown Timer/5:visible")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 1 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 1,
+"values": [ true, false ]
+}
+tracks/1/type = "value"
+tracks/1/path = NodePath("Countdown Timer/5:modulate")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray( 0, 1 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 0,
+"values": [ Color( 1, 1, 1, 1 ), Color( 1, 1, 1, 0 ) ]
+}
+tracks/2/type = "value"
+tracks/2/path = NodePath("Countdown Timer/5:rect_scale")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/keys = {
+"times": PoolRealArray( 0, 1 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 0,
+"values": [ Vector2( 1, 1 ), Vector2( 2, 2 ) ]
+}
+
+[sub_resource type="Animation" id=6]
+resource_name = "Game"
+length = 2.5
+tracks/0/type = "value"
+tracks/0/path = NodePath("Countdown Timer/GAME!:rect_scale")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 1 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 0,
+"values": [ Vector2( 0.755, 0.755 ), Vector2( 1, 2 ) ]
+}
+tracks/1/type = "value"
+tracks/1/path = NodePath("Countdown Timer/GAME!:self_modulate")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray( 0, 1 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 0,
+"values": [ Color( 1, 1, 1, 1 ), Color( 1, 1, 1, 0 ) ]
+}
+tracks/2/type = "value"
+tracks/2/path = NodePath("Countdown Timer/GAME!:visible")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/keys = {
+"times": PoolRealArray( 0, 1 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 1,
+"values": [ true, false ]
+}
+tracks/3/type = "method"
+tracks/3/path = NodePath("Countdown Timer/Node")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"values": [ {
+"args": [  ],
+"method": "pause"
+} ]
+}
+
+[sub_resource type="Animation" id=7]
+
+[sub_resource type="DynamicFont" id=8]
+size = 310
+outline_size = 18
+outline_color = Color( 0, 0, 0, 1 )
+use_filter = true
+extra_spacing_top = -15
+extra_spacing_bottom = -24
+extra_spacing_char = 12
+font_data = ExtResource( 1 )
+
+[sub_resource type="DynamicFont" id=9]
+size = 310
+outline_size = 18
+outline_color = Color( 0, 0, 0, 1 )
+use_filter = true
+extra_spacing_top = -15
+extra_spacing_bottom = -24
+extra_spacing_char = 12
+font_data = ExtResource( 1 )
+
+[sub_resource type="DynamicFont" id=10]
+size = 310
+outline_size = 18
+outline_color = Color( 0, 0, 0, 1 )
+use_filter = true
+extra_spacing_top = -15
+extra_spacing_bottom = -24
+extra_spacing_char = 12
+font_data = ExtResource( 1 )
+
+[sub_resource type="DynamicFont" id=11]
+size = 310
+outline_size = 18
+outline_color = Color( 0, 0, 0, 1 )
+use_filter = true
+extra_spacing_top = -15
+extra_spacing_bottom = -24
+extra_spacing_char = 12
+font_data = ExtResource( 1 )
+
+[sub_resource type="DynamicFont" id=12]
+size = 310
+outline_size = 18
+outline_color = Color( 0, 0, 0, 1 )
+use_filter = true
+extra_spacing_top = -15
+extra_spacing_bottom = -24
+extra_spacing_char = 12
+font_data = ExtResource( 1 )
+
+[sub_resource type="DynamicFont" id=13]
+size = 310
+outline_size = 18
+outline_color = Color( 0, 0, 0, 1 )
+use_filter = true
+extra_spacing_top = -15
+extra_spacing_bottom = -24
+extra_spacing_char = 12
+font_data = ExtResource( 1 )
+
+[node name="MatchEnd" type="CanvasLayer"]
+
+[node name="Countdown Timer" type="AnimationPlayer" parent="."]
+pause_mode = 2
+anims/1 = SubResource( 1 )
+anims/2 = SubResource( 2 )
+anims/3 = SubResource( 3 )
+anims/4 = SubResource( 4 )
+anims/5 = SubResource( 5 )
+anims/Game = SubResource( 6 )
+anims/Nothing = SubResource( 7 )
+anims/Time = SubResource( 6 )
+script = ExtResource( 2 )
+
+[node name="GAME!" type="Label" parent="Countdown Timer"]
+visible = false
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+margin_left = -453.661
+margin_top = -117.359
+margin_right = 528.339
+margin_bottom = 154.641
+rect_scale = Vector2( 0.755, 0.755 )
+rect_pivot_offset = Vector2( 456.597, 122.798 )
+custom_fonts/font = SubResource( 8 )
+text = "GAME!"
+align = 1
+valign = 1
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="5" type="Label" parent="Countdown Timer"]
+visible = false
+anchor_right = 1.0
+anchor_bottom = 1.00234
+margin_left = 883.49
+margin_top = 404.0
+margin_right = -836.51
+margin_bottom = -403.995
+grow_horizontal = 2
+grow_vertical = 2
+rect_pivot_offset = Vector2( 84.2405, 129.389 )
+custom_fonts/font = SubResource( 9 )
+text = "5"
+align = 1
+valign = 1
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="4" type="Label" parent="Countdown Timer"]
+visible = false
+anchor_right = 1.0
+anchor_bottom = 1.00234
+margin_left = 883.49
+margin_top = 404.0
+margin_right = -836.51
+margin_bottom = -403.995
+grow_horizontal = 2
+grow_vertical = 2
+rect_pivot_offset = Vector2( 84.2405, 129.389 )
+custom_fonts/font = SubResource( 10 )
+text = "4"
+align = 1
+valign = 1
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="3" type="Label" parent="Countdown Timer"]
+visible = false
+anchor_right = 1.0
+anchor_bottom = 1.00234
+margin_left = 883.49
+margin_top = 401.468
+margin_right = -856.51
+margin_bottom = -406.527
+grow_horizontal = 2
+grow_vertical = 2
+rect_pivot_offset = Vector2( 84.2405, 129.389 )
+custom_fonts/font = SubResource( 11 )
+text = "3"
+align = 1
+valign = 1
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="2" type="Label" parent="Countdown Timer"]
+visible = false
+anchor_top = 0.00234477
+anchor_right = 1.0
+anchor_bottom = 1.00234
+margin_left = 883.49
+margin_top = 401.468
+margin_right = -856.51
+margin_bottom = -406.527
+rect_pivot_offset = Vector2( 87.6511, 143.606 )
+custom_fonts/font = SubResource( 12 )
+text = "2"
+align = 1
+valign = 1
+__meta__ = {
+"_edit_use_anchors_": false,
+"_editor_description_": ""
+}
+
+[node name="1" type="Label" parent="Countdown Timer"]
+visible = false
+anchor_top = 0.00234477
+anchor_right = 1.0
+anchor_bottom = 1.00234
+margin_left = 883.49
+margin_top = 401.468
+margin_right = -915.51
+margin_bottom = -406.527
+rect_pivot_offset = Vector2( 59.11, 134.092 )
+custom_fonts/font = SubResource( 13 )
+text = "1"
+align = 1
+valign = 1
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="TIME!" type="Label" parent="Countdown Timer"]
+visible = false
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+margin_left = -384.0
+margin_top = -136.0
+margin_right = 467.0
+margin_bottom = 136.0
+rect_scale = Vector2( 0.755, 0.755 )
+rect_pivot_offset = Vector2( 396.618, 135.448 )
+custom_fonts/font = SubResource( 8 )
+text = "TIME!"
+align = 1
+valign = 1
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="Node" type="Node" parent="Countdown Timer"]
+script = ExtResource( 3 )

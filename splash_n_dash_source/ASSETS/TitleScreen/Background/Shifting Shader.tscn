@@ -1,0 +1,114 @@
+[gd_scene load_steps=8 format=2]
+
+[ext_resource path="res://ASSETS/TitleScreen/BG1.png" type="Texture" id=1]
+
+[sub_resource type="Shader" id=1]
+code = "shader_type canvas_item;
+
+uniform float screen_height = 270.0;
+
+void fragment() {
+	float diff_x = 0.1 * sin((10.0 * UV.y)+(2.0 * TIME));
+	COLOR = texture(TEXTURE, vec2(UV.x + diff_x, UV.y));
+	COLOR = mix(COLOR, vec4(0.0), float(int(UV.y * screen_height) % 2));
+}"
+
+[sub_resource type="ShaderMaterial" id=2]
+shader = SubResource( 1 )
+shader_param/screen_height = 270.0
+
+[sub_resource type="Shader" id=3]
+code = "shader_type canvas_item;
+
+uniform float screen_height = 280.0;
+
+void fragment() {
+	float diff_x = -0.1 * sin((10.0 * UV.y)+(2.0 * TIME));
+	COLOR = texture(TEXTURE, vec2(UV.x + diff_x, UV.y));
+	COLOR = mix(vec4(0.0),COLOR, float(int(UV.y * screen_height) % 2));
+}"
+
+[sub_resource type="ShaderMaterial" id=4]
+shader = SubResource( 3 )
+shader_param/screen_height = 270.0
+
+[sub_resource type="StreamTexture" id=5]
+load_path = "res://.import/BG1.png-d43606ed05b38da8d89e1fcf448694f0.stex"
+
+[sub_resource type="Animation" id=6]
+resource_name = "Hue Shifting"
+length = 5.0
+step = 0.5
+tracks/0/type = "value"
+tracks/0/path = NodePath("ColorRect:color")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 1, 2, 3, 4, 5 ),
+"transitions": PoolRealArray( 1, 1, 1, 1, 1, 1 ),
+"update": 0,
+"values": [ Color( 0.721569, 0.294118, 0.266667, 1 ), Color( 0.67451, 0.2, 1, 1 ), Color( 0.2, 0.717647, 1, 1 ), Color( 0.2, 1, 0.454902, 1 ), Color( 1, 0.94902, 0.2, 1 ), Color( 0.721569, 0.294118, 0.266667, 1 ) ]
+}
+tracks/1/type = "value"
+tracks/1/path = NodePath("WobbleOne:modulate")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray( 0, 1, 2, 3, 4, 5 ),
+"transitions": PoolRealArray( 1, 8.28211, 8.28211, 8.28211, 8.28211, 1 ),
+"update": 0,
+"values": [ Color( 1, 1, 1, 1 ), Color( 0.67451, 0.2, 1, 1 ), Color( 0.2, 0.717647, 1, 1 ), Color( 0.2, 1, 0.454902, 1 ), Color( 1, 0.94902, 0.2, 1 ), Color( 1, 1, 1, 1 ) ]
+}
+tracks/2/type = "value"
+tracks/2/path = NodePath("WobbleTwo:modulate")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/keys = {
+"times": PoolRealArray( 0, 1, 2, 3, 4, 5 ),
+"transitions": PoolRealArray( 1, 8.28211, 8.28211, 8.28211, 8.28211, 1 ),
+"update": 0,
+"values": [ Color( 1, 1, 1, 1 ), Color( 0.67451, 0.2, 1, 1 ), Color( 0.2, 0.717647, 1, 1 ), Color( 0.2, 1, 0.454902, 1 ), Color( 1, 0.94902, 0.2, 1 ), Color( 1, 1, 1, 1 ) ]
+}
+
+[node name="Shifting Shader" type="Control"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="ColorRect" type="ColorRect" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color( 0.721569, 0.294118, 0.266667, 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="WobbleOne" type="TextureRect" parent="."]
+material = SubResource( 2 )
+margin_right = 1920.0
+margin_bottom = 1080.0
+texture = ExtResource( 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="WobbleTwo" type="TextureRect" parent="."]
+material = SubResource( 4 )
+margin_right = 1920.0
+margin_bottom = 1080.0
+texture = SubResource( 5 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+playback_process_mode = 0
+"anims/Hue Shifting" = SubResource( 6 )

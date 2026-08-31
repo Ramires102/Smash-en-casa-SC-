@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="AttackData" load_steps=2 format=3 uid="uid://john_uair"]
+
+[ext_resource type="Script" path="res://resources/attack_data.gd" id="1_atk"]
+
+[resource]
+script = ExtResource("1_atk")
+attack_name = "Heaven's Thrust"
+damage = 9.0
+base_knockback = 18.0
+knockback_scaling = 80.0
+angle_degrees = 82.0
+startup_frames = 4
+active_frames = 6
+recovery_frames = 10
+animation_name = "UpAir"
+is_aerial = true
+hitbox_offset = Vector3(0.2, 0.95, 0.0)
+hitbox_radius = 0.85
+combo_next = null
+combo_window_frames = 0
+self_impulse = Vector3(0.0, 0.0, 0.0)
+self_impulse_frame = 0
+disable_gravity_during_active = false

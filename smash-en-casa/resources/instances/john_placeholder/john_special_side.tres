@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="AttackData" load_steps=2 format=3 uid="uid://john_special_side"]
+
+[ext_resource type="Script" path="res://resources/attack_data.gd" id="1_atk"]
+
+[resource]
+script = ExtResource("1_atk")
+attack_name = "Menacing Lunge Dash"
+damage = 11.0
+base_knockback = 30.0
+knockback_scaling = 105.0
+angle_degrees = 45.0
+startup_frames = 6
+active_frames = 10
+recovery_frames = 14
+animation_name = "SpecialSide"
+hitbox_offset = Vector3(1.2, 0.0, 0.0)
+hitbox_radius = 0.85
+combo_next = null
+combo_window_frames = 0
+self_impulse = Vector3(12.0, 1.5, 0.0)
+self_impulse_frame = 6
+disable_gravity_during_active = true

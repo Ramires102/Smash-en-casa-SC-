@@ -1,0 +1,15 @@
+[remap]
+
+importer="ogg_vorbis"
+type="AudioStreamOGGVorbis"
+path="res://.import/fox_illusion2.ogg-1e61f44b35ba8c90009e1a254c370d4f.oggstr"
+
+[deps]
+
+source_file="res://ASSETS/Wolf/sounds/fox_illusion2.ogg"
+dest_files=[ "res://.import/fox_illusion2.ogg-1e61f44b35ba8c90009e1a254c370d4f.oggstr" ]
+
+[params]
+
+loop=true
+loop_offset=0

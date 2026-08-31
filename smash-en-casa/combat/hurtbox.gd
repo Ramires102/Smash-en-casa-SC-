@@ -1,5 +1,5 @@
 class_name Hurtbox
-extends Area3D
+extends Area2D
 
 enum HurtboxState {
 	NORMAL,        ## Recibe daño y knockback normal
@@ -9,10 +9,8 @@ enum HurtboxState {
 }
 
 signal impact_received(impact: ImpactData)
-@warning_ignore("unused_signal")
-signal hit_received(impact: ImpactData)
 
-@export var owner_character: Node3D
+@export var owner_character: Node2D
 @export var current_state: HurtboxState = HurtboxState.NORMAL
 @export var debug_draw_hurtbox: bool = true
 
@@ -31,17 +29,23 @@ func _setup_debug_visualizer() -> void:
 		_debug_mesh_instance = MeshInstance3D.new()
 		_debug_mesh_instance.name = "DebugHurtboxMesh"
 		var capsule := CapsuleMesh.new()
-		capsule.radius = 0.55
-		capsule.height = 1.85
+		capsule.radius = 0.52
+		capsule.height = 1.80
 		_debug_mesh_instance.mesh = capsule
 		
 		var mat := StandardMaterial3D.new()
 		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-		mat.albedo_color = Color(0.2, 0.9, 0.2, 0.25) # Verde semi-transparente
+		mat.albedo_color = Color(0.18, 0.95, 0.42, 0.20) # Verde esmeralda suave translúcido
 		mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+		mat.render_priority = 8
 		_debug_mesh_instance.material_override = mat
-		add_child(_debug_mesh_instance)
+		
+		# Attachear al Humanoid del personaje para que se renderice en el mundo 3D
+		if owner_character and owner_character.has_node("Humanoid"):
+			owner_character.get_node("Humanoid").add_child(_debug_mesh_instance)
+		else:
+			add_child(_debug_mesh_instance)
 
 ## Cambia el estado de vulnerabilidad de la Hurtbox
 func set_state(new_state: HurtboxState) -> void:
@@ -53,13 +57,13 @@ func _update_debug_color() -> void:
 		var mat: StandardMaterial3D = _debug_mesh_instance.material_override as StandardMaterial3D
 		match current_state:
 			HurtboxState.NORMAL:
-				mat.albedo_color = Color(0.2, 0.9, 0.2, 0.25) # Verde
+				mat.albedo_color = Color(0.18, 0.95, 0.42, 0.20) # Verde Esmeralda
 			HurtboxState.INTANGIBLE:
-				mat.albedo_color = Color(0.2, 0.7, 1.0, 0.35) # Azul / Cyan
+				mat.albedo_color = Color(0.15, 0.80, 1.0, 0.28) # Azul Cyan
 			HurtboxState.INVULNERABLE:
-				mat.albedo_color = Color(1.0, 0.85, 0.1, 0.4) # Dorado
+				mat.albedo_color = Color(1.0, 0.85, 0.18, 0.32) # Dorado Solar
 			HurtboxState.SUPER_ARMOR:
-				mat.albedo_color = Color(0.9, 0.5, 0.1, 0.4) # Naranja
+				mat.albedo_color = Color(1.0, 0.55, 0.1, 0.30) # Naranja
 
 ## Recibe un impacto canónico. Ignora duplicados o si la Hurtbox es intangible/invulnerable.
 func receive_impact(impact: ImpactData) -> void:
@@ -73,13 +77,13 @@ func receive_impact(impact: ImpactData) -> void:
 	
 	if current_state == HurtboxState.SUPER_ARMOR:
 		# En Super Armor recibe daño pero knockback se anula a 0
-		impact.knockback_vector = Vector3.ZERO
+		impact.knockback_vector = Vector2.ZERO
 		impact.hitstun_frames = 0
 	
 	if owner_character and owner_character.has_method("on_impact_received"):
 		owner_character.on_impact_received(impact)
 	impact_received.emit(impact)
-	hit_received.emit(impact)
+
 
 ## Limpia el historial de swings recibidos (llamar al respawnear o cambiar de estado).
 func clear_received_swings() -> void:

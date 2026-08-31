@@ -1,0 +1,141 @@
+[gd_scene load_steps=7 format=2]
+
+[ext_resource path="res://ASSETS/Fox/hud.png" type="Texture" id=1]
+[ext_resource path="res://ASSETS/Fonts/tf2build.ttf" type="DynamicFontData" id=2]
+[ext_resource path="res://ASSETS/Fox/hurt.png" type="Texture" id=3]
+[ext_resource path="res://ASSETS/CSS/CharacterSelect.gd" type="Script" id=4]
+
+[sub_resource type="DynamicFont" id=1]
+size = 32
+outline_size = 3
+outline_color = Color( 0, 0, 0, 1 )
+use_filter = true
+font_data = ExtResource( 2 )
+
+[sub_resource type="RectangleShape2D" id=2]
+extents = Vector2( 112.158, 63.993 )
+
+[node name="Character" type="TextureButton" groups=[
+"Char_Select",
+]]
+use_parent_material = true
+margin_right = 224.0
+margin_bottom = 128.0
+grow_horizontal = 0
+grow_vertical = 0
+rect_min_size = Vector2( 224, 128 )
+rect_pivot_offset = Vector2( 112, 64 )
+rect_clip_content = true
+focus_mode = 0
+size_flags_horizontal = 4
+size_flags_vertical = 4
+action_mode = 0
+enabled_focus_mode = 0
+texture_normal = ExtResource( 1 )
+expand = true
+stretch_mode = 5
+script = ExtResource( 4 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+character = "FOX"
+normal_texture = ExtResource( 1 )
+pressed_texture = ExtResource( 3 )
+
+[node name="Control" type="Control" parent="."]
+show_behind_parent = true
+margin_right = 40.0
+margin_bottom = 40.0
+rect_min_size = Vector2( 224, 128 )
+rect_pivot_offset = Vector2( 112, 65 )
+rect_clip_content = true
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="ColorRect" type="ColorRect" parent="Control"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color( 0.12549, 0.0901961, 0.219608, 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="ColorRect2" type="ColorRect" parent="Control"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+margin_top = 25.0
+margin_bottom = -96.0
+color = Color( 0.172549, 0.137255, 0.309804, 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="ColorRect4" type="ColorRect" parent="Control"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+margin_top = 108.0
+margin_bottom = -13.0
+color = Color( 0.172549, 0.137255, 0.309804, 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="ColorRect3" type="ColorRect" parent="Control"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+margin_top = 38.0
+margin_bottom = -26.0
+color = Color( 0.172549, 0.137255, 0.309804, 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="HBoxContainer" type="HBoxContainer" parent="."]
+margin_right = 224.0
+margin_bottom = 128.0
+rect_min_size = Vector2( 224, 128 )
+alignment = 2
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="VBoxContainer" type="VBoxContainer" parent="HBoxContainer"]
+margin_right = 224.0
+margin_bottom = 128.0
+rect_min_size = Vector2( 224, 128 )
+alignment = 2
+
+[node name="Label" type="Label" parent="HBoxContainer/VBoxContainer"]
+margin_top = 96.0
+margin_right = 224.0
+margin_bottom = 128.0
+size_flags_horizontal = 3
+size_flags_vertical = 1
+custom_fonts/font = SubResource( 1 )
+text = "Fox"
+align = 1
+valign = 1
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="point" type="Position2D" parent="."]
+position = Vector2( 112, 64 )
+
+[node name="CharacterArea" type="Area2D" parent="."]
+position = Vector2( 112, 64 )
+space_override = 2
+gravity_point = true
+gravity_vec = Vector2( 0, 0 )
+gravity = 1024.0
+collision_layer = 131072
+collision_mask = 262144
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="CharacterArea"]
+shape = SubResource( 2 )
+
+[connection signal="button_down" from="." to="." method="_on_Character_button_down"]
+[connection signal="button_up" from="." to="." method="_on_Character_button_up"]
+[connection signal="area_entered" from="CharacterArea" to="." method="_on_Area2D_area_entered"]
+[connection signal="area_exited" from="CharacterArea" to="." method="_on_Area2D_area_exited"]

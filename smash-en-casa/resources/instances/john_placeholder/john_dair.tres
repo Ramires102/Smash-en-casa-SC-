@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="AttackData" load_steps=2 format=3 uid="uid://john_dair"]
+
+[ext_resource type="Script" path="res://resources/attack_data.gd" id="1_atk"]
+
+[resource]
+script = ExtResource("1_atk")
+attack_name = "ROAD ROLLER Stomp"
+damage = 13.0
+base_knockback = 42.0
+knockback_scaling = 135.0
+angle_degrees = 270.0
+startup_frames = 10
+active_frames = 6
+recovery_frames = 18
+animation_name = "DownAir"
+is_aerial = true
+hitbox_offset = Vector3(0.0, -0.95, 0.0)
+hitbox_radius = 0.8
+combo_next = null
+combo_window_frames = 0
+self_impulse = Vector3(0.0, -6.0, 0.0)
+self_impulse_frame = 10
+disable_gravity_during_active = true

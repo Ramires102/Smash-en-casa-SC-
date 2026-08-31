@@ -28,6 +28,12 @@ func physics_update(delta: float) -> void:
 		return
 
 	var input_vec: Vector2 = character.get_input_vector()
+
+	if input_vec.y < -0.5:
+		dbg("to_squat", {"reason": "down_input_from_run", "input_y": snapped(input_vec.y, 0.001)})
+		state_machine.transition_to("Squat")
+		return
+
 	if abs(input_vec.x) < 0.1:
 		dbg("to_run_brake", {"reason": "no_horizontal_input"})
 		state_machine.transition_to("RunBrake")

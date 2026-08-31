@@ -1,0 +1,15 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+path="res://.import/CSS Music.mp3-43822357aa6022676b495d9f326c72e4.mp3str"
+
+[deps]
+
+source_file="res://ASSETS/TitleScreen/Music/CSS Music.mp3"
+dest_files=[ "res://.import/CSS Music.mp3-43822357aa6022676b495d9f326c72e4.mp3str" ]
+
+[params]
+
+loop=true
+loop_offset=0

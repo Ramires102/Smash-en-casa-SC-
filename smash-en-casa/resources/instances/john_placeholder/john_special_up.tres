@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="AttackData" load_steps=2 format=3 uid="uid://john_special_up"]
+
+[ext_resource type="Script" path="res://resources/attack_data.gd" id="1_atk"]
+
+[resource]
+script = ExtResource("1_atk")
+attack_name = "Star Ascension (Rising Barrage)"
+damage = 12.0
+base_knockback = 35.0
+knockback_scaling = 110.0
+angle_degrees = 80.0
+startup_frames = 4
+active_frames = 14
+recovery_frames = 18
+animation_name = "SpecialUp"
+hitbox_offset = Vector3(0.4, 0.95, 0.0)
+hitbox_radius = 0.85
+combo_next = null
+combo_window_frames = 0
+self_impulse = Vector3(3.2, 19.5, 0.0)
+self_impulse_frame = 4
+disable_gravity_during_active = false

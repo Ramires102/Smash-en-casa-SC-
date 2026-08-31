@@ -1,6 +1,9 @@
 class_name FallState
 extends State
 
+## Estado de Caída Libre 2D.
+## Soporta: Fast Fall, Double Jump, Coyote Jump, Air Dodge, Ataques Aéreos.
+
 func enter(_msg: Dictionary = {}) -> void:
 	dbg("enter", {
 		"vx": snapped(character.velocity.x if character else 0.0, 0.001),
@@ -18,20 +21,19 @@ func exit() -> void:
 func physics_update(delta: float) -> void:
 	var input_vec: Vector2 = character.get_input_vector() if character else Vector2.ZERO
 	
-	# Control de Air Drift auténtico (aceleración y fricción aérea)
+	# Control de Air Drift auténtico (aceleración y fricción aérea 2D)
 	if character and character.controller:
-		if abs(input_vec.x) > 0.1:
-			var target_vx: float = input_vec.x * character.controller.get_air_speed()
-			character.controller.accelerate_air_velocity(target_vx, delta)
+		character.controller.apply_snd_air_movement(input_vec.x, delta)
+		if absf(input_vec.x) > 0.1:
 			character.update_facing_direction(input_vec.x)
-		else:
-			character.controller.apply_air_friction(delta)
 			
-		# Detección de Fast Fall auténtico (toque firme hacia abajo durante caída)
-		if input_vec.y < -0.6 and not character.is_fast_falling:
+		# Detección de Fast Fall auténtico 2D (solo down just-pressed y en descenso)
+		if character.is_down_just_pressed() and character.velocity.y > 0.0 and not character.is_fast_falling:
 			character.is_fast_falling = true
-			character.velocity.y = -character.controller.get_fast_fall_speed()
+			character.velocity.y = character.controller.get_fast_fall_speed()
 			dbg("fast_fall_activated", {"vy": snapped(character.velocity.y, 0.001)})
+		elif character.is_fast_falling:
+			character.velocity.y = character.controller.get_fast_fall_speed()
 
 	dbg_tick(delta, {
 		"vx": snapped(character.velocity.x if character else 0.0, 0.001),
@@ -40,17 +42,40 @@ func physics_update(delta: float) -> void:
 		"input_x": snapped(input_vec.x, 0.001)
 	})
 
-	# Aterrizaje suave en el suelo
+	# Aterrizaje en el suelo
 	if character and character.is_on_floor():
 		character.is_fast_falling = false
-		if abs(input_vec.x) > 0.1:
-			dbg("to_run", {"reason": "landed_with_input", "input_x": snapped(input_vec.x, 0.001)})
-			state_machine.transition_to("Run")
-		else:
-			dbg("to_idle", {"reason": "landed_no_input"})
-			state_machine.transition_to("Idle")
+		dbg("to_idle", {
+			"reason": "landed_with_lag",
+			"lag_frames": Constants.NORMAL_LANDING_LAG_FRAMES,
+			"input_x": snapped(input_vec.x, 0.001)
+		})
+		state_machine.transition_to("Idle", {"landing_lag": Constants.NORMAL_LANDING_LAG_FRAMES})
 		return
 
+	# Coyote Jump
+	if character and character.has_coyote_jump() and character.is_jump_just_pressed():
+		character.consume_coyote_jump()
+		character.is_fast_falling = false
+		dbg("to_coyote_jump", {"coyote_time": true})
+		state_machine.transition_to("Jump", {"multiplier": 1.0, "is_coyote_jump": true})
+		return
+
+	# Doble Salto en el Aire
+	if character and character.air_jumps_left > 0 and character.is_jump_just_pressed():
+		character.air_jumps_left -= 1
+		character.is_fast_falling = false
+		dbg("to_double_jump", {"jumps_left": character.air_jumps_left})
+		state_machine.transition_to("Jump", {"multiplier": 0.95, "is_double_jump": true})
+		return
+
+	# Esquive Aéreo (Air Dodge)
+	if character and character.is_shield_pressed() and character.can_air_dodge:
+		dbg("to_airdodge")
+		state_machine.transition_to("AirDodge")
+		return
+
+	# Ataque Aéreo
 	if character and character.is_attack_just_pressed():
 		dbg("to_attack", {"reason": "attack_pressed_air"})
 		state_machine.transition_to("Attack")

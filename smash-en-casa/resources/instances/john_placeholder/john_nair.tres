@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="AttackData" load_steps=2 format=3 uid="uid://john_nair"]
+
+[ext_resource type="Script" path="res://resources/attack_data.gd" id="1_atk"]
+
+[resource]
+script = ExtResource("1_atk")
+attack_name = "Meme Helicopter Spin"
+damage = 7.0
+base_knockback = 5.0
+knockback_scaling = 15.0
+angle_degrees = 45.0
+startup_frames = 3
+active_frames = 14
+recovery_frames = 8
+animation_name = "NeutralAir"
+is_aerial = true
+hitbox_offset = Vector3(0.0, 0.0, 0.0)
+hitbox_radius = 0.9
+combo_next = null
+combo_window_frames = 0
+self_impulse = Vector3(0.0, 0.0, 0.0)
+self_impulse_frame = 0
+disable_gravity_during_active = false

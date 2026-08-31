@@ -27,9 +27,17 @@ func setup_match(p1: Character, p2: Character, initial_lives: int = 3, time_limi
 	if stage and not stage.blast_zone_entered.is_connected(_on_player_ko):
 		stage.blast_zone_entered.connect(_on_player_ko)
 
+	if not Events.time_freeze_requested.is_connected(_on_time_freeze_requested):
+		Events.time_freeze_requested.connect(_on_time_freeze_requested)
+
 	lives_updated.emit(1, p1_lives)
 	lives_updated.emit(2, p2_lives)
 	timer_updated.emit(current_time)
+
+var time_freeze_timer: float = 0.0
+
+func _on_time_freeze_requested(duration_sec: float, _instigator: Node) -> void:
+	time_freeze_timer = maxf(time_freeze_timer, duration_sec)
 
 func start_battle() -> void:
 	is_active = true
@@ -38,6 +46,11 @@ func _process(delta: float) -> void:
 	if not is_active:
 		return
 	
+	if time_freeze_timer > 0.0:
+		time_freeze_timer -= delta
+		# El reloj de combate no corre durante Time Stop
+		return
+
 	current_time -= delta
 	timer_updated.emit(max(0.0, current_time))
 	
