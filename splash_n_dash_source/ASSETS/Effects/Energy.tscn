@@ -1,0 +1,29 @@
+[gd_scene load_steps=15 format=2]
+
+[ext_resource path="res://ASSETS/Effects/Hit Effects/Energy Hit/Energy Hit01.png" type="Texture" id=1]
+[ext_resource path="res://ASSETS/Effects/Hit Effects/Energy Hit/Energy Hit03.png" type="Texture" id=2]
+[ext_resource path="res://ASSETS/Effects/Hit Effects/Energy Hit/Energy Hit00.png" type="Texture" id=3]
+[ext_resource path="res://ASSETS/Effects/Hit Effects/Energy Hit/Energy Hit04.png" type="Texture" id=4]
+[ext_resource path="res://ASSETS/Effects/Hit Effects/Energy Hit/Energy Hit02.png" type="Texture" id=5]
+[ext_resource path="res://ASSETS/Effects/Hit Effects/Energy Hit/Energy Hit08.png" type="Texture" id=6]
+[ext_resource path="res://ASSETS/Effects/Hit Effects/Energy Hit/Energy Hit06.png" type="Texture" id=7]
+[ext_resource path="res://ASSETS/Effects/Hit Effects/Energy Hit/Energy Hit05.png" type="Texture" id=8]
+[ext_resource path="res://ASSETS/Effects/Hit Effects/Energy Hit/Energy Hit07.png" type="Texture" id=9]
+[ext_resource path="res://ASSETS/Effects/Hit Effects/Energy Hit/Energy Hit11.png" type="Texture" id=10]
+[ext_resource path="res://ASSETS/Effects/Hit Effects/Energy Hit/Energy Hit09.png" type="Texture" id=11]
+[ext_resource path="res://ASSETS/Effects/Hit Effects/Energy Hit/Energy Hit10.png" type="Texture" id=12]
+[ext_resource path="res://ASSETS/Effects/Hit.gd" type="Script" id=13]
+
+[sub_resource type="SpriteFrames" id=1]
+animations = [ {
+"frames": [ ExtResource( 3 ), ExtResource( 1 ), ExtResource( 5 ), ExtResource( 2 ), ExtResource( 4 ), ExtResource( 8 ), ExtResource( 7 ), ExtResource( 9 ), ExtResource( 6 ), ExtResource( 11 ), ExtResource( 12 ), ExtResource( 10 ) ],
+"loop": false,
+"name": "1",
+"speed": 60.0
+} ]
+
+[node name="Energy" type="AnimatedSprite"]
+scale = Vector2( 0.25, 0.25 )
+frames = SubResource( 1 )
+animation = "1"
+script = ExtResource( 13 )

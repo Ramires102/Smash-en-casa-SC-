@@ -1,0 +1,30 @@
+[gd_scene load_steps=4 format=3 uid="uid://c_timestop_overlay"]
+
+[ext_resource type="Script" path="res://effects/time_stop_overlay.gd" id="1_ovrl"]
+[ext_resource type="Shader" path="res://effects/time_stop_shader.gdshader" id="2_shdr"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_ts"]
+shader = ExtResource("2_shdr")
+shader_parameter/shockwave_radius = 0.0
+shader_parameter/shockwave_width = 0.14
+shader_parameter/shockwave_force = 0.09
+shader_parameter/shockwave_center = Vector2(0.5, 0.5)
+shader_parameter/grayscale_mix = 0.0
+shader_parameter/chromatic_aberration = 0.0
+shader_parameter/stasis_tint = Color(0.48, 0.52, 0.72, 1)
+shader_parameter/highlight_threshold = 0.65
+shader_parameter/flash_intensity = 0.0
+
+[node name="TimeStopOverlay" type="CanvasLayer" node_paths=PackedStringArray("overlay_rect")]
+layer = 12
+script = ExtResource("1_ovrl")
+overlay_rect = NodePath("ColorRect")
+
+[node name="ColorRect" type="ColorRect" parent="."]
+material = SubResource("ShaderMaterial_ts")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2

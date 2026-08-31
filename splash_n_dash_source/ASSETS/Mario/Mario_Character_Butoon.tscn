@@ -1,0 +1,15 @@
+[gd_scene load_steps=5 format=2]
+
+[ext_resource path="res://ASSETS/CSS/CharacterSelect.tscn" type="PackedScene" id=1]
+[ext_resource path="res://ASSETS/Mario/hud.png" type="Texture" id=2]
+[ext_resource path="res://ASSETS/Mario/hurt.png" type="Texture" id=3]
+[ext_resource path="res://ASSETS/Mario/icon.png" type="Texture" id=4]
+
+[node name="Character" instance=ExtResource( 1 )]
+texture_normal = ExtResource( 4 )
+character = "MARIO"
+normal_texture = ExtResource( 2 )
+pressed_texture = ExtResource( 3 )
+
+[node name="Label" parent="HBoxContainer/VBoxContainer" index="0"]
+text = "Mario"

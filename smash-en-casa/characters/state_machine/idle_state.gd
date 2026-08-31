@@ -1,10 +1,14 @@
 class_name IdleState
 extends State
 
-func enter(_msg: Dictionary = {}) -> void:
-	dbg("enter")
+var _landing_lag_remaining: int = 0
+
+func enter(msg: Dictionary = {}) -> void:
+	_landing_lag_remaining = maxi(0, int(msg.get("landing_lag", 0)))
+	dbg("enter", {"landing_lag": _landing_lag_remaining})
 	if character:
-		character.velocity.x = 0.0
+		if _landing_lag_remaining <= 0:
+			character.velocity.x = 0.0
 		character.set_menacing_aura_enabled(true)
 	if character and character.has_node("AnimationController"):
 		character.get_node("AnimationController").play_animation("Idle")
@@ -20,8 +24,16 @@ func physics_update(delta: float) -> void:
 		dbg_tick(delta, {
 			"vx": snapped(character.velocity.x, 0.001),
 			"input_x": snapped(character.get_input_vector().x, 0.001),
-			"dash_intent": character.is_dash_intent()
+			"dash_intent": character.is_dash_intent(),
+			"landing_lag": _landing_lag_remaining
 		})
+
+	if _landing_lag_remaining > 0:
+		_landing_lag_remaining -= 1
+		if character and character.controller:
+			var trac: float = character.controller.get_traction()
+			character.velocity.x = move_toward(character.velocity.x, 0.0, trac * 0.5 * delta)
+		return
 
 	if not character.is_on_floor():
 		dbg("to_fall", {"reason": "left_floor"})
@@ -36,6 +48,12 @@ func physics_update(delta: float) -> void:
 	var input_vec: Vector2 = character.get_input_vector()
 
 	if input_vec.y < -0.5:
+		if character and character.global_position.y < -10.0 and character.is_down_just_pressed():
+			character.global_position.y += 12.0
+			character.velocity.y = maxf(character.velocity.y, 60.0)
+			dbg("to_fall", {"reason": "platform_drop_down"})
+			state_machine.transition_to("Fall")
+			return
 		dbg("to_squat", {"reason": "down_input", "input_y": snapped(input_vec.y, 0.001)})
 		state_machine.transition_to("Squat")
 		return

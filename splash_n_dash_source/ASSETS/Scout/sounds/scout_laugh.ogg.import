@@ -1,0 +1,15 @@
+[remap]
+
+importer="ogg_vorbis"
+type="AudioStreamOGGVorbis"
+path="res://.import/scout_laugh.ogg-fe7e216dcc0e4c84acebc8a9a7b9e8ea.oggstr"
+
+[deps]
+
+source_file="res://ASSETS/Scout/sounds/scout_laugh.ogg"
+dest_files=[ "res://.import/scout_laugh.ogg-fe7e216dcc0e4c84acebc8a9a7b9e8ea.oggstr" ]
+
+[params]
+
+loop=true
+loop_offset=0

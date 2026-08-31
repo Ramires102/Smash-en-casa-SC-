@@ -1,0 +1,37 @@
+[gd_scene load_steps=4 format=2]
+
+[ext_resource path="res://ASSETS/UI Features/Arrow.png" type="Texture" id=1]
+[ext_resource path="res://ASSETS/UI Features/Arrow1.png" type="Texture" id=2]
+
+[sub_resource type="RectangleShape2D" id=1]
+extents = Vector2( 51.8571, 61.7406 )
+
+[node name="Right_Arrow" type="TextureButton"]
+modulate = Color( 0.431373, 0, 1, 1 )
+anchor_right = 1.0
+anchor_bottom = 1.0
+margin_right = -1810.0
+margin_bottom = -956.0
+rect_min_size = Vector2( 110, 124 )
+texture_normal = ExtResource( 1 )
+texture_pressed = ExtResource( 2 )
+expand = true
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="TextureRect" type="TextureRect" parent="."]
+margin_right = 40.0
+margin_bottom = 40.0
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="ArrowArea2D" type="Area2D" parent="."]
+position = Vector2( 60, 62 )
+monitoring = false
+collision_layer = 65536
+collision_mask = 524288
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ArrowArea2D"]
+shape = SubResource( 1 )

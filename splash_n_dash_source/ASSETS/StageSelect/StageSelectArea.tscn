@@ -1,0 +1,157 @@
+[gd_scene load_steps=4 format=2]
+
+[ext_resource path="res://ASSETS/StageSelect/Stage Select Menu/Bottom Char Select.png" type="Texture" id=1]
+[ext_resource path="res://ASSETS/StageSelect/Stage Select Menu/Top Char Select.png" type="Texture" id=2]
+[ext_resource path="res://ASSETS/StageSelect/Stage Select Menu/Smashville Button.tscn" type="PackedScene" id=4]
+
+[node name="MarginContainer" type="MarginContainer"]
+margin_right = 756.0
+margin_bottom = 704.0
+grow_horizontal = 0
+grow_vertical = 0
+rect_min_size = Vector2( 756, 704 )
+size_flags_horizontal = 0
+size_flags_vertical = 0
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+margin_right = 756.0
+margin_bottom = 704.0
+custom_constants/separation = 0
+
+[node name="Top" type="MarginContainer" parent="VBoxContainer"]
+margin_right = 756.0
+margin_bottom = 72.0
+rect_min_size = Vector2( 0, 72 )
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="TextureRect" type="TextureRect" parent="VBoxContainer/Top"]
+margin_right = 756.0
+margin_bottom = 72.0
+texture = ExtResource( 2 )
+expand = true
+
+[node name="Middle" type="MarginContainer" parent="VBoxContainer"]
+margin_top = 72.0
+margin_right = 756.0
+margin_bottom = 628.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="ColorRect" type="ColorRect" parent="VBoxContainer/Middle"]
+margin_right = 756.0
+margin_bottom = 556.0
+color = Color( 0, 0, 0, 1 )
+
+[node name="ItemList" type="MarginContainer" parent="VBoxContainer/Middle"]
+margin_left = 3.0
+margin_right = 752.0
+margin_bottom = 556.0
+rect_min_size = Vector2( 748, 556 )
+size_flags_horizontal = 6
+size_flags_vertical = 3
+
+[node name="ColorRect" type="ColorRect" parent="VBoxContainer/Middle/ItemList"]
+margin_right = 749.0
+margin_bottom = 556.0
+color = Color( 0, 0, 0, 1 )
+
+[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/Middle/ItemList"]
+margin_right = 749.0
+margin_bottom = 556.0
+
+[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer/Middle/ItemList/VBoxContainer"]
+margin_right = 749.0
+margin_bottom = 182.0
+rect_min_size = Vector2( 0, 84 )
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="TextureRect" parent="VBoxContainer/Middle/ItemList/VBoxContainer/HBoxContainer" instance=ExtResource( 4 )]
+
+[node name="TextureRect3" type="ColorRect" parent="VBoxContainer/Middle/ItemList/VBoxContainer/HBoxContainer"]
+margin_left = 251.0
+margin_right = 498.0
+margin_bottom = 182.0
+rect_min_size = Vector2( 247, 0 )
+color = Color( 0.396078, 0.364706, 0.984314, 1 )
+
+[node name="TextureRect4" type="ColorRect" parent="VBoxContainer/Middle/ItemList/VBoxContainer/HBoxContainer"]
+margin_left = 502.0
+margin_right = 749.0
+margin_bottom = 182.0
+rect_min_size = Vector2( 247, 0 )
+color = Color( 0.396078, 0.364706, 0.984314, 1 )
+
+[node name="HBoxContainer2" type="HBoxContainer" parent="VBoxContainer/Middle/ItemList/VBoxContainer"]
+margin_top = 186.0
+margin_right = 749.0
+margin_bottom = 369.0
+rect_min_size = Vector2( 0, 84 )
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="TextureRect4" type="ColorRect" parent="VBoxContainer/Middle/ItemList/VBoxContainer/HBoxContainer2"]
+margin_right = 247.0
+margin_bottom = 183.0
+rect_min_size = Vector2( 247, 0 )
+color = Color( 0.396078, 0.364706, 0.984314, 1 )
+
+[node name="TextureRect5" type="ColorRect" parent="VBoxContainer/Middle/ItemList/VBoxContainer/HBoxContainer2"]
+margin_left = 251.0
+margin_right = 498.0
+margin_bottom = 183.0
+rect_min_size = Vector2( 247, 0 )
+color = Color( 0.396078, 0.364706, 0.984314, 1 )
+
+[node name="TextureRect6" type="ColorRect" parent="VBoxContainer/Middle/ItemList/VBoxContainer/HBoxContainer2"]
+margin_left = 502.0
+margin_right = 749.0
+margin_bottom = 183.0
+rect_min_size = Vector2( 247, 0 )
+color = Color( 0.396078, 0.364706, 0.984314, 1 )
+
+[node name="HBoxContainer3" type="HBoxContainer" parent="VBoxContainer/Middle/ItemList/VBoxContainer"]
+margin_top = 373.0
+margin_right = 749.0
+margin_bottom = 556.0
+rect_min_size = Vector2( 0, 84 )
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="TextureRect4" type="ColorRect" parent="VBoxContainer/Middle/ItemList/VBoxContainer/HBoxContainer3"]
+margin_right = 247.0
+margin_bottom = 183.0
+rect_min_size = Vector2( 247, 0 )
+color = Color( 0.396078, 0.364706, 0.984314, 1 )
+
+[node name="TextureRect5" type="ColorRect" parent="VBoxContainer/Middle/ItemList/VBoxContainer/HBoxContainer3"]
+margin_left = 251.0
+margin_right = 498.0
+margin_bottom = 183.0
+rect_min_size = Vector2( 247, 0 )
+color = Color( 0.396078, 0.364706, 0.984314, 1 )
+
+[node name="TextureRect6" type="ColorRect" parent="VBoxContainer/Middle/ItemList/VBoxContainer/HBoxContainer3"]
+margin_left = 502.0
+margin_right = 749.0
+margin_bottom = 183.0
+rect_min_size = Vector2( 247, 0 )
+color = Color( 0.396078, 0.364706, 0.984314, 1 )
+
+[node name="Bottom" type="MarginContainer" parent="VBoxContainer"]
+margin_top = 628.0
+margin_right = 756.0
+margin_bottom = 704.0
+rect_min_size = Vector2( 0, 76 )
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="TextureRect" type="TextureRect" parent="VBoxContainer/Bottom"]
+margin_right = 756.0
+margin_bottom = 76.0
+texture = ExtResource( 1 )
+expand = true

@@ -18,7 +18,12 @@ const COMPAT_STATE_SCRIPTS: Dictionary = {
 	"JumpSquat": "res://characters/state_machine/jumpsquat_state.gd",
 	"Daze": "res://characters/state_machine/daze_state.gd",
 	"Roll": "res://characters/state_machine/roll_state.gd",
-	"Spotdodge": "res://characters/state_machine/spotdodge_state.gd"
+	"Spotdodge": "res://characters/state_machine/spotdodge_state.gd",
+	"Ledge": "res://characters/state_machine/ledge_state.gd",
+	"LedgeGetup": "res://characters/state_machine/ledge_getup_state.gd",
+	"AirDodge": "res://characters/state_machine/air_dodge_state.gd",
+	"Tumble": "res://characters/state_machine/tumble_state.gd",
+	"Ukemi": "res://characters/state_machine/ukemi_state.gd"
 }
 
 # Mapeo de alias ACMD hacia FSM jugable.
@@ -42,9 +47,19 @@ const ACMD_ALIASES: Dictionary = {
 	"escape_f": "roll",
 	"escape_b": "roll",
 	"escape_n": "spotdodge",
-	"damage_fly": "hit",
-	"damage_fall": "hit",
-	"stop_sce": "hit"
+	"escape_air": "airdodge",
+	"escape_air_slide": "airdodge",
+	"damage_fly": "tumble",
+	"damage_fall": "tumble",
+	"stop_sce": "hit",
+	"passive": "ukemi",
+	"passive_stand": "ukemi",
+	"passivefb": "ukemi",
+	"cliff_catch": "ledge",
+	"cliff_wait": "ledge",
+	"cliff_climb": "ledgegetup",
+	"cliff_attack": "ledgegetup",
+	"cliff_escape": "ledgegetup"
 }
 
 func _ready() -> void:
@@ -76,7 +91,7 @@ func _cache_states() -> void:
 		if child is State:
 			states[child.name.to_lower()] = child
 			child.state_machine = self
-			child.character = owner as CharacterBody3D
+			child.character = owner as Character
 
 func _unhandled_input(event: InputEvent) -> void:
 	if current_state:

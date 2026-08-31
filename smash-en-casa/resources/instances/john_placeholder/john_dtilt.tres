@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="AttackData" load_steps=2 format=3 uid="uid://john_dtilt"]
+
+[ext_resource type="Script" path="res://resources/attack_data.gd" id="1_atk"]
+
+[resource]
+script = ExtResource("1_atk")
+attack_name = "Floor Sweeper Slide"
+damage = 6.5
+base_knockback = 6.0
+knockback_scaling = 25.0
+angle_degrees = 80.0
+startup_frames = 3
+active_frames = 5
+recovery_frames = 9
+animation_name = "AttackDown"
+hitbox_offset = Vector3(0.9, -0.5, 0.0)
+hitbox_radius = 0.6
+combo_next = null
+combo_window_frames = 0
+self_impulse = Vector3(2.5, 0.0, 0.0)
+self_impulse_frame = 3
+disable_gravity_during_active = false

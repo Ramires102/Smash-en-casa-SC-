@@ -28,6 +28,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		_on_back_button_pressed()
 
 # --- Selección de P1 ---
+
+
 func _on_p1_miyabi_pressed() -> void:
 	p1_selected = miyabi_data
 	p1_status.text = "P1 Seleccionó: Miyabi"
@@ -48,7 +50,14 @@ func _on_p1_john_pressed() -> void:
 	p1_status.text = "P1 Seleccionó: John Placeholder"
 	_check_ready()
 
+func _on_p1_nekomiya_pressed() -> void:
+	p1_selected = nekomiya_data
+	p1_status.text = "P1 Seleccionó: Nekomiya Mana"
+	_check_ready()
+
 # --- Selección de P2 ---
+
+
 func _on_p2_miyabi_pressed() -> void:
 	p2_selected = miyabi_data
 	p2_status.text = "P2 Seleccionó: Miyabi"
@@ -67,12 +76,6 @@ func _on_p2_sakuya_pressed() -> void:
 func _on_p2_john_pressed() -> void:
 	p2_selected = john_data
 	p2_status.text = "P2 Seleccionó: John Placeholder"
-	_check_ready()
-
-# --- Selección de Nekomiya Mana ---
-func _on_p1_nekomiya_pressed() -> void:
-	p1_selected = nekomiya_data
-	p1_status.text = "P1 Seleccionó: Nekomiya Mana"
 	_check_ready()
 
 func _on_p2_nekomiya_pressed() -> void:

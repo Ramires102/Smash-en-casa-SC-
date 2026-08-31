@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="AttackData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://resources/attack_data.gd" id="1_atk"]
+[ext_resource type="Resource" path="res://resources/instances/sakuya_prism/attacks/sakuya_jab2.tres" id="2_jab2"]
+
+[resource]
+script = ExtResource("1_atk")
+attack_name = "5A (Slap Starter)"
+damage = 2.5
+base_knockback = 8.0
+knockback_scaling = 20.0
+angle_degrees = 361.0
+startup_frames = 8
+active_frames = 2
+recovery_frames = 7
+animation_name = "AttackNeutral"
+hitbox_offset = Vector3(0.72, 0.05, 0.0)
+hitbox_radius = 0.52
+combo_next = ExtResource("2_jab2")
+combo_window_frames = 10
+self_impulse = Vector3(0.0, 0.0, 0.0)
+self_impulse_frame = 0
+disable_gravity_during_active = false
+sub_hitboxes = []
+spawns_projectile = false
+is_time_stop = false

@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="MoveSet" load_steps=13 format=3 uid="uid://john_moveset"]
+
+[ext_resource type="Script" path="res://resources/moveset.gd" id="1_mset"]
+[ext_resource type="Resource" uid="uid://john_jab1" path="res://resources/instances/john_placeholder/john_jab1.tres" id="2_jab"]
+[ext_resource type="Resource" uid="uid://john_stilt" path="res://resources/instances/john_placeholder/john_stilt.tres" id="3_stilt"]
+[ext_resource type="Resource" uid="uid://john_utilt" path="res://resources/instances/john_placeholder/john_utilt.tres" id="4_utilt"]
+[ext_resource type="Resource" uid="uid://john_dtilt" path="res://resources/instances/john_placeholder/john_dtilt.tres" id="5_dtilt"]
+[ext_resource type="Resource" uid="uid://john_nair" path="res://resources/instances/john_placeholder/john_nair.tres" id="6_nair"]
+[ext_resource type="Resource" uid="uid://john_uair" path="res://resources/instances/john_placeholder/john_uair.tres" id="7_uair"]
+[ext_resource type="Resource" uid="uid://john_dair" path="res://resources/instances/john_placeholder/john_dair.tres" id="8_dair"]
+[ext_resource type="Resource" uid="uid://john_special_neutral" path="res://resources/instances/john_placeholder/john_special_neutral.tres" id="9_spn"]
+[ext_resource type="Resource" uid="uid://john_special_side" path="res://resources/instances/john_placeholder/john_special_side.tres" id="10_sps"]
+[ext_resource type="Resource" uid="uid://john_special_up" path="res://resources/instances/john_placeholder/john_special_up.tres" id="11_spu"]
+[ext_resource type="Resource" uid="uid://john_special_down" path="res://resources/instances/john_placeholder/john_special_down.tres" id="12_spd"]
+
+[resource]
+script = ExtResource("1_mset")
+neutral_attack = ExtResource("2_jab")
+side_tilt = ExtResource("3_stilt")
+up_tilt = ExtResource("4_utilt")
+down_tilt = ExtResource("5_dtilt")
+neutral_air = ExtResource("6_nair")
+up_air = ExtResource("7_uair")
+down_air = ExtResource("8_dair")
+special_neutral = ExtResource("9_spn")
+special_side = ExtResource("10_sps")
+special_up = ExtResource("11_spu")
+special_down = ExtResource("12_spd")

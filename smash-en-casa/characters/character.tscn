@@ -17,10 +17,36 @@
 [ext_resource type="Script" path="res://characters/state_machine/death_state.gd" id="15_death"]
 [ext_resource type="Script" path="res://characters/state_machine/shield_state.gd" id="16_shield"]
 [ext_resource type="Script" path="res://combat/pushbox.gd" id="17_push"]
+[ext_resource type="Script" path="res://characters/state_machine/tumble_state.gd" id="18_tumble"]
+[ext_resource type="Script" path="res://characters/state_machine/ukemi_state.gd" id="19_ukemi"]
+[ext_resource type="Script" path="res://characters/state_machine/air_dodge_state.gd" id="20_airdodge"]
+[ext_resource type="Script" path="res://characters/state_machine/ledge_state.gd" id="21_ledge"]
+[ext_resource type="Script" path="res://characters/state_machine/ledge_getup_state.gd" id="22_getup"]
+[ext_resource type="Script" path="res://characters/state_machine/walk_state.gd" id="23_walk"]
+[ext_resource type="Script" path="res://characters/state_machine/dash_state.gd" id="24_dash"]
+[ext_resource type="Script" path="res://characters/state_machine/jumpsquat_state.gd" id="25_jsquat"]
+[ext_resource type="Script" path="res://characters/state_machine/squat_state.gd" id="26_squat"]
+[ext_resource type="Script" path="res://characters/state_machine/daze_state.gd" id="27_daze"]
+[ext_resource type="Script" path="res://characters/state_machine/roll_state.gd" id="28_roll"]
+[ext_resource type="Script" path="res://characters/state_machine/spotdodge_state.gd" id="29_spot"]
 
-[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_1"]
-radius = 0.5
-height = 1.8
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_main"]
+radius = 14.0
+height = 48.0
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_hit"]
+radius = 20.0
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_hurt"]
+radius = 15.0
+height = 50.0
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_push"]
+radius = 14.0
+height = 48.0
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_ledge"]
+size = Vector2(22, 26)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_body"]
 albedo_color = Color(0.2, 0.6, 1, 1)
@@ -44,18 +70,7 @@ albedo_color = Color(0.1, 0.8, 1, 0.45)
 radius = 1.1
 height = 2.2
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_hit"]
-size = Vector3(1.2, 1.2, 1.2)
-
-[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_hurt"]
-radius = 0.55
-height = 1.85
-
-[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_push"]
-radius = 0.52
-height = 1.8
-
-[node name="Character" type="CharacterBody3D"]
+[node name="Character" type="CharacterBody2D"]
 collision_layer = 2
 collision_mask = 1
 script = ExtResource("1_char")
@@ -71,8 +86,111 @@ script = ExtResource("3_stats")
 script = ExtResource("4_atkctrl")
 hitbox = NodePath("../Hitbox")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
-shape = SubResource("CapsuleShape3D_1")
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CapsuleShape2D_main")
+
+[node name="Hitbox" type="Area2D" parent="."]
+collision_layer = 8
+collision_mask = 4
+script = ExtResource("5_hit")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Hitbox"]
+position = Vector2(22, 0)
+shape = SubResource("CircleShape2D_hit")
+
+[node name="Hurtbox" type="Area2D" parent="."]
+collision_layer = 4
+collision_mask = 8
+script = ExtResource("6_hurt")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Hurtbox"]
+shape = SubResource("CapsuleShape2D_hurt")
+
+[node name="Pushbox" type="Area2D" parent="."]
+collision_layer = 16
+collision_mask = 16
+script = ExtResource("17_push")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Pushbox"]
+shape = SubResource("CapsuleShape2D_push")
+
+[node name="LedgeDetector" type="Area2D" parent="."]
+position = Vector2(0, -16)
+collision_layer = 32
+collision_mask = 32
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="LedgeDetector"]
+shape = SubResource("RectangleShape2D_ledge")
+
+[node name="AnimationController" type="Node" parent="." node_paths=PackedStringArray("animation_player")]
+script = ExtResource("7_anim")
+animation_player = NodePath("../AnimationPlayer")
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+
+[node name="StateMachine" type="Node" parent="." node_paths=PackedStringArray("initial_state")]
+script = ExtResource("8_fsm")
+initial_state = NodePath("Idle")
+
+[node name="Idle" type="Node" parent="StateMachine"]
+script = ExtResource("9_idle")
+
+[node name="Walk" type="Node" parent="StateMachine"]
+script = ExtResource("23_walk")
+
+[node name="Dash" type="Node" parent="StateMachine"]
+script = ExtResource("24_dash")
+
+[node name="Run" type="Node" parent="StateMachine"]
+script = ExtResource("10_run")
+
+[node name="JumpSquat" type="Node" parent="StateMachine"]
+script = ExtResource("25_jsquat")
+
+[node name="Jump" type="Node" parent="StateMachine"]
+script = ExtResource("11_jump")
+
+[node name="Fall" type="Node" parent="StateMachine"]
+script = ExtResource("12_fall")
+
+[node name="Squat" type="Node" parent="StateMachine"]
+script = ExtResource("26_squat")
+
+[node name="Attack" type="Node" parent="StateMachine"]
+script = ExtResource("13_atk")
+
+[node name="Hit" type="Node" parent="StateMachine"]
+script = ExtResource("14_hitst")
+
+[node name="Tumble" type="Node" parent="StateMachine"]
+script = ExtResource("18_tumble")
+
+[node name="Ukemi" type="Node" parent="StateMachine"]
+script = ExtResource("19_ukemi")
+
+[node name="AirDodge" type="Node" parent="StateMachine"]
+script = ExtResource("20_airdodge")
+
+[node name="Ledge" type="Node" parent="StateMachine"]
+script = ExtResource("21_ledge")
+
+[node name="LedgeGetup" type="Node" parent="StateMachine"]
+script = ExtResource("22_getup")
+
+[node name="Shield" type="Node" parent="StateMachine"]
+script = ExtResource("16_shield")
+
+[node name="Daze" type="Node" parent="StateMachine"]
+script = ExtResource("27_daze")
+
+[node name="Roll" type="Node" parent="StateMachine"]
+script = ExtResource("28_roll")
+
+[node name="Spotdodge" type="Node" parent="StateMachine"]
+script = ExtResource("29_spot")
+
+[node name="Death" type="Node" parent="StateMachine"]
+script = ExtResource("15_death")
 
 [node name="Humanoid" type="Node3D" parent="."]
 
@@ -130,66 +248,3 @@ surface_material_override/0 = SubResource("StandardMaterial3D_body")
 visible = false
 mesh = SubResource("SphereMesh_shield")
 surface_material_override/0 = SubResource("StandardMaterial3D_shield")
-
-[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
-visible = false
-mesh = SubResource("BoxMesh_torso")
-
-[node name="Hitbox" type="Area3D" parent="."]
-collision_layer = 8
-collision_mask = 4
-script = ExtResource("5_hit")
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Hitbox"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.8, 0, 0)
-shape = SubResource("BoxShape3D_hit")
-
-[node name="Hurtbox" type="Area3D" parent="."]
-collision_layer = 4
-collision_mask = 8
-script = ExtResource("6_hurt")
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Hurtbox"]
-shape = SubResource("CapsuleShape3D_hurt")
-
-[node name="Pushbox" type="Area3D" parent="."]
-collision_layer = 16
-collision_mask = 16
-script = ExtResource("17_push")
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Pushbox"]
-shape = SubResource("CapsuleShape3D_push")
-
-[node name="AnimationController" type="Node" parent="." node_paths=PackedStringArray("animation_player")]
-script = ExtResource("7_anim")
-animation_player = NodePath("../AnimationPlayer")
-
-[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
-
-[node name="StateMachine" type="Node" parent="." node_paths=PackedStringArray("initial_state")]
-script = ExtResource("8_fsm")
-initial_state = NodePath("Idle")
-
-[node name="Idle" type="Node" parent="StateMachine"]
-script = ExtResource("9_idle")
-
-[node name="Run" type="Node" parent="StateMachine"]
-script = ExtResource("10_run")
-
-[node name="Jump" type="Node" parent="StateMachine"]
-script = ExtResource("11_jump")
-
-[node name="Fall" type="Node" parent="StateMachine"]
-script = ExtResource("12_fall")
-
-[node name="Attack" type="Node" parent="StateMachine"]
-script = ExtResource("13_atk")
-
-[node name="Hit" type="Node" parent="StateMachine"]
-script = ExtResource("14_hitst")
-
-[node name="Death" type="Node" parent="StateMachine"]
-script = ExtResource("15_death")
-
-[node name="Shield" type="Node" parent="StateMachine"]
-script = ExtResource("16_shield")

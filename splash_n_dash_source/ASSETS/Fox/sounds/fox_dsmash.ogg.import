@@ -1,0 +1,15 @@
+[remap]
+
+importer="ogg_vorbis"
+type="AudioStreamOGGVorbis"
+path="res://.import/fox_dsmash.ogg-c1da6400463a7abb430a3f31f61ac15c.oggstr"
+
+[deps]
+
+source_file="res://ASSETS/Fox/sounds/fox_dsmash.ogg"
+dest_files=[ "res://.import/fox_dsmash.ogg-c1da6400463a7abb430a3f31f61ac15c.oggstr" ]
+
+[params]
+
+loop=false
+loop_offset=0

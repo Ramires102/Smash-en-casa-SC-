@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="AttackData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/attack_data.gd" id="1_atk"]
+
+[resource]
+script = ExtResource("1_atk")
+attack_name = "Ricochet Knife Slash"
+damage = 5.5
+base_knockback = 13.0
+knockback_scaling = 70.0
+angle_degrees = 30.0
+startup_frames = 6
+active_frames = 3
+recovery_frames = 14
+animation_name = "AttackSide"
+hitbox_offset = Vector3(0.9, 0.05, 0.0)
+hitbox_radius = 0.62
+combo_next = null
+combo_window_frames = 0
+self_impulse = Vector3(0.0, 0.0, 0.0)
+self_impulse_frame = 0
+disable_gravity_during_active = false

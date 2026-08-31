@@ -1,6 +1,22 @@
 [gd_scene load_steps=22 format=3 uid="uid://b_stage_main"]
 
 [ext_resource type="Script" path="res://battle/stage.gd" id="1_stage"]
+[ext_resource type="Script" path="res://battle/ledge_point.gd" id="2_ledge"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_floor"]
+size = Vector2(560, 40)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_soft_plat"]
+size = Vector2(126, 8)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_soft_top"]
+size = Vector2(118, 8)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_ledge"]
+size = Vector2(24, 30)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_ledge"]
+size = Vector3(1.2, 1.8, 3.8)
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_sunset"]
 sky_top_color = Color(0.14, 0.18, 0.38, 1)
@@ -276,3 +292,66 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 2, 0)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="BlastZone"]
 shape = SubResource("BoxShape3D_blast")
+
+[node name="StageColliders2D" type="Node2D" parent="."]
+
+[node name="MainFloor" type="StaticBody2D" parent="StageColliders2D"]
+collision_layer = 1
+collision_mask = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="StageColliders2D/MainFloor"]
+position = Vector2(0, 20)
+shape = SubResource("RectangleShape2D_floor")
+
+[node name="SoftPlatformLeft" type="StaticBody2D" parent="StageColliders2D"]
+position = Vector2(-154, -87.5)
+collision_layer = 1
+collision_mask = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="StageColliders2D/SoftPlatformLeft"]
+position = Vector2(0, 4)
+shape = SubResource("RectangleShape2D_soft_plat")
+one_way_collision = true
+
+[node name="SoftPlatformRight" type="StaticBody2D" parent="StageColliders2D"]
+position = Vector2(154, -87.5)
+collision_layer = 1
+collision_mask = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="StageColliders2D/SoftPlatformRight"]
+position = Vector2(0, 4)
+shape = SubResource("RectangleShape2D_soft_plat")
+one_way_collision = true
+
+[node name="SoftPlatformTop" type="StaticBody2D" parent="StageColliders2D"]
+position = Vector2(0, -166)
+collision_layer = 1
+collision_mask = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="StageColliders2D/SoftPlatformTop"]
+position = Vector2(0, 4)
+shape = SubResource("RectangleShape2D_soft_plat")
+one_way_collision = true
+
+[node name="LedgeLeft" type="Area2D" parent="StageColliders2D"]
+position = Vector2(-280, 0)
+collision_layer = 32
+collision_mask = 32
+script = ExtResource("2_ledge")
+ledge_direction = 1.0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="StageColliders2D/LedgeLeft"]
+position = Vector2(-6, 6)
+shape = SubResource("RectangleShape2D_ledge")
+
+[node name="LedgeRight" type="Area2D" parent="StageColliders2D"]
+position = Vector2(280, 0)
+collision_layer = 32
+collision_mask = 32
+script = ExtResource("2_ledge")
+ledge_direction = -1.0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="StageColliders2D/LedgeRight"]
+position = Vector2(6, 6)
+shape = SubResource("RectangleShape2D_ledge")
+

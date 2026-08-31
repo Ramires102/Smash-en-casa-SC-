@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="AttackData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/attack_data.gd" id="1_atk"]
+
+[resource]
+script = ExtResource("1_atk")
+attack_name = "Heavenly Knives"
+damage = 5.8
+base_knockback = 10.0
+knockback_scaling = 70.0
+angle_degrees = 70.0
+startup_frames = 7
+active_frames = 2
+recovery_frames = 15
+animation_name = "UpAir"
+hitbox_offset = Vector3(0.18, 0.88, 0.0)
+hitbox_radius = 0.64
+combo_next = null
+combo_window_frames = 0
+self_impulse = Vector3(0.0, 0.0, 0.0)
+self_impulse_frame = 0
+disable_gravity_during_active = false

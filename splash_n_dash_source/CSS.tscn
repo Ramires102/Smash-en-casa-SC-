@@ -1,0 +1,340 @@
+[gd_scene load_steps=22 format=2]
+
+[ext_resource path="res://ASSETS/TitleScreen/Background/Shifting Shader.tscn" type="PackedScene" id=1]
+[ext_resource path="res://ASSETS/TitleScreen/Background/HolloGram Shader.tscn" type="PackedScene" id=2]
+[ext_resource path="res://ASSETS/CSS/Hand.tscn" type="PackedScene" id=3]
+[ext_resource path="res://ASSETS/TitleScreen/BG2.png" type="Texture" id=4]
+[ext_resource path="res://ASSETS/TitleScreen/Background/Waving Shader.tscn" type="PackedScene" id=5]
+[ext_resource path="res://ASSETS/UI Features/ReadyToFight.tscn" type="PackedScene" id=8]
+[ext_resource path="res://ASSETS/CSS/Character Border.tscn" type="PackedScene" id=9]
+[ext_resource path="res://ASSETS/CSS/PLAYER1_SELECT.tscn" type="PackedScene" id=10]
+[ext_resource path="res://ASSETS/CSS/PLAYER2_SELECT.tscn" type="PackedScene" id=11]
+[ext_resource path="res://ASSETS/CSS/Hand_2.tscn" type="PackedScene" id=12]
+[ext_resource path="res://ASSETS/Fox/charselect.png" type="Texture" id=13]
+[ext_resource path="res://ASSETS/CSS/Coin.tscn" type="PackedScene" id=14]
+[ext_resource path="res://ASSETS/CSS/Coin_2.tscn" type="PackedScene" id=15]
+[ext_resource path="res://ASSETS/UI Features/Stocks.tscn" type="PackedScene" id=16]
+[ext_resource path="res://ASSETS/UI Features/Timer.tscn" type="PackedScene" id=17]
+[ext_resource path="res://ASSETS/UI Features/Gamemode.tscn" type="PackedScene" id=18]
+[ext_resource path="res://ASSETS/UI Features/Back Button.tscn" type="PackedScene" id=19]
+[ext_resource path="res://CSS.gd" type="Script" id=20]
+[ext_resource path="res://ASSETS/TitleScreen/BG1.png" type="Texture" id=21]
+[ext_resource path="res://ASSETS/CSS/Boundaries.tscn" type="PackedScene" id=22]
+
+[sub_resource type="Animation" id=1]
+resource_name = "Hue Shifting"
+length = 5.0
+step = 0.5
+tracks/0/type = "value"
+tracks/0/path = NodePath("ColorRect:color")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 1, 2, 3, 4, 5 ),
+"transitions": PoolRealArray( 1, 1, 1, 1, 1, 1 ),
+"update": 0,
+"values": [ Color( 0.721569, 0.294118, 0.266667, 1 ), Color( 0.67451, 0.2, 1, 1 ), Color( 0.2, 0.717647, 1, 1 ), Color( 0.2, 1, 0.454902, 1 ), Color( 1, 0.94902, 0.2, 1 ), Color( 0.721569, 0.294118, 0.266667, 1 ) ]
+}
+tracks/1/type = "value"
+tracks/1/path = NodePath("WobbleOne:modulate")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray( 0, 1, 2, 3, 4, 5 ),
+"transitions": PoolRealArray( 1, 8.28211, 8.28211, 8.28211, 8.28211, 1 ),
+"update": 0,
+"values": [ Color( 1, 1, 1, 1 ), Color( 0.67451, 0.2, 1, 1 ), Color( 0.2, 0.717647, 1, 1 ), Color( 0.2, 1, 0.454902, 1 ), Color( 1, 0.94902, 0.2, 1 ), Color( 1, 1, 1, 1 ) ]
+}
+tracks/2/type = "value"
+tracks/2/path = NodePath("WobbleTwo:modulate")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/keys = {
+"times": PoolRealArray( 0, 1, 2, 3, 4, 5 ),
+"transitions": PoolRealArray( 1, 8.28211, 8.28211, 8.28211, 8.28211, 1 ),
+"update": 0,
+"values": [ Color( 1, 1, 1, 1 ), Color( 0.67451, 0.2, 1, 1 ), Color( 0.2, 0.717647, 1, 1 ), Color( 0.2, 1, 0.454902, 1 ), Color( 1, 0.94902, 0.2, 1 ), Color( 1, 1, 1, 1 ) ]
+}
+
+[node name="CSS" type="Control"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource( 20 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="Background" type="Control" parent="."]
+show_behind_parent = true
+anchor_right = 1.0
+anchor_bottom = 1.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+__meta__ = {
+"_edit_group_": true,
+"_edit_lock_": true,
+"_edit_use_anchors_": false
+}
+
+[node name="TextureButton" type="TextureRect" parent="Background"]
+visible = false
+anchor_right = 1.0
+anchor_bottom = 1.0
+texture = ExtResource( 21 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="Shifting Shader2" parent="Background" instance=ExtResource( 1 )]
+anchor_right = 0.0
+anchor_bottom = 0.0
+margin_right = 1884.0
+margin_bottom = 800.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="ColorRect" parent="Background/Shifting Shader2" index="0"]
+margin_right = 34.0
+margin_bottom = 284.0
+color = Color( 0, 0, 0, 1 )
+
+[node name="WobbleOne" parent="Background/Shifting Shader2" index="1"]
+modulate = Color( 1, 0, 0.984314, 1 )
+
+[node name="WobbleTwo" parent="Background/Shifting Shader2" index="2"]
+modulate = Color( 1, 0, 0, 1 )
+
+[node name="AnimationPlayer" parent="Background/Shifting Shader2" index="3"]
+"anims/Hue Shifting" = SubResource( 1 )
+
+[node name="HolloGram Shader" parent="Background" instance=ExtResource( 2 )]
+visible = false
+modulate = Color( 1, 1, 1, 0.25 )
+anchor_right = 0.0
+anchor_bottom = 0.0
+margin_right = 1884.0
+margin_bottom = 800.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="TextureRect" parent="Background/HolloGram Shader" index="0"]
+anchor_left = 0.003125
+anchor_top = -0.00833333
+anchor_right = 1.00312
+anchor_bottom = 0.991667
+margin_left = -894.0
+margin_top = -567.0
+margin_right = -858.0
+margin_bottom = -287.0
+rect_scale = Vector2( 1.84, 2.04 )
+texture = ExtResource( 4 )
+
+[node name="Waving Shader" parent="Background" instance=ExtResource( 5 )]
+anchor_right = 0.0
+anchor_bottom = 0.0
+margin_right = 1914.0
+margin_bottom = 733.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="ColorRect" parent="Background/Waving Shader" index="0"]
+visible = false
+
+[node name="Shifting Shader" parent="Background" instance=ExtResource( 1 )]
+anchor_right = 0.0
+anchor_bottom = 0.0
+margin_right = 1884.0
+margin_bottom = 800.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="ColorRect" parent="Background/Shifting Shader" index="0"]
+visible = false
+
+[node name="WobbleOne" parent="Background/Shifting Shader" index="1"]
+modulate = Color( 0.203922, 0.0901961, 0.478431, 1 )
+
+[node name="WobbleTwo" parent="Background/Shifting Shader" index="2"]
+modulate = Color( 0.203922, 0.0901961, 0.478431, 1 )
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+custom_constants/separation = 0
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="Options" type="MarginContainer" parent="VBoxContainer"]
+margin_right = 1920.0
+margin_bottom = 145.0
+rect_min_size = Vector2( 1920, 128 )
+size_flags_horizontal = 3
+size_flags_vertical = 2
+size_flags_stretch_ratio = 0.0
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/Options"]
+margin_right = 1920.0
+margin_bottom = 145.0
+
+[node name="HBoxContainer2" type="HBoxContainer" parent="VBoxContainer/Options/VBoxContainer"]
+margin_right = 1920.0
+margin_bottom = 145.0
+alignment = 1
+
+[node name="HBoxContainer2" type="HBoxContainer" parent="VBoxContainer/Options/VBoxContainer/HBoxContainer2"]
+margin_left = 21.0
+margin_right = 272.0
+margin_bottom = 145.0
+
+[node name="Control" parent="VBoxContainer/Options/VBoxContainer/HBoxContainer2/HBoxContainer2" instance=ExtResource( 19 )]
+anchor_right = 0.0
+anchor_bottom = 0.0
+margin_right = 251.0
+margin_bottom = 145.0
+
+[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer/Options/VBoxContainer/HBoxContainer2"]
+margin_left = 276.0
+margin_right = 1898.0
+margin_bottom = 145.0
+alignment = 2
+
+[node name="Control" parent="VBoxContainer/Options/VBoxContainer/HBoxContainer2/HBoxContainer" instance=ExtResource( 16 )]
+anchor_right = 0.0
+anchor_bottom = 0.0
+margin_right = 502.0
+margin_bottom = 145.0
+
+[node name="Control2" parent="VBoxContainer/Options/VBoxContainer/HBoxContainer2/HBoxContainer" instance=ExtResource( 17 )]
+anchor_right = 0.0
+anchor_bottom = 0.0
+margin_left = 506.0
+margin_right = 1116.0
+margin_bottom = 145.0
+
+[node name="Control3" parent="VBoxContainer/Options/VBoxContainer/HBoxContainer2/HBoxContainer" instance=ExtResource( 18 )]
+anchor_right = 0.0
+anchor_bottom = 0.0
+margin_left = 1120.0
+margin_right = 1622.0
+margin_bottom = 145.0
+
+[node name="ColorRect" type="ColorRect" parent="VBoxContainer/Options"]
+visible = false
+margin_right = 1920.0
+margin_bottom = 145.0
+color = Color( 0.886275, 0, 0, 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="Character Border" parent="VBoxContainer" instance=ExtResource( 9 )]
+margin_top = 145.0
+margin_bottom = 604.0
+
+[node name="ColorRect" parent="VBoxContainer/Character Border" index="0"]
+margin_bottom = 459.0
+color = Color( 0, 0, 0, 0.5 )
+
+[node name="Characters" parent="VBoxContainer/Character Border" index="1"]
+margin_top = 165.0
+margin_bottom = 293.0
+
+[node name="Preview" type="MarginContainer" parent="VBoxContainer"]
+margin_top = 604.0
+margin_right = 1920.0
+margin_bottom = 1080.0
+rect_min_size = Vector2( 1920, 476 )
+size_flags_horizontal = 3
+size_flags_vertical = 3
+custom_constants/margin_top = 0
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="ColorRect" type="ColorRect" parent="VBoxContainer/Preview"]
+visible = false
+margin_right = 1920.0
+margin_bottom = 476.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+color = Color( 0, 0.858824, 1, 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer/Preview"]
+margin_right = 1920.0
+margin_bottom = 476.0
+custom_constants/separation = 0
+
+[node name="PLAYER_1" parent="VBoxContainer/Preview/HBoxContainer" instance=ExtResource( 10 )]
+anchor_right = 0.0
+anchor_bottom = 0.0
+margin_right = 960.0
+margin_bottom = 476.0
+FOX = ExtResource( 13 )
+
+[node name="PLAYER_2" parent="VBoxContainer/Preview/HBoxContainer" instance=ExtResource( 11 )]
+anchor_right = 0.0
+anchor_bottom = 0.0
+margin_left = 960.0
+margin_right = 1920.0
+margin_bottom = 476.0
+FOX = ExtResource( 13 )
+
+[node name="Coin_1" parent="." instance=ExtResource( 14 )]
+position = Vector2( 865.171, 666.626 )
+
+[node name="Coin_2" parent="." instance=ExtResource( 15 )]
+position = Vector2( 1073.43, 666.626 )
+
+[node name="Hand_2" parent="." instance=ExtResource( 12 )]
+position = Vector2( 1352.23, 496.416 )
+
+[node name="Hand_1" parent="." instance=ExtResource( 3 )]
+position = Vector2( 611.864, 494.636 )
+
+[node name="ReadyToFightBanner" parent="." instance=ExtResource( 8 )]
+
+[node name="Boundaries" parent="." instance=ExtResource( 22 )]
+
+[connection signal="character_deselected" from="VBoxContainer/Character Border/Characters/Character" to="VBoxContainer/Preview/HBoxContainer/PLAYER_1" method="_on_Character_character_deselected"]
+[connection signal="character_deselected" from="VBoxContainer/Character Border/Characters/Character" to="." method="_on_Character_character_deselected"]
+[connection signal="character_deselected" from="VBoxContainer/Character Border/Characters/Character" to="VBoxContainer/Preview/HBoxContainer/PLAYER_2" method="_on_Character_character_deselected"]
+[connection signal="character_hovered" from="VBoxContainer/Character Border/Characters/Character" to="VBoxContainer/Preview/HBoxContainer/PLAYER_1" method="_on_Character_character_hovered"]
+[connection signal="character_hovered" from="VBoxContainer/Character Border/Characters/Character" to="VBoxContainer/Preview/HBoxContainer/PLAYER_2" method="_on_Character_character_hovered"]
+[connection signal="character_selected" from="VBoxContainer/Character Border/Characters/Character" to="VBoxContainer/Preview/HBoxContainer/PLAYER_1" method="_on_Character_character_selected"]
+[connection signal="character_selected" from="VBoxContainer/Character Border/Characters/Character" to="." method="_on_Character_character_selected"]
+[connection signal="character_selected" from="VBoxContainer/Character Border/Characters/Character" to="VBoxContainer/Preview/HBoxContainer/PLAYER_2" method="_on_Character_character_selected"]
+[connection signal="character_deselected" from="VBoxContainer/Character Border/Characters/Character3" to="VBoxContainer/Preview/HBoxContainer/PLAYER_1" method="_on_Character_character_deselected"]
+[connection signal="character_deselected" from="VBoxContainer/Character Border/Characters/Character3" to="VBoxContainer/Preview/HBoxContainer/PLAYER_2" method="_on_Character_character_deselected"]
+[connection signal="character_hovered" from="VBoxContainer/Character Border/Characters/Character3" to="VBoxContainer/Preview/HBoxContainer/PLAYER_1" method="_on_Character_character_hovered"]
+[connection signal="character_hovered" from="VBoxContainer/Character Border/Characters/Character3" to="VBoxContainer/Preview/HBoxContainer/PLAYER_2" method="_on_Character_character_hovered"]
+[connection signal="character_selected" from="VBoxContainer/Character Border/Characters/Character3" to="VBoxContainer/Preview/HBoxContainer/PLAYER_1" method="_on_Character_character_selected"]
+[connection signal="character_selected" from="VBoxContainer/Character Border/Characters/Character3" to="VBoxContainer/Preview/HBoxContainer/PLAYER_2" method="_on_Character_character_selected"]
+[connection signal="character_deselected" from="VBoxContainer/Character Border/Characters/Character2" to="VBoxContainer/Preview/HBoxContainer/PLAYER_1" method="_on_Character_character_deselected"]
+[connection signal="character_deselected" from="VBoxContainer/Character Border/Characters/Character2" to="VBoxContainer/Preview/HBoxContainer/PLAYER_2" method="_on_Character_character_deselected"]
+[connection signal="character_hovered" from="VBoxContainer/Character Border/Characters/Character2" to="VBoxContainer/Preview/HBoxContainer/PLAYER_1" method="_on_Character_character_hovered"]
+[connection signal="character_hovered" from="VBoxContainer/Character Border/Characters/Character2" to="VBoxContainer/Preview/HBoxContainer/PLAYER_2" method="_on_Character_character_hovered"]
+[connection signal="character_selected" from="VBoxContainer/Character Border/Characters/Character2" to="VBoxContainer/Preview/HBoxContainer/PLAYER_1" method="_on_Character_character_selected"]
+[connection signal="character_selected" from="VBoxContainer/Character Border/Characters/Character2" to="VBoxContainer/Preview/HBoxContainer/PLAYER_2" method="_on_Character_character_selected"]
+[connection signal="char_ready" from="VBoxContainer/Preview/HBoxContainer/PLAYER_1" to="." method="_on_PLAYER_1_char_ready"]
+[connection signal="char_unready" from="VBoxContainer/Preview/HBoxContainer/PLAYER_1" to="." method="_on_PLAYER_1_char_unready"]
+[connection signal="char_ready" from="VBoxContainer/Preview/HBoxContainer/PLAYER_2" to="." method="_on_PLAYER_2_char_ready"]
+[connection signal="char_unready" from="VBoxContainer/Preview/HBoxContainer/PLAYER_2" to="." method="_on_PLAYER_2_char_unready"]
+
+[editable path="Background/Shifting Shader2"]
+[editable path="Background/HolloGram Shader"]
+[editable path="Background/Waving Shader"]
+[editable path="Background/Shifting Shader"]
+[editable path="VBoxContainer/Character Border"]

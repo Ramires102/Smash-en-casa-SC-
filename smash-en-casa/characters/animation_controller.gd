@@ -7,6 +7,7 @@ extends Node
 # Referencia al personaje padre para detectar si tiene modelo real
 var _character: Node = null
 var _has_real_model: bool = false
+var _placeholder_profile_name: String = ""
 
 # ── Sistema de Animaciones GLB ────────────────────────────────
 var _glb_anim_player: AnimationPlayer = null
@@ -14,18 +15,92 @@ var _glb_anim_player: AnimationPlayer = null
 # Mapeo: nombre del estado del juego → nombre de la animación dentro del GLB
 var _anim_map: Dictionary = {}
 
+const LEGACY_ANIMATION_ALIASES: Dictionary = {
+	"AttackJab1": "AttackNeutral",
+	"AttackJab2": "AttackNeutral2",
+	"AttackJab3": "AttackNeutral3",
+	"AttackSideTilt": "AttackSide",
+	"AttackUpTilt": "AttackUp",
+	"AttackDownTilt": "AttackDown",
+	"AttackNair": "NeutralAir",
+	"AttackUair": "UpAir",
+	"AttackDair": "DownAir",
+	"AttackAir": "NeutralAir",
+	"AttackAirUp": "UpAir",
+	"AttackAirDown": "DownAir",
+	"AttackFair": "NeutralAir",
+	"AttackBair": "NeutralAir",
+	"ForwardAir": "NeutralAir",
+	"BackAir": "NeutralAir",
+	"AttackSpecial": "SpecialNeutral",
+	"AttackSpecialNeutral": "SpecialNeutral",
+	"AttackSpecialSide": "SpecialSide",
+	"AttackSpecialUp": "SpecialUp",
+	"AttackSpecialDown": "SpecialDown",
+	"Special": "SpecialNeutral",
+	"Grab": "AttackNeutral"
+}
+
 func _ready() -> void:
 	_character = get_parent()
+	if not animation_player and _character and _character.has_node("AnimationPlayer"):
+		animation_player = _character.get_node("AnimationPlayer")
+	_resolve_placeholder_profile()
+	
 	if animation_player:
-		# Esperar un frame para que load_character() haya instanciado el ModelRoot
-		await get_tree().process_frame
 		_has_real_model = _character != null and _character.has_node("Humanoid/ModelRoot")
 		if _has_real_model:
 			_setup_glb_animations()
 		else:
 			_setup_placeholder_animations()
 
+func setup(data: CharacterData) -> void:
+	_character = get_parent()
+	if not animation_player and _character and _character.has_node("AnimationPlayer"):
+		animation_player = _character.get_node("AnimationPlayer")
+	if not animation_player:
+		return
+	_resolve_placeholder_profile(data)
+		
+	_has_real_model = data != null and data.model_scene != null
+	if _has_real_model:
+		if _character and _character.has_node("Humanoid/ModelRoot"):
+			_setup_glb_animations()
+		else:
+			call_deferred("_deferred_setup_glb")
+	else:
+		_setup_placeholder_animations()
+		if _character and _character.has_node("StateMachine"):
+			var fsm = _character.get_node("StateMachine")
+			if fsm and fsm.current_state:
+				play_animation(fsm.current_state.name)
+
+func _resolve_placeholder_profile(data: CharacterData = null) -> void:
+	if data != null and data.character_name != "":
+		_placeholder_profile_name = data.character_name.strip_edges().to_lower()
+		return
+
+	_placeholder_profile_name = ""
+	if _character and "character_data" in _character and _character.character_data != null:
+		var candidate: String = str(_character.character_data.character_name)
+		if candidate != "":
+			_placeholder_profile_name = candidate.strip_edges().to_lower()
+
+func _is_sakuya_placeholder_profile() -> bool:
+	return _placeholder_profile_name.find("sakuya") != -1
+
+func _deferred_setup_glb() -> void:
+	if _character and _character.has_node("Humanoid/ModelRoot"):
+		_setup_glb_animations()
+
+func _resolve_animation_alias(anim_name: String) -> String:
+	if LEGACY_ANIMATION_ALIASES.has(anim_name):
+		return String(LEGACY_ANIMATION_ALIASES[anim_name])
+	return anim_name
+
 func play_animation(anim_name: String, custom_speed: float = 1.0) -> void:
+	anim_name = _resolve_animation_alias(anim_name)
+
 	# 1. Si la animación mapeada pertenece al AnimationPlayer del GLB
 	if _glb_anim_player and anim_name in _anim_map:
 		var glb_name: String = _anim_map[anim_name]
@@ -352,6 +427,60 @@ func _add_procedural_fallbacks() -> void:
 			lib.add_animation("Daze", daze)
 		_anim_map["Daze"] = "Daze"
 
+	# ── Ledge (Colgado del borde) ──
+	if "Ledge" not in _anim_map:
+		var ledge_anim := Animation.new()
+		ledge_anim.loop_mode = Animation.LOOP_LINEAR
+		ledge_anim.length = 0.8
+		var lp := ledge_anim.add_track(Animation.TYPE_VALUE)
+		ledge_anim.track_set_path(lp, "Humanoid/ModelRoot:position")
+		ledge_anim.track_insert_key(lp, 0.0,  Vector3(0.0, base_y - 0.22, 0.0))
+		ledge_anim.track_insert_key(lp, 0.4,  Vector3(0.0, base_y - 0.26, 0.0))
+		ledge_anim.track_insert_key(lp, 0.8,  Vector3(0.0, base_y - 0.22, 0.0))
+		var lr := ledge_anim.add_track(Animation.TYPE_VALUE)
+		ledge_anim.track_set_path(lr, "Humanoid/ModelRoot:rotation_degrees")
+		ledge_anim.track_insert_key(lr, 0.0,  Vector3(8.0, 0.0, 0.0))
+		ledge_anim.track_insert_key(lr, 0.4,  Vector3(4.0, 0.0, 0.0))
+		ledge_anim.track_insert_key(lr, 0.8,  Vector3(8.0, 0.0, 0.0))
+		if not lib.has_animation("Ledge"):
+			lib.add_animation("Ledge", ledge_anim)
+		_anim_map["Ledge"] = "Ledge"
+
+	# ── LedgeGetup (Subida del borde) ──
+	if "LedgeGetup" not in _anim_map:
+		var getup_anim := Animation.new()
+		getup_anim.length = 0.32
+		var gp := getup_anim.add_track(Animation.TYPE_VALUE)
+		getup_anim.track_set_path(gp, "Humanoid/ModelRoot:position")
+		getup_anim.track_insert_key(gp, 0.0,   Vector3(0.0, base_y - 0.22, 0.0))
+		getup_anim.track_insert_key(gp, 0.16,  Vector3(0.0, base_y + 0.15, 0.0))
+		getup_anim.track_insert_key(gp, 0.32,  Vector3(0.0, base_y,        0.0))
+		var gr := getup_anim.add_track(Animation.TYPE_VALUE)
+		getup_anim.track_set_path(gr, "Humanoid/ModelRoot:rotation_degrees")
+		getup_anim.track_insert_key(gr, 0.0,   Vector3(-15.0, 0.0, 0.0))
+		getup_anim.track_insert_key(gr, 0.32,  Vector3(0.0,   0.0, 0.0))
+		if not lib.has_animation("LedgeGetup"):
+			lib.add_animation("LedgeGetup", getup_anim)
+		_anim_map["LedgeGetup"] = "LedgeGetup"
+
+	# ── AirDodge (Esquive en el aire) ──
+	if "AirDodge" not in _anim_map:
+		var ad_anim := Animation.new()
+		ad_anim.length = 0.45
+		var adr := ad_anim.add_track(Animation.TYPE_VALUE)
+		ad_anim.track_set_path(adr, "Humanoid/ModelRoot:rotation_degrees")
+		ad_anim.track_insert_key(adr, 0.0,   Vector3(0.0,   0.0, 0.0))
+		ad_anim.track_insert_key(adr, 0.22,  Vector3(180.0, 0.0, 0.0))
+		ad_anim.track_insert_key(adr, 0.45,  Vector3(360.0, 0.0, 0.0))
+		var ads := ad_anim.add_track(Animation.TYPE_VALUE)
+		ad_anim.track_set_path(ads, "Humanoid/ModelRoot:scale")
+		ad_anim.track_insert_key(ads, 0.0,   Vector3(1.15, 1.15, 1.15))
+		ad_anim.track_insert_key(ads, 0.22,  Vector3(0.9, 0.9, 0.9))
+		ad_anim.track_insert_key(ads, 0.45,  Vector3(1.15, 1.15, 1.15))
+		if not lib.has_animation("AirDodge"):
+			lib.add_animation("AirDodge", ad_anim)
+		_anim_map["AirDodge"] = "AirDodge"
+
 	# ── RESET ──
 	var reset := Animation.new()
 	reset.length = 0.001
@@ -387,6 +516,9 @@ func _setup_real_model_animations() -> void:
 	if not lib.has_animation("Attack"):  lib.add_animation("Attack",  _real_attack_anim())
 	if not lib.has_animation("Shield"):  lib.add_animation("Shield",  _real_shield_anim())
 	if not lib.has_animation("RunBrake"): lib.add_animation("RunBrake", _real_brake_anim())
+	if not lib.has_animation("Ledge"):   lib.add_animation("Ledge",   _real_idle_anim())
+	if not lib.has_animation("LedgeGetup"): lib.add_animation("LedgeGetup", _real_jump_anim())
+	if not lib.has_animation("AirDodge"): lib.add_animation("AirDodge", _real_jump_anim())
 	if not lib.has_animation("RESET"):   lib.add_animation("RESET",   _real_reset_anim())
 
 func _real_reset_anim() -> Animation:
@@ -543,17 +675,19 @@ func _real_brake_anim() -> Animation:
 # PLACEHOLDER: Animaciones procedurales para cubos/maniquí
 # ─────────────────────────────────────────────────────────────
 func _setup_placeholder_animations() -> void:
-	var lib: AnimationLibrary
+	_resolve_placeholder_profile()
 	if animation_player.has_animation_library(""):
-		lib = animation_player.get_animation_library("")
-	else:
-		lib = AnimationLibrary.new()
-		animation_player.add_animation_library("", lib)
+		animation_player.remove_animation_library("")
+
+	var lib := AnimationLibrary.new()
+	animation_player.add_animation_library("", lib)
+
+	var use_sakuya_profile: bool = _is_sakuya_placeholder_profile()
 
 	lib.add_animation("RESET", _create_reset_animation())
-	lib.add_animation("Idle", _create_idle_animation())
-	lib.add_animation("Walk", _create_walk_animation())
-	lib.add_animation("Run", _create_run_animation())
+	lib.add_animation("Idle", _create_sakuya_idle_animation() if use_sakuya_profile else _create_idle_animation())
+	lib.add_animation("Walk", _create_sakuya_walk_animation() if use_sakuya_profile else _create_walk_animation())
+	lib.add_animation("Run", _create_sakuya_run_animation() if use_sakuya_profile else _create_run_animation())
 	lib.add_animation("RunBrake", _create_run_brake_animation())
 	lib.add_animation("Pivot", _create_pivot_animation())
 	lib.add_animation("Squat", _create_squat_animation())
@@ -562,6 +696,22 @@ func _setup_placeholder_animations() -> void:
 	lib.add_animation("Fall", _create_fall_animation())
 	lib.add_animation("FastFall", _create_fast_fall_animation())
 	lib.add_animation("Attack", _create_attack_animation())
+	lib.add_animation("AttackNeutral", _create_sakuya_attack_neutral_animation() if use_sakuya_profile else _create_attack_neutral_animation())
+	lib.add_animation("AttackNeutral2", _create_sakuya_attack_neutral2_animation() if use_sakuya_profile else _create_attack_neutral2_animation())
+	lib.add_animation("AttackNeutral3", _create_sakuya_attack_neutral3_animation() if use_sakuya_profile else _create_attack_neutral3_animation())
+	lib.add_animation("AttackSide", _create_sakuya_attack_side_animation() if use_sakuya_profile else _create_attack_side_animation())
+	lib.add_animation("AttackUp", _create_sakuya_attack_up_animation() if use_sakuya_profile else _create_attack_up_animation())
+	lib.add_animation("AttackDown", _create_sakuya_attack_down_animation() if use_sakuya_profile else _create_attack_down_animation())
+	lib.add_animation("NeutralAir", _create_sakuya_neutral_air_animation() if use_sakuya_profile else _create_neutral_air_animation())
+	lib.add_animation("UpAir", _create_sakuya_up_air_animation() if use_sakuya_profile else _create_up_air_animation())
+	lib.add_animation("DownAir", _create_sakuya_down_air_animation() if use_sakuya_profile else _create_down_air_animation())
+	lib.add_animation("SpecialNeutral", _create_sakuya_special_neutral_animation() if use_sakuya_profile else _create_special_neutral_animation())
+	lib.add_animation("SpecialSide", _create_sakuya_special_side_animation() if use_sakuya_profile else _create_special_side_animation())
+	lib.add_animation("SpecialUp", _create_sakuya_special_up_animation() if use_sakuya_profile else _create_special_up_animation())
+	lib.add_animation("SpecialDown", _create_sakuya_special_down_animation() if use_sakuya_profile else _create_special_down_animation())
+	lib.add_animation("AirDodge", _create_air_dodge_animation())
+	lib.add_animation("Ledge", _create_ledge_animation())
+	lib.add_animation("LedgeGetup", _create_ledge_getup_animation())
 	lib.add_animation("Hit", _create_hit_animation())
 	lib.add_animation("Shield", _create_shield_animation())
 	lib.add_animation("Roll", _create_roll_animation())
@@ -611,40 +761,42 @@ func _create_reset_animation() -> Animation:
 func _create_idle_animation() -> Animation:
 	var anim := Animation.new()
 	anim.loop_mode = Animation.LOOP_LINEAR
-	anim.length = 1.0
+	anim.length = 1.2
 	var t_pos := anim.add_track(Animation.TYPE_VALUE)
 	anim.track_set_path(t_pos, "Humanoid/TorsoMesh:position")
 	anim.track_insert_key(t_pos, 0.0, Vector3(0, 0.05, 0))
+	anim.track_insert_key(t_pos, 0.6, Vector3(0, 0.08, 0))
+	anim.track_insert_key(t_pos, 1.2, Vector3(0, 0.05, 0))
 	var t_rot := anim.add_track(Animation.TYPE_VALUE)
 	anim.track_set_path(t_rot, "Humanoid/TorsoMesh:rotation_degrees")
-	anim.track_insert_key(t_rot, 0.0, Vector3(-20, 15, 10))
-	anim.track_insert_key(t_rot, 0.5, Vector3(-15, 10, 6))
-	anim.track_insert_key(t_rot, 1.0, Vector3(-20, 15, 10))
+	anim.track_insert_key(t_rot, 0.0, Vector3(-18, 22, 12))
+	anim.track_insert_key(t_rot, 0.6, Vector3(-14, 18, 8))
+	anim.track_insert_key(t_rot, 1.2, Vector3(-18, 22, 12))
 	var h_rot := anim.add_track(Animation.TYPE_VALUE)
 	anim.track_set_path(h_rot, "Humanoid/TorsoMesh/HeadMesh:rotation_degrees")
-	anim.track_insert_key(h_rot, 0.0, Vector3(20, -15, -8))
-	anim.track_insert_key(h_rot, 0.5, Vector3(15, -10, -4))
-	anim.track_insert_key(h_rot, 1.0, Vector3(20, -15, -8))
+	anim.track_insert_key(h_rot, 0.0, Vector3(18, -20, -10))
+	anim.track_insert_key(h_rot, 0.6, Vector3(14, -16, -6))
+	anim.track_insert_key(h_rot, 1.2, Vector3(18, -20, -10))
 	var lua_rot := anim.add_track(Animation.TYPE_VALUE)
 	anim.track_set_path(lua_rot, "Humanoid/TorsoMesh/LeftUpperArm:rotation_degrees")
-	anim.track_insert_key(lua_rot, 0.0, Vector3(-35, 45, -40))
-	anim.track_insert_key(lua_rot, 0.5, Vector3(-30, 40, -35))
-	anim.track_insert_key(lua_rot, 1.0, Vector3(-35, 45, -40))
+	anim.track_insert_key(lua_rot, 0.0, Vector3(-40, 55, -45))
+	anim.track_insert_key(lua_rot, 0.6, Vector3(-35, 50, -40))
+	anim.track_insert_key(lua_rot, 1.2, Vector3(-40, 55, -45))
 	var lfa_rot := anim.add_track(Animation.TYPE_VALUE)
 	anim.track_set_path(lfa_rot, "Humanoid/TorsoMesh/LeftUpperArm/LeftForearm:rotation_degrees")
-	anim.track_insert_key(lfa_rot, 0.0, Vector3(-105, 20, 15))
-	anim.track_insert_key(lfa_rot, 0.5, Vector3(-95, 15, 10))
-	anim.track_insert_key(lfa_rot, 0.0, Vector3(-105, 20, 15))
+	anim.track_insert_key(lfa_rot, 0.0, Vector3(-110, 25, 20))
+	anim.track_insert_key(lfa_rot, 0.6, Vector3(-100, 20, 15))
+	anim.track_insert_key(lfa_rot, 1.2, Vector3(-110, 25, 20))
 	var rua_rot := anim.add_track(Animation.TYPE_VALUE)
 	anim.track_set_path(rua_rot, "Humanoid/TorsoMesh/RightUpperArm:rotation_degrees")
-	anim.track_insert_key(rua_rot, 0.0, Vector3(35, -45, 40))
-	anim.track_insert_key(rua_rot, 0.5, Vector3(30, -40, 35))
-	anim.track_insert_key(rua_rot, 1.0, Vector3(35, -45, 40))
+	anim.track_insert_key(rua_rot, 0.0, Vector3(-80, -35, 25))
+	anim.track_insert_key(rua_rot, 0.6, Vector3(-75, -30, 20))
+	anim.track_insert_key(rua_rot, 1.2, Vector3(-80, -35, 25))
 	var rfa_rot := anim.add_track(Animation.TYPE_VALUE)
 	anim.track_set_path(rfa_rot, "Humanoid/TorsoMesh/RightUpperArm/RightForearm:rotation_degrees")
-	anim.track_insert_key(rfa_rot, 0.0, Vector3(-105, -20, -15))
-	anim.track_insert_key(rfa_rot, 0.5, Vector3(-95, -15, -10))
-	anim.track_insert_key(rfa_rot, 1.0, Vector3(-105, -20, -15))
+	anim.track_insert_key(rfa_rot, 0.0, Vector3(-90, 0, 0))
+	anim.track_insert_key(rfa_rot, 0.6, Vector3(-80, 0, 0))
+	anim.track_insert_key(rfa_rot, 1.2, Vector3(-90, 0, 0))
 	return anim
 
 func _create_walk_animation() -> Animation:
@@ -800,4 +952,608 @@ func _create_spotdodge_animation() -> Animation:
 	anim.track_set_path(t_pos, "Humanoid/TorsoMesh:position")
 	anim.track_insert_key(t_pos, 0.0, Vector3(0, 0, -0.4))
 	anim.track_insert_key(t_pos, 0.3, Vector3(0, 0.05, 0))
+	return anim
+
+func _create_attack_neutral_animation() -> Animation:
+	var anim := Animation.new()
+	anim.length = 0.25
+	var lua_rot := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(lua_rot, "Humanoid/TorsoMesh/LeftUpperArm:rotation_degrees")
+	anim.track_insert_key(lua_rot, 0.0, Vector3(0, 0, 0))
+	anim.track_insert_key(lua_rot, 0.08, Vector3(-85, 20, 10))
+	anim.track_insert_key(lua_rot, 0.25, Vector3(0, 0, 0))
+	var t_rot := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(t_rot, "Humanoid/TorsoMesh:rotation_degrees")
+	anim.track_insert_key(t_rot, 0.0, Vector3(0, 0, 0))
+	anim.track_insert_key(t_rot, 0.08, Vector3(-5, -15, 0))
+	anim.track_insert_key(t_rot, 0.25, Vector3(0, 0, 0))
+	return anim
+
+func _create_attack_neutral2_animation() -> Animation:
+	# ORA ORA FLURRY: Ráfaga rápida de puñetazos alternados estilo MUGEN/JoJo
+	var anim := Animation.new()
+	anim.length = 0.28
+	var lua_rot := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(lua_rot, "Humanoid/TorsoMesh/LeftUpperArm:rotation_degrees")
+	anim.track_insert_key(lua_rot, 0.00, Vector3(0, 0, 0))
+	anim.track_insert_key(lua_rot, 0.05, Vector3(-95, 15, 0))
+	anim.track_insert_key(lua_rot, 0.12, Vector3(10, 0, 0))
+	anim.track_insert_key(lua_rot, 0.19, Vector3(-100, 15, 0))
+	anim.track_insert_key(lua_rot, 0.28, Vector3(0, 0, 0))
+	var rua_rot := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(rua_rot, "Humanoid/TorsoMesh/RightUpperArm:rotation_degrees")
+	anim.track_insert_key(rua_rot, 0.00, Vector3(0, 0, 0))
+	anim.track_insert_key(rua_rot, 0.07, Vector3(15, 0, 0))
+	anim.track_insert_key(rua_rot, 0.14, Vector3(-105, -15, 0))
+	anim.track_insert_key(rua_rot, 0.21, Vector3(10, 0, 0))
+	anim.track_insert_key(rua_rot, 0.28, Vector3(0, 0, 0))
+	var t_rot := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(t_rot, "Humanoid/TorsoMesh:rotation_degrees")
+	anim.track_insert_key(t_rot, 0.00, Vector3(0, 0, 0))
+	anim.track_insert_key(t_rot, 0.07, Vector3(-5, -15, 0))
+	anim.track_insert_key(t_rot, 0.14, Vector3(-5, 15, 0))
+	anim.track_insert_key(t_rot, 0.21, Vector3(-5, -15, 0))
+	anim.track_insert_key(t_rot, 0.28, Vector3(0, 0, 0))
+	return anim
+
+func _create_attack_neutral3_animation() -> Animation:
+	# KONO JOHN DA! Finisher: Gancho ascendente demoledor con torso inclinado
+	var anim := Animation.new()
+	anim.length = 0.38
+	var rua_rot := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(rua_rot, "Humanoid/TorsoMesh/RightUpperArm:rotation_degrees")
+	anim.track_insert_key(rua_rot, 0.00, Vector3(30, -20, 0))
+	anim.track_insert_key(rua_rot, 0.10, Vector3(45, -30, 0))
+	anim.track_insert_key(rua_rot, 0.18, Vector3(-160, -10, 0))
+	anim.track_insert_key(rua_rot, 0.38, Vector3(0, 0, 0))
+	var t_pos := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(t_pos, "Humanoid/TorsoMesh:position")
+	anim.track_insert_key(t_pos, 0.00, Vector3(0, 0.05, 0))
+	anim.track_insert_key(t_pos, 0.10, Vector3(0, -0.05, 0))
+	anim.track_insert_key(t_pos, 0.18, Vector3(0, 0.22, 0))
+	anim.track_insert_key(t_pos, 0.38, Vector3(0, 0.05, 0))
+	var t_rot := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(t_rot, "Humanoid/TorsoMesh:rotation_degrees")
+	anim.track_insert_key(t_rot, 0.00, Vector3(0, 0, 0))
+	anim.track_insert_key(t_rot, 0.10, Vector3(-10, -20, 0))
+	anim.track_insert_key(t_rot, 0.18, Vector3(25, 15, 0))
+	anim.track_insert_key(t_rot, 0.38, Vector3(0, 0, 0))
+	return anim
+
+func _create_attack_side_animation() -> Animation:
+	# Menacing Palm Strike: Estocada frontal con desplazamiento y palma extendida
+	var anim := Animation.new()
+	anim.length = 0.35
+	var rua_rot := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(rua_rot, "Humanoid/TorsoMesh/RightUpperArm:rotation_degrees")
+	anim.track_insert_key(rua_rot, 0.00, Vector3(0, 0, 0))
+	anim.track_insert_key(rua_rot, 0.08, Vector3(-95, -10, 0))
+	anim.track_insert_key(rua_rot, 0.35, Vector3(0, 0, 0))
+	var t_pos := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(t_pos, "Humanoid/TorsoMesh:position")
+	anim.track_insert_key(t_pos, 0.00, Vector3(0, 0.05, 0))
+	anim.track_insert_key(t_pos, 0.10, Vector3(0.2, 0.02, 0))
+	anim.track_insert_key(t_pos, 0.35, Vector3(0, 0.05, 0))
+	var t_rot := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(t_rot, "Humanoid/TorsoMesh:rotation_degrees")
+	anim.track_insert_key(t_rot, 0.00, Vector3(0, 0, 0))
+	anim.track_insert_key(t_rot, 0.10, Vector3(20, 0, 0))
+	anim.track_insert_key(t_rot, 0.35, Vector3(0, 0, 0))
+	return anim
+
+func _create_attack_up_animation() -> Animation:
+	var anim := Animation.new()
+	anim.length = 0.32
+	var rul_rot := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(rul_rot, "Humanoid/RightUpperLeg:rotation_degrees")
+	anim.track_insert_key(rul_rot, 0.0, Vector3(0, 0, 0))
+	anim.track_insert_key(rul_rot, 0.10, Vector3(-120, 0, 0))
+	anim.track_insert_key(rul_rot, 0.32, Vector3(0, 0, 0))
+	var t_rot := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(t_rot, "Humanoid/TorsoMesh:rotation_degrees")
+	anim.track_insert_key(t_rot, 0.0, Vector3(0, 0, 0))
+	anim.track_insert_key(t_rot, 0.10, Vector3(-25, 0, 0))
+	anim.track_insert_key(t_rot, 0.32, Vector3(0, 0, 0))
+	return anim
+
+func _create_attack_down_animation() -> Animation:
+	var anim := Animation.new()
+	anim.length = 0.30
+	var t_pos := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(t_pos, "Humanoid/TorsoMesh:position")
+	anim.track_insert_key(t_pos, 0.0, Vector3(0, 0.05, 0))
+	anim.track_insert_key(t_pos, 0.08, Vector3(0.15, -0.22, 0))
+	anim.track_insert_key(t_pos, 0.30, Vector3(0, 0.05, 0))
+	var rul_rot := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(rul_rot, "Humanoid/RightUpperLeg:rotation_degrees")
+	anim.track_insert_key(rul_rot, 0.0, Vector3(0, 0, 0))
+	anim.track_insert_key(rul_rot, 0.08, Vector3(-65, 30, 0))
+	anim.track_insert_key(rul_rot, 0.30, Vector3(0, 0, 0))
+	return anim
+
+func _create_neutral_air_animation() -> Animation:
+	var anim := Animation.new()
+	anim.length = 0.35
+	var t_rot := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(t_rot, "Humanoid/TorsoMesh:rotation_degrees")
+	anim.track_insert_key(t_rot, 0.0, Vector3(0, 0, 0))
+	anim.track_insert_key(t_rot, 0.175, Vector3(0, 180, 0))
+	anim.track_insert_key(t_rot, 0.35, Vector3(0, 360, 0))
+	var lua_rot := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(lua_rot, "Humanoid/TorsoMesh/LeftUpperArm:rotation_degrees")
+	anim.track_insert_key(lua_rot, 0.0, Vector3(0, 0, -50))
+	anim.track_insert_key(lua_rot, 0.35, Vector3(0, 0, 0))
+	var rua_rot := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(rua_rot, "Humanoid/TorsoMesh/RightUpperArm:rotation_degrees")
+	anim.track_insert_key(rua_rot, 0.0, Vector3(0, 0, 50))
+	anim.track_insert_key(rua_rot, 0.35, Vector3(0, 0, 0))
+	return anim
+
+func _create_up_air_animation() -> Animation:
+	var anim := Animation.new()
+	anim.length = 0.32
+	var t_rot := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(t_rot, "Humanoid/TorsoMesh:rotation_degrees")
+	anim.track_insert_key(t_rot, 0.0, Vector3(0, 0, 0))
+	anim.track_insert_key(t_rot, 0.16, Vector3(-180, 0, 0))
+	anim.track_insert_key(t_rot, 0.32, Vector3(-360, 0, 0))
+	var rua_rot := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(rua_rot, "Humanoid/TorsoMesh/RightUpperArm:rotation_degrees")
+	anim.track_insert_key(rua_rot, 0.0, Vector3(0, 0, 0))
+	anim.track_insert_key(rua_rot, 0.12, Vector3(-160, 0, 0))
+	anim.track_insert_key(rua_rot, 0.32, Vector3(0, 0, 0))
+	return anim
+
+func _create_down_air_animation() -> Animation:
+	# ROAD ROLLER Stomp: Pausa dramática en el aire y caída en picada destructiva
+	var anim := Animation.new()
+	anim.length = 0.42
+	var lul_rot := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(lul_rot, "Humanoid/LeftUpperLeg:rotation_degrees")
+	anim.track_insert_key(lul_rot, 0.00, Vector3(-45, 0, 0))
+	anim.track_insert_key(lul_rot, 0.15, Vector3(25, 0, 0))
+	anim.track_insert_key(lul_rot, 0.42, Vector3(0, 0, 0))
+	var rul_rot := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(rul_rot, "Humanoid/RightUpperLeg:rotation_degrees")
+	anim.track_insert_key(rul_rot, 0.00, Vector3(-45, 0, 0))
+	anim.track_insert_key(rul_rot, 0.15, Vector3(25, 0, 0))
+	anim.track_insert_key(rul_rot, 0.42, Vector3(0, 0, 0))
+	var lua_rot := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(lua_rot, "Humanoid/TorsoMesh/LeftUpperArm:rotation_degrees")
+	anim.track_insert_key(lua_rot, 0.00, Vector3(-150, 20, 0))
+	anim.track_insert_key(lua_rot, 0.15, Vector3(-130, 0, 0))
+	anim.track_insert_key(lua_rot, 0.42, Vector3(0, 0, 0))
+	var rua_rot := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(rua_rot, "Humanoid/TorsoMesh/RightUpperArm:rotation_degrees")
+	anim.track_insert_key(rua_rot, 0.00, Vector3(-150, -20, 0))
+	anim.track_insert_key(rua_rot, 0.15, Vector3(-130, 0, 0))
+	anim.track_insert_key(rua_rot, 0.42, Vector3(0, 0, 0))
+	return anim
+
+func _create_special_neutral_animation() -> Animation:
+	# ZA PLACEHOLDER: Carga congelada en pose amenazante y descarga de poder
+	var anim := Animation.new()
+	anim.length = 0.50
+	var rua_rot := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(rua_rot, "Humanoid/TorsoMesh/RightUpperArm:rotation_degrees")
+	anim.track_insert_key(rua_rot, 0.00, Vector3(0, 0, 0))
+	anim.track_insert_key(rua_rot, 0.18, Vector3(60, -50, 0))
+	anim.track_insert_key(rua_rot, 0.26, Vector3(-105, 0, 0))
+	anim.track_insert_key(rua_rot, 0.50, Vector3(0, 0, 0))
+	var t_rot := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(t_rot, "Humanoid/TorsoMesh:rotation_degrees")
+	anim.track_insert_key(t_rot, 0.00, Vector3(0, 0, 0))
+	anim.track_insert_key(t_rot, 0.18, Vector3(-15, -45, 0))
+	anim.track_insert_key(t_rot, 0.26, Vector3(30, 35, 0))
+	anim.track_insert_key(t_rot, 0.50, Vector3(0, 0, 0))
+	var t_pos := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(t_pos, "Humanoid/TorsoMesh:position")
+	anim.track_insert_key(t_pos, 0.00, Vector3(0, 0.05, 0))
+	anim.track_insert_key(t_pos, 0.18, Vector3(-0.1, 0.02, 0))
+	anim.track_insert_key(t_pos, 0.26, Vector3(0.3, 0.05, 0))
+	anim.track_insert_key(t_pos, 0.50, Vector3(0, 0.05, 0))
+	return anim
+
+func _create_special_up_animation() -> Animation:
+	# Star Ascension: Super Uppercut giratorio ascendente hacia las estrellas
+	var anim := Animation.new()
+	anim.length = 0.48
+	var rua_rot := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(rua_rot, "Humanoid/TorsoMesh/RightUpperArm:rotation_degrees")
+	anim.track_insert_key(rua_rot, 0.00, Vector3(20, 0, 0))
+	anim.track_insert_key(rua_rot, 0.08, Vector3(-175, 0, 0))
+	anim.track_insert_key(rua_rot, 0.48, Vector3(-90, 0, 0))
+	var lul_rot := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(lul_rot, "Humanoid/LeftUpperLeg:rotation_degrees")
+	anim.track_insert_key(lul_rot, 0.00, Vector3(0, 0, 0))
+	anim.track_insert_key(lul_rot, 0.08, Vector3(-70, 0, 0))
+	anim.track_insert_key(lul_rot, 0.48, Vector3(0, 0, 0))
+	var t_rot := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(t_rot, "Humanoid/TorsoMesh:rotation_degrees")
+	anim.track_insert_key(t_rot, 0.00, Vector3(0, 0, 0))
+	anim.track_insert_key(t_rot, 0.15, Vector3(0, 180, 0))
+	anim.track_insert_key(t_rot, 0.30, Vector3(0, 360, 0))
+	anim.track_insert_key(t_rot, 0.48, Vector3(0, 360, 0))
+	return anim
+
+func _create_special_down_animation() -> Animation:
+	var anim := Animation.new()
+	anim.length = 0.45
+	var lul_rot := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(lul_rot, "Humanoid/LeftUpperLeg:rotation_degrees")
+	anim.track_insert_key(lul_rot, 0.0, Vector3(0, 0, 0))
+	anim.track_insert_key(lul_rot, 0.12, Vector3(-45, 0, 0))
+	anim.track_insert_key(lul_rot, 0.45, Vector3(0, 0, 0))
+	var rul_rot := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(rul_rot, "Humanoid/RightUpperLeg:rotation_degrees")
+	anim.track_insert_key(rul_rot, 0.0, Vector3(0, 0, 0))
+	anim.track_insert_key(rul_rot, 0.12, Vector3(-45, 0, 0))
+	anim.track_insert_key(rul_rot, 0.45, Vector3(0, 0, 0))
+	var t_pos := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(t_pos, "Humanoid/TorsoMesh:position")
+	anim.track_insert_key(t_pos, 0.0, Vector3(0, 0.05, 0))
+	anim.track_insert_key(t_pos, 0.12, Vector3(0, 0.25, 0))
+	anim.track_insert_key(t_pos, 0.45, Vector3(0, -0.15, 0))
+	return anim
+
+func _create_air_dodge_animation() -> Animation:
+	var anim := Animation.new()
+	anim.length = 0.45
+	var t_rot := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(t_rot, "Humanoid/TorsoMesh:rotation_degrees")
+	anim.track_insert_key(t_rot, 0.0, Vector3(0, 0, 0))
+	anim.track_insert_key(t_rot, 0.22, Vector3(180, 0, 0))
+	anim.track_insert_key(t_rot, 0.45, Vector3(360, 0, 0))
+	return anim
+
+func _create_ledge_animation() -> Animation:
+	var anim := Animation.new()
+	anim.loop_mode = Animation.LOOP_LINEAR
+	anim.length = 0.8
+	var lua_rot := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(lua_rot, "Humanoid/TorsoMesh/LeftUpperArm:rotation_degrees")
+	anim.track_insert_key(lua_rot, 0.0, Vector3(-165, 0, 0))
+	anim.track_insert_key(lua_rot, 0.8, Vector3(-165, 0, 0))
+	var rua_rot := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(rua_rot, "Humanoid/TorsoMesh/RightUpperArm:rotation_degrees")
+	anim.track_insert_key(rua_rot, 0.0, Vector3(-165, 0, 0))
+	anim.track_insert_key(rua_rot, 0.8, Vector3(-165, 0, 0))
+	var t_pos := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(t_pos, "Humanoid/TorsoMesh:position")
+	anim.track_insert_key(t_pos, 0.0, Vector3(0, -0.1, 0))
+	anim.track_insert_key(t_pos, 0.4, Vector3(0, -0.15, 0))
+	anim.track_insert_key(t_pos, 0.8, Vector3(0, -0.1, 0))
+	return anim
+
+func _create_ledge_getup_animation() -> Animation:
+	var anim := Animation.new()
+	anim.length = 0.32
+	var lua_rot := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(lua_rot, "Humanoid/TorsoMesh/LeftUpperArm:rotation_degrees")
+	anim.track_insert_key(lua_rot, 0.0, Vector3(-165, 0, 0))
+	anim.track_insert_key(lua_rot, 0.16, Vector3(-75, 0, 0))
+	anim.track_insert_key(lua_rot, 0.32, Vector3(0, 0, 0))
+	var rua_rot := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(rua_rot, "Humanoid/TorsoMesh/RightUpperArm:rotation_degrees")
+	anim.track_insert_key(rua_rot, 0.0, Vector3(-165, 0, 0))
+	anim.track_insert_key(rua_rot, 0.16, Vector3(-75, 0, 0))
+	anim.track_insert_key(rua_rot, 0.32, Vector3(0, 0, 0))
+	var t_pos := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(t_pos, "Humanoid/TorsoMesh:position")
+	anim.track_insert_key(t_pos, 0.0, Vector3(0, -0.1, 0))
+	anim.track_insert_key(t_pos, 0.16, Vector3(0, 0.2, 0))
+	anim.track_insert_key(t_pos, 0.32, Vector3(0, 0.05, 0))
+	return anim
+
+func _create_special_side_animation() -> Animation:
+	# Menacing Lunge Dash: Embestida veloz hacia el frente
+	var anim := Animation.new()
+	anim.length = 0.38
+	var t_rot := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(t_rot, "Humanoid/TorsoMesh:rotation_degrees")
+	anim.track_insert_key(t_rot, 0.00, Vector3(0, 0, 0))
+	anim.track_insert_key(t_rot, 0.10, Vector3(35, 0, 0))
+	anim.track_insert_key(t_rot, 0.38, Vector3(0, 0, 0))
+	var t_pos := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(t_pos, "Humanoid/TorsoMesh:position")
+	anim.track_insert_key(t_pos, 0.00, Vector3(0, 0.05, 0))
+	anim.track_insert_key(t_pos, 0.10, Vector3(0.25, -0.05, 0))
+	anim.track_insert_key(t_pos, 0.38, Vector3(0, 0.05, 0))
+	var lua_rot := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(lua_rot, "Humanoid/TorsoMesh/LeftUpperArm:rotation_degrees")
+	anim.track_insert_key(lua_rot, 0.00, Vector3(0, 0, 0))
+	anim.track_insert_key(lua_rot, 0.10, Vector3(-105, 10, 0))
+	anim.track_insert_key(lua_rot, 0.38, Vector3(0, 0, 0))
+	var rua_rot := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(rua_rot, "Humanoid/TorsoMesh/RightUpperArm:rotation_degrees")
+	anim.track_insert_key(rua_rot, 0.00, Vector3(0, 0, 0))
+	anim.track_insert_key(rua_rot, 0.10, Vector3(-115, -10, 0))
+	anim.track_insert_key(rua_rot, 0.38, Vector3(0, 0, 0))
+	return anim
+
+func _create_sakuya_attack_neutral_animation() -> Animation:
+	var anim := Animation.new()
+	anim.length = 0.24
+	var rua_rot := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(rua_rot, "Humanoid/TorsoMesh/RightUpperArm:rotation_degrees")
+	anim.track_insert_key(rua_rot, 0.00, Vector3(-18, -8, 10))
+	anim.track_insert_key(rua_rot, 0.07, Vector3(-120, -28, 0))
+	anim.track_insert_key(rua_rot, 0.24, Vector3(0, 0, 0))
+	var t_rot := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(t_rot, "Humanoid/TorsoMesh:rotation_degrees")
+	anim.track_insert_key(t_rot, 0.00, Vector3(0, 0, 0))
+	anim.track_insert_key(t_rot, 0.07, Vector3(-4, -22, 0))
+	anim.track_insert_key(t_rot, 0.24, Vector3(0, 0, 0))
+	return anim
+
+func _create_sakuya_attack_neutral2_animation() -> Animation:
+	var anim := Animation.new()
+	anim.length = 0.30
+	var lua_rot := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(lua_rot, "Humanoid/TorsoMesh/LeftUpperArm:rotation_degrees")
+	anim.track_insert_key(lua_rot, 0.00, Vector3(-12, 0, 0))
+	anim.track_insert_key(lua_rot, 0.08, Vector3(-110, 24, 0))
+	anim.track_insert_key(lua_rot, 0.17, Vector3(6, 0, 0))
+	anim.track_insert_key(lua_rot, 0.30, Vector3(0, 0, 0))
+	var rua_rot := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(rua_rot, "Humanoid/TorsoMesh/RightUpperArm:rotation_degrees")
+	anim.track_insert_key(rua_rot, 0.00, Vector3(0, 0, 0))
+	anim.track_insert_key(rua_rot, 0.10, Vector3(-95, -22, 0))
+	anim.track_insert_key(rua_rot, 0.22, Vector3(8, 0, 0))
+	anim.track_insert_key(rua_rot, 0.30, Vector3(0, 0, 0))
+	return anim
+
+func _create_sakuya_attack_neutral3_animation() -> Animation:
+	var anim := Animation.new()
+	anim.length = 0.40
+	var rua_rot := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(rua_rot, "Humanoid/TorsoMesh/RightUpperArm:rotation_degrees")
+	anim.track_insert_key(rua_rot, 0.00, Vector3(20, -15, 0))
+	anim.track_insert_key(rua_rot, 0.14, Vector3(-145, -10, 0))
+	anim.track_insert_key(rua_rot, 0.40, Vector3(0, 0, 0))
+	var t_pos := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(t_pos, "Humanoid/TorsoMesh:position")
+	anim.track_insert_key(t_pos, 0.00, Vector3(0, 0.05, 0))
+	anim.track_insert_key(t_pos, 0.14, Vector3(0.22, 0.10, 0))
+	anim.track_insert_key(t_pos, 0.40, Vector3(0, 0.05, 0))
+	return anim
+
+func _create_sakuya_attack_side_animation() -> Animation:
+	var anim := Animation.new()
+	anim.length = 0.34
+	var rua_rot := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(rua_rot, "Humanoid/TorsoMesh/RightUpperArm:rotation_degrees")
+	anim.track_insert_key(rua_rot, 0.00, Vector3(0, 0, 0))
+	anim.track_insert_key(rua_rot, 0.09, Vector3(-120, -18, 0))
+	anim.track_insert_key(rua_rot, 0.34, Vector3(0, 0, 0))
+	var lua_rot := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(lua_rot, "Humanoid/TorsoMesh/LeftUpperArm:rotation_degrees")
+	anim.track_insert_key(lua_rot, 0.00, Vector3(0, 0, 0))
+	anim.track_insert_key(lua_rot, 0.09, Vector3(-40, 18, 0))
+	anim.track_insert_key(lua_rot, 0.34, Vector3(0, 0, 0))
+	return anim
+
+func _create_sakuya_attack_up_animation() -> Animation:
+	var anim := Animation.new()
+	anim.length = 0.32
+	var lua_rot := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(lua_rot, "Humanoid/TorsoMesh/LeftUpperArm:rotation_degrees")
+	anim.track_insert_key(lua_rot, 0.00, Vector3(-10, 0, 0))
+	anim.track_insert_key(lua_rot, 0.11, Vector3(-165, 8, 0))
+	anim.track_insert_key(lua_rot, 0.32, Vector3(0, 0, 0))
+	var t_rot := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(t_rot, "Humanoid/TorsoMesh:rotation_degrees")
+	anim.track_insert_key(t_rot, 0.00, Vector3(0, 0, 0))
+	anim.track_insert_key(t_rot, 0.11, Vector3(-30, 6, 0))
+	anim.track_insert_key(t_rot, 0.32, Vector3(0, 0, 0))
+	return anim
+
+func _create_sakuya_attack_down_animation() -> Animation:
+	var anim := Animation.new()
+	anim.length = 0.31
+	var t_pos := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(t_pos, "Humanoid/TorsoMesh:position")
+	anim.track_insert_key(t_pos, 0.00, Vector3(0, 0.05, 0))
+	anim.track_insert_key(t_pos, 0.08, Vector3(0.18, -0.18, 0))
+	anim.track_insert_key(t_pos, 0.31, Vector3(0, 0.05, 0))
+	var rul_rot := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(rul_rot, "Humanoid/RightUpperLeg:rotation_degrees")
+	anim.track_insert_key(rul_rot, 0.00, Vector3(0, 0, 0))
+	anim.track_insert_key(rul_rot, 0.08, Vector3(-78, 26, 0))
+	anim.track_insert_key(rul_rot, 0.31, Vector3(0, 0, 0))
+	return anim
+
+func _create_sakuya_neutral_air_animation() -> Animation:
+	var anim := Animation.new()
+	anim.length = 0.34
+	var t_rot := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(t_rot, "Humanoid/TorsoMesh:rotation_degrees")
+	anim.track_insert_key(t_rot, 0.00, Vector3(0, 0, 0))
+	anim.track_insert_key(t_rot, 0.17, Vector3(0, 155, 0))
+	anim.track_insert_key(t_rot, 0.34, Vector3(0, 310, 0))
+	var rua_rot := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(rua_rot, "Humanoid/TorsoMesh/RightUpperArm:rotation_degrees")
+	anim.track_insert_key(rua_rot, 0.00, Vector3(-80, -20, 0))
+	anim.track_insert_key(rua_rot, 0.34, Vector3(0, 0, 0))
+	return anim
+
+func _create_sakuya_up_air_animation() -> Animation:
+	var anim := Animation.new()
+	anim.length = 0.30
+	var lua_rot := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(lua_rot, "Humanoid/TorsoMesh/LeftUpperArm:rotation_degrees")
+	anim.track_insert_key(lua_rot, 0.00, Vector3(-20, 0, 0))
+	anim.track_insert_key(lua_rot, 0.12, Vector3(-175, 10, 0))
+	anim.track_insert_key(lua_rot, 0.30, Vector3(0, 0, 0))
+	var t_rot := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(t_rot, "Humanoid/TorsoMesh:rotation_degrees")
+	anim.track_insert_key(t_rot, 0.00, Vector3(0, 0, 0))
+	anim.track_insert_key(t_rot, 0.12, Vector3(-155, 0, 0))
+	anim.track_insert_key(t_rot, 0.30, Vector3(-320, 0, 0))
+	return anim
+
+func _create_sakuya_down_air_animation() -> Animation:
+	var anim := Animation.new()
+	anim.length = 0.44
+	var lul_rot := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(lul_rot, "Humanoid/LeftUpperLeg:rotation_degrees")
+	anim.track_insert_key(lul_rot, 0.00, Vector3(-40, 0, 0))
+	anim.track_insert_key(lul_rot, 0.15, Vector3(35, 0, 0))
+	anim.track_insert_key(lul_rot, 0.44, Vector3(0, 0, 0))
+	var rul_rot := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(rul_rot, "Humanoid/RightUpperLeg:rotation_degrees")
+	anim.track_insert_key(rul_rot, 0.00, Vector3(-40, 0, 0))
+	anim.track_insert_key(rul_rot, 0.15, Vector3(35, 0, 0))
+	anim.track_insert_key(rul_rot, 0.44, Vector3(0, 0, 0))
+	return anim
+
+func _create_sakuya_special_neutral_animation() -> Animation:
+	var anim := Animation.new()
+	anim.length = 0.46
+	var rua_rot := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(rua_rot, "Humanoid/TorsoMesh/RightUpperArm:rotation_degrees")
+	anim.track_insert_key(rua_rot, 0.00, Vector3(0, 0, 0))
+	anim.track_insert_key(rua_rot, 0.16, Vector3(-65, -42, 0))
+	anim.track_insert_key(rua_rot, 0.46, Vector3(0, 0, 0))
+	var lua_rot := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(lua_rot, "Humanoid/TorsoMesh/LeftUpperArm:rotation_degrees")
+	anim.track_insert_key(lua_rot, 0.00, Vector3(0, 0, 0))
+	anim.track_insert_key(lua_rot, 0.16, Vector3(-58, 38, 0))
+	anim.track_insert_key(lua_rot, 0.46, Vector3(0, 0, 0))
+	return anim
+
+func _create_sakuya_special_side_animation() -> Animation:
+	var anim := Animation.new()
+	anim.length = 0.44
+	var t_pos := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(t_pos, "Humanoid/TorsoMesh:position")
+	anim.track_insert_key(t_pos, 0.00, Vector3(0, 0.05, 0))
+	anim.track_insert_key(t_pos, 0.12, Vector3(0.12, 0.02, 0))
+	anim.track_insert_key(t_pos, 0.44, Vector3(0, 0.05, 0))
+	var rua_rot := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(rua_rot, "Humanoid/TorsoMesh/RightUpperArm:rotation_degrees")
+	anim.track_insert_key(rua_rot, 0.00, Vector3(0, 0, 0))
+	anim.track_insert_key(rua_rot, 0.12, Vector3(-120, -16, 0))
+	anim.track_insert_key(rua_rot, 0.44, Vector3(0, 0, 0))
+	return anim
+
+func _create_sakuya_special_up_animation() -> Animation:
+	var anim := Animation.new()
+	anim.length = 0.50
+	var t_rot := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(t_rot, "Humanoid/TorsoMesh:rotation_degrees")
+	anim.track_insert_key(t_rot, 0.00, Vector3(0, 0, 0))
+	anim.track_insert_key(t_rot, 0.18, Vector3(-12, 150, 0))
+	anim.track_insert_key(t_rot, 0.33, Vector3(-12, 300, 0))
+	anim.track_insert_key(t_rot, 0.50, Vector3(0, 360, 0))
+	var rua_rot := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(rua_rot, "Humanoid/TorsoMesh/RightUpperArm:rotation_degrees")
+	anim.track_insert_key(rua_rot, 0.00, Vector3(10, -15, 0))
+	anim.track_insert_key(rua_rot, 0.10, Vector3(-170, -8, 0))
+	anim.track_insert_key(rua_rot, 0.50, Vector3(-90, 0, 0))
+	return anim
+
+func _create_sakuya_special_down_animation() -> Animation:
+	var anim := Animation.new()
+	anim.length = 0.58
+	var t_pos := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(t_pos, "Humanoid/TorsoMesh:position")
+	anim.track_insert_key(t_pos, 0.00, Vector3(0, 0.05, 0))
+	anim.track_insert_key(t_pos, 0.20, Vector3(0, 0.12, 0))
+	anim.track_insert_key(t_pos, 0.58, Vector3(0, 0.05, 0))
+	var lua_rot := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(lua_rot, "Humanoid/TorsoMesh/LeftUpperArm:rotation_degrees")
+	anim.track_insert_key(lua_rot, 0.00, Vector3(0, 0, 0))
+	anim.track_insert_key(lua_rot, 0.20, Vector3(-95, 28, 0))
+	anim.track_insert_key(lua_rot, 0.58, Vector3(0, 0, 0))
+	var rua_rot := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(rua_rot, "Humanoid/TorsoMesh/RightUpperArm:rotation_degrees")
+	anim.track_insert_key(rua_rot, 0.00, Vector3(0, 0, 0))
+	anim.track_insert_key(rua_rot, 0.20, Vector3(-95, -28, 0))
+	anim.track_insert_key(rua_rot, 0.58, Vector3(0, 0, 0))
+	return anim
+
+func _create_sakuya_idle_animation() -> Animation:
+	# Elegant Maid Stance: Postura erguida y elegante con manos reposando al frente
+	var anim := Animation.new()
+	anim.loop_mode = Animation.LOOP_LINEAR
+	anim.length = 1.4
+	var t_pos := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(t_pos, "Humanoid/TorsoMesh:position")
+	anim.track_insert_key(t_pos, 0.0, Vector3(0, 0.05, 0))
+	anim.track_insert_key(t_pos, 0.7, Vector3(0, 0.07, 0))
+	anim.track_insert_key(t_pos, 1.4, Vector3(0, 0.05, 0))
+	var t_rot := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(t_rot, "Humanoid/TorsoMesh:rotation_degrees")
+	anim.track_insert_key(t_rot, 0.0, Vector3(2, 0, 0))
+	anim.track_insert_key(t_rot, 0.7, Vector3(0, 0, 0))
+	anim.track_insert_key(t_rot, 1.4, Vector3(2, 0, 0))
+	var lua_rot := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(lua_rot, "Humanoid/TorsoMesh/LeftUpperArm:rotation_degrees")
+	anim.track_insert_key(lua_rot, 0.0, Vector3(-35, 25, 0))
+	anim.track_insert_key(lua_rot, 0.7, Vector3(-30, 20, 0))
+	anim.track_insert_key(lua_rot, 1.4, Vector3(-35, 25, 0))
+	var lfa_rot := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(lfa_rot, "Humanoid/TorsoMesh/LeftUpperArm/LeftForearm:rotation_degrees")
+	anim.track_insert_key(lfa_rot, 0.0, Vector3(-80, 0, 0))
+	anim.track_insert_key(lfa_rot, 0.7, Vector3(-75, 0, 0))
+	anim.track_insert_key(lfa_rot, 1.4, Vector3(-80, 0, 0))
+	var rua_rot := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(rua_rot, "Humanoid/TorsoMesh/RightUpperArm:rotation_degrees")
+	anim.track_insert_key(rua_rot, 0.0, Vector3(-35, -25, 0))
+	anim.track_insert_key(rua_rot, 0.7, Vector3(-30, -20, 0))
+	anim.track_insert_key(rua_rot, 1.4, Vector3(-35, -25, 0))
+	var rfa_rot := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(rfa_rot, "Humanoid/TorsoMesh/RightUpperArm/RightForearm:rotation_degrees")
+	anim.track_insert_key(rfa_rot, 0.0, Vector3(-80, 0, 0))
+	anim.track_insert_key(rfa_rot, 0.7, Vector3(-75, 0, 0))
+	anim.track_insert_key(rfa_rot, 1.4, Vector3(-80, 0, 0))
+	return anim
+
+func _create_sakuya_walk_animation() -> Animation:
+	# Graceful Maid Walk
+	var anim := Animation.new()
+	anim.loop_mode = Animation.LOOP_LINEAR
+	anim.length = 0.6
+	var t_rot := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(t_rot, "Humanoid/TorsoMesh:rotation_degrees")
+	anim.track_insert_key(t_rot, 0.0, Vector3(4, 0, 4))
+	anim.track_insert_key(t_rot, 0.3, Vector3(4, 0, -4))
+	anim.track_insert_key(t_rot, 0.6, Vector3(4, 0, 4))
+	var lul_rot := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(lul_rot, "Humanoid/LeftUpperLeg:rotation_degrees")
+	anim.track_insert_key(lul_rot, 0.0, Vector3(25, 0, 0))
+	anim.track_insert_key(lul_rot, 0.3, Vector3(-25, 0, 0))
+	anim.track_insert_key(lul_rot, 0.6, Vector3(25, 0, 0))
+	var rul_rot := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(rul_rot, "Humanoid/RightUpperLeg:rotation_degrees")
+	anim.track_insert_key(rul_rot, 0.0, Vector3(-25, 0, 0))
+	anim.track_insert_key(rul_rot, 0.3, Vector3(25, 0, 0))
+	anim.track_insert_key(rul_rot, 0.6, Vector3(-25, 0, 0))
+	return anim
+
+func _create_sakuya_run_animation() -> Animation:
+	# Swift Maid Dash
+	var anim := Animation.new()
+	anim.loop_mode = Animation.LOOP_LINEAR
+	anim.length = 0.36
+	var t_rot := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(t_rot, "Humanoid/TorsoMesh:rotation_degrees")
+	anim.track_insert_key(t_rot, 0.0, Vector3(20, 0, 0))
+	var lua_rot := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(lua_rot, "Humanoid/TorsoMesh/LeftUpperArm:rotation_degrees")
+	anim.track_insert_key(lua_rot, 0.0, Vector3(30, 15, 0))
+	var rua_rot := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(rua_rot, "Humanoid/TorsoMesh/RightUpperArm:rotation_degrees")
+	anim.track_insert_key(rua_rot, 0.0, Vector3(30, -15, 0))
+	var lul_rot := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(lul_rot, "Humanoid/LeftUpperLeg:rotation_degrees")
+	anim.track_insert_key(lul_rot, 0.0, Vector3(45, 0, 0))
+	anim.track_insert_key(lul_rot, 0.18, Vector3(-45, 0, 0))
+	anim.track_insert_key(lul_rot, 0.36, Vector3(45, 0, 0))
+	var rul_rot := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(rul_rot, "Humanoid/RightUpperLeg:rotation_degrees")
+	anim.track_insert_key(rul_rot, 0.0, Vector3(-45, 0, 0))
+	anim.track_insert_key(rul_rot, 0.18, Vector3(45, 0, 0))
+	anim.track_insert_key(rul_rot, 0.36, Vector3(-45, 0, 0))
 	return anim

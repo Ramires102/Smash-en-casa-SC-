@@ -1,0 +1,37 @@
+[gd_scene load_steps=5 format=2]
+
+[ext_resource path="res://ASSETS/UI Features/ico_time_60.png" type="Texture" id=1]
+[ext_resource path="res://ASSETS/Fonts/TF2_72.tres" type="DynamicFont" id=2]
+[ext_resource path="res://ASSETS/StageSelect/Time.gd" type="Script" id=3]
+[ext_resource path="res://ASSETS/Shaders/Outline.tres" type="Material" id=4]
+
+[node name="MarginContainer" type="MarginContainer"]
+margin_right = 256.0
+margin_bottom = 64.0
+rect_min_size = Vector2( 256, 64 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="HBoxContainer" type="HBoxContainer" parent="."]
+margin_right = 307.0
+margin_bottom = 64.0
+
+[node name="TextureRect" type="TextureRect" parent="HBoxContainer"]
+modulate = Color( 0.721569, 0.564706, 1, 1 )
+material = ExtResource( 4 )
+margin_right = 64.0
+margin_bottom = 64.0
+texture = ExtResource( 1 )
+stretch_mode = 6
+
+[node name="Time" type="Label" parent="HBoxContainer"]
+margin_left = 68.0
+margin_right = 307.0
+margin_bottom = 64.0
+size_flags_horizontal = 3
+size_flags_vertical = 7
+custom_fonts/font = ExtResource( 2 )
+text = "13:03 PM"
+valign = 2
+script = ExtResource( 3 )

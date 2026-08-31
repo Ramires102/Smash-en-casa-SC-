@@ -1,0 +1,6390 @@
+[gd_scene load_steps=58 format=2]
+
+[ext_resource path="res://ASSETS/Scout/ScoutSprites.tres" type="SpriteFrames" id=1]
+[ext_resource path="res://ASSETS/Scout/ScoutAnim.tres" type="Animation" id=2]
+[ext_resource path="res://ASSETS/Effects/Explosion.tscn" type="PackedScene" id=3]
+[ext_resource path="res://Grabbox.tscn" type="PackedScene" id=5]
+[ext_resource path="res://ASSETS/Fox/FOX_ANGEL_PLAT.tscn" type="PackedScene" id=6]
+[ext_resource path="res://Hitbox.tscn" type="PackedScene" id=7]
+[ext_resource path="res://ASSETS/Mario/Mario_fireball.tscn" type="PackedScene" id=8]
+[ext_resource path="res://ASSETS/Mario/MarioAnim.tres" type="Animation" id=35]
+
+[sub_resource type="GDScript" id=1]
+script/source = "extends KinematicBody2D
+export var id: int
+export var percentage = 0
+export var stocks = 3 
+export var weight = 110
+var velocity = Vector2(0,0)
+export(float) var time_scale = 1
+#A constant is something that doesnt change,
+#\"SPEED\" is just the name of the constant used, similar to ta variable
+const UP = Vector2(0,-1)
+export var hitbox: PackedScene
+export var grabbox: PackedScene
+export var projectile: PackedScene
+export var explosion: PackedScene
+export var angel_platform: PackedScene
+
+#	var RUNSPEED = RUNSPEED_1#*get_process_delta_time()#340
+#	var DASHSPEED = DASHSPEED_1#*get_process_delta_time()#390
+#	var WALKSPEED = WALKSPEED_1#*get_process_delta_time()#159
+#	var GRAVITY = GRAVITY_1#*get_process_delta_time()#1800
+#	var JUMPFORCE = JUMPFORCE_1#*get_process_delta_time()#500
+#	var MAX_JUMPFORCE = MAX_JUMPFORCE_1#*get_process_delta_time()#800
+#	var DOUBLEJUMPFORCE = DOUBLEJUMPFORCE_1#*get_process_delta_time()#1000
+#	var MAXAIRSPEED = MAXAIRSPEED_1#*get_process_delta_time()#300
+#	var AIR_ACCEL = AIR_ACCEL_1#*get_process_delta_time()#30
+#	var FALLSPEED = FALLSPEED_1#*get_process_delta_time()#60
+#	var FALLINGSPEED = FALLINGSPEED_1#*get_process_delta_time()#900
+#	var MAXFALLSPEED = MAXFALLSPEED_1#*get_process_delta_time()#900
+#	var TRACTION = TRACTION_1#*get_process_delta_time()#40
+#	var ROLL_DISTANCE = ROLL_DISTANCE_1#*get_process_delta_time()#350
+#	var air_dodge_speed = air_dodge_speed_1
+#	var UP_B_LAUNCHSPEED =UP_B_LAUNCHSPEED_1
+
+export(float) var RUNSPEED = 300#18600#*get_process_delta_time()#310
+export(float) var DASHSPEED = 320#21000#*get_process_delta_time()#350
+export(float) var WALKSPEED = 155#9540#*get_process_delta_time()#159
+export(float) var GRAVITY = 1800#108000#*get_process_delta_time()#1800
+export(float) var JUMPFORCE = 500#28140#*get_process_delta_time()#469
+export(float) var MAX_JUMPFORCE = 680#43920#*get_process_delta_time()#732
+export(float) var DOUBLEJUMPFORCE = 600#49800#*get_process_delta_time()#830
+export(float) var MAXAIRSPEED = 300#18000#*get_process_delta_time()#300
+export(float) var AIR_ACCEL = 16#1800#*get_process_delta_time()#30
+export(float) var FALLSPEED = 40#3060#*get_process_delta_time()#51
+export(float) var FALLINGSPEED = 900#54000#*get_process_delta_time()#900
+export(float) var MAXFALLSPEED = 900#51420#54000#*get_process_delta_time()#857
+export(float) var TRACTION = 32#2400#*get_process_delta_time()#40
+export(float) var ROLL_DISTANCE = 350#21000#*get_process_delta_time()#350
+export(float) var air_dodge_speed = 500#30000#500
+export(float) var UP_B_LAUNCHSPEED = 700#30000#500
+
+export var landing_frames = 0
+onready var shapez = $Collisionbox
+onready var spritez = $Sprite
+onready var anim = $Sprite/AnimationPlayer
+onready var raycasts = $Raycasts
+onready var states = $State
+onready var hurtbox = get_node(\"HurtBox/Hurtbox\")
+onready var last_ledge = false
+#onready var Hitbox = $Hitbox
+onready var Ledge_Grab_F:= $Raycasts/Ledge_Grab_F
+onready var gun_pos = get_node(\"gun_pos\")
+onready var Ledge_Grab_B = get_node('Raycasts/Ledge_Grab_B')
+onready var GroundL = get_node('Raycasts/GroundL')
+onready var GroundR = get_node('Raycasts/GroundR')
+onready var state_machine = $StateMachine
+var is_attacking = false;
+var fastfall = false
+var last_platform = false
+var regrab = 30
+var down_buffer = 0
+var up_buffer = 0
+var right_buffer = 0
+var left_buffer = 0
+var shield_buffer = 0
+var invis_frames = 0
+var tech_frames = 0
+var cooldown =0
+var lag_frames = 0
+var buffer_dodge = false
+var buffering_dodge
+var grabbing = false
+func grabbing(value):
+	grabbing = value
+#Perfect Wavedash
+export var perfect_wavedash_modifier = 1#11
+export var dash_duration = 6
+export var jump_squat_duration = 3
+
+var moonwalk = false
+
+var selfState
+var in_air
+var catch = false
+
+export var airJump = 0
+export var airJumpMax = 2
+
+func reset_sprite():
+	yield(get_tree().create_timer(0.05), \"timeout\")
+	spritez.position = Vector2(0,-8)
+
+func _ready():
+	set_physics_process(true)
+	pass
+
+func _reset_Jumps():
+	airJump = airJumpMax
+
+func parry():
+	if frame==4:
+		pass
+		#turn off hurt box
+	if frame == 20:
+		#enablehurt box
+		pass
+
+func rolling():
+	if frame==4:
+		pass
+		#turn off hurt box
+	if frame == 20:
+		#enablehurt box
+		pass
+
+func reset_platform():
+	last_platform = false
+	self.set_collision_mask_bit(2,true)
+
+func reset_ledge():
+#	last_ledge.is_grabbed = false
+	last_ledge = false
+
+func direction():
+	if Ledge_Grab_F.get_cast_to().x > 0:
+		return 1
+	else:
+		return -1
+
+func invis_frames():
+	invis_frames -=1
+	invis_frames = clamp(invis_frames, 0, invis_frames)
+
+func down_buffer():
+	if not Input.is_action_pressed('down_%s' % id):
+		down_buffer = 0
+	elif Input.is_action_pressed('down_%s' % id):
+		down_buffer+=1
+
+func up_buffer():
+	if not Input.is_action_pressed('up_%s' % id):
+		up_buffer = 0
+	elif Input.is_action_pressed('up_%s' % id):
+		up_buffer+=1
+
+func right_buffer():
+	if not Input.is_action_pressed('right_%s' % id):
+		right_buffer = 0
+	elif Input.is_action_pressed('right_%s' % id):
+		right_buffer+=1
+
+func left_buffer():
+	if not Input.is_action_pressed('left_%s' % id):
+		left_buffer = 0
+	elif Input.is_action_pressed('left_%s' % id):
+		left_buffer+=1
+
+func shield_buffer():
+	if not Input.is_action_pressed('shield_%s' % id):
+		shield_buffer = 0
+	elif Input.is_action_pressed(\"shield_%s\" % id):
+		shield_buffer+=1
+
+func techwindow():
+		tech_frames +=1
+		clamp(tech_frames, 0, 20)
+func tech():
+		tech_frames = 0
+		
+func cooldown():
+	#print (cooldown)
+	cooldown -= 1
+	cooldown = clamp(cooldown,0,cooldown)
+	
+	
+var frame = 0
+var lagframes = 0
+var hitstun = 0
+var knockback = 0
+var charge = 1
+
+var hdecay = 0
+var vdecay = 0
+var hdecay_1 = 0
+var vdecay_1 = 0
+
+func turn(direction):
+	var dir = 0
+	if direction:
+		dir = -1
+	else:
+		dir = 1
+	$Sprite.set_flip_h(direction)
+	gun_pos.position = Vector2(dir*abs(gun_pos.position.x),gun_pos.position.y)
+	Ledge_Grab_F.set_cast_to(Vector2(dir*abs(Ledge_Grab_F.get_cast_to().x),Ledge_Grab_F.get_cast_to().y))
+	Ledge_Grab_B.set_cast_to(Vector2(-dir*abs(Ledge_Grab_F.get_cast_to().x),Ledge_Grab_F.get_cast_to().y))
+
+	pass
+	#For a grab hitbox, maybe I can make a new 'Grab hitbox' 
+	#scene with specific properties to grabbing.
+	#maybe I could copy and paste the 'create hibox' function below
+var connected = false
+
+func create_hitbox(width, height, damage,angle,base_kb, kb_scaling,duration,type,points,angle_flipper,hitlag=1):
+	#var hitbox = preload('Hitbox Test.tscn')
+	var hitbox_instance = hitbox.instance()
+	self.add_child(hitbox_instance)
+	#Rotates The Points 
+	if direction() == 1:
+		hitbox_instance.set_parameters(width, height, damage,angle,base_kb, kb_scaling,duration,type,points,angle_flipper,hitlag)
+		#print (\"1\")
+	else:
+		#var flip_x_points = []
+		#for point in points:
+		#	flip_x_points.append( Vector2(-point.x, point.y) ) 
+		var flip_x_points = Vector2(-points.x, points.y)
+		hitbox_instance.set_parameters(width, height, damage,-angle+180,base_kb, kb_scaling,duration,type,flip_x_points,angle_flipper,hitlag)
+		#print (\"2\")
+	return hitbox_instance
+
+func create_grabbox(width, height, damage,duration,points):
+	var grabbox_instance = grabbox.instance()
+	self.add_child(grabbox_instance)
+	#Rotates The Points 
+	if direction() == 1:
+		grabbox_instance.set_parameters(width, height, damage,duration,points)
+		#print (\"1\")
+	else:
+		var flip_x_points = Vector2(-points.x, points.y)
+		grabbox_instance.set_parameters(width, height, damage,duration,flip_x_points)
+		#print (\"2\")
+	return grabbox_instance
+
+func create_projectile(dir_x,dir_y,point):
+	var projectile_instance = projectile.instance()
+	projectile_instance.player_list.append(self)
+#	get_parent().add_child(projectile_instance)
+	#sets position
+	gun_pos.set_position(point)
+	#Flips the direction
+	if direction() == 1:
+		projectile_instance.dir(dir_x,dir_y)
+		get_parent().add_child(projectile_instance)
+		projectile_instance.set_position(gun_pos.get_global_position())
+		#print (\"1\")
+	else:
+		gun_pos.position.x = -gun_pos.position.x
+		projectile_instance.dir(-(dir_x),dir_y)
+		get_parent().add_child(projectile_instance)
+		projectile_instance.set_position(gun_pos.get_global_position())
+		#print (\"2\")
+	return projectile_instance
+
+func PARRY():
+	if frame == 2:
+		#create_hitbox(30,60,60,76,24,100,4,'normal',[Vector2(-16,0)],1.5)
+		create_hitbox(48,68,6,76,18,140,4,'normal',Vector2(-22,-15),0,0.6)
+	if frame ==30:
+		return true
+
+func RESPAWN():
+	var angel_plat = angel_platform.instance()
+	self.add_child(angel_plat)
+	return true
+	
+func DESPAWN():
+	var angel_plat = get_node(\"FOX_ANGEL_PLAT\")
+	angel_plat.queue_free()
+	return true
+
+func UP_TILT():
+	if frame == 6:
+		#create_hitbox(30,60,60,76,24,100,4,'normal',[Vector2(-16,0)],1.5)
+		create_hitbox(32,44.8,3,90,6,125,2,'normal',Vector2(3.2,-32),0,1)
+	if frame >=18:
+		return true
+
+func DOWN_TILT():
+	if frame == 6:
+	#	create_hitbox(40,20,5,90,18,110,4,'normal',Vector2(64,32),0.6)
+		create_hitbox(68,26.8,4,70,7,160,15,'normal',Vector2(44,16),0,1)
+	if frame >=22:
+		return true
+
+func FORWARD_TILT():
+	if frame == 8:
+		#create_hitbox(40,20,7,120,40,140,3,'normal',Vector2(48,8),0.3,false)
+		create_hitbox(68,26.8,5,40,8,150,8,'normal',Vector2(-0.8,8.8),0,1)
+	if frame >=17:
+		return true
+		
+func JAB():
+	if frame == 2:
+			create_grabbox(30,40,0,3,Vector2(64,0))
+	if frame == 5:
+			if grabbing == true:
+				return false
+				#create_grabbox(40,50,0,13,Vector2(64,0))
+	if frame >= 20:
+		return true
+
+func JAB_1():
+	if frame == 1:
+		grabbing = false
+		create_grabbox(30,40,0,13,Vector2(64,0))
+	if frame == 12:
+		create_hitbox(40,20,8,90,11,150,9,'normal',Vector2(48,8),0,1)
+	#if frame == 26:
+	#	create_projectile(0,-1,Vector2(34.089,-70.645))
+#	if frame == 32:
+#		create_projectile(0,-1,Vector2(34.089,-70.645))
+#	if frame == 39:
+#		create_projectile(0,-1,Vector2(34.089,-70.645))
+	if frame == 32:
+		return true
+
+func NEUTRAL_SPECIAL():
+	if frame == 35:
+		return true
+
+func FORWARD_SPECIAL():
+	if frame == 32:
+		return true
+
+func DOWN_SPECIAL():
+	if frame == 2:
+		create_hitbox(16,22.4,10,290,13,120,15,'normal',Vector2(0,32),0,1)
+		#This is only meant to make the opponant stun
+	if frame == 30:
+		return true
+
+func UP_SPECIAL():
+	if frame == 10:
+		create_hitbox(41.6,39.2,3,270,2,120,5,'normal',Vector2(-4,74.4),0,1)
+	if frame == 34:
+		create_hitbox(41.6,39.2,6,270,4,140,4,'normal',Vector2(-4,74.4),0,1)
+	if frame == 53:
+		return true
+
+func NAIR():
+	if frame == 8:
+		create_hitbox(51.2,51.2,1,40,160,0,5,'normal',Vector2(3.2,-6.4),0,1)
+	if frame == 14:
+		create_hitbox(51.2,51.2,1,45,125,0,5,'normal',Vector2(3.2,-6.4),0,1)
+	if frame == 21:
+		create_hitbox(51.2,51.2,3,55,8,120,6,'normal',Vector2(3.2,-6.4),0,1)
+	if frame == 36:
+		return true
+
+func UAIR():
+	if frame == 7:
+		create_hitbox(28.8,60.8,1,90,160,0,3,'slash',Vector2(0,-3.2),3,1)
+	if frame == 10:
+		create_hitbox(28.8,60.8,1,90,8,125,3,'slash',Vector2(0,-3.2),0,1)
+	if frame == 13:
+		create_hitbox(30,60.8,2,90,20,170,4,'slash',Vector2(0,-3.2),0,1)
+	if frame == 25:
+		return true 
+
+func BAIR():
+	if frame == 6:
+		create_hitbox(35.2,32,5,45,5,160,10,'normal',Vector2(-25.6,-6.8),6,1)
+	if frame == 27:
+		return true
+
+func FAIR():
+	if frame == 12:
+		create_hitbox(6.8,6.8,10,40,2,180,4,'normal',Vector2(41.6,-25.6),0,1)
+	if frame == 15:
+		create_hitbox(44.8,38.4,6,40,7,160,9,'normal',Vector2(38.4,-25.6),0,1)
+	if frame == 25:
+		return true
+
+func DAIR():
+	if frame == 12:
+		create_hitbox(44.8,30,4,45,6,160,5,'normal',Vector2(0,-12.8),0,1)
+		create_hitbox(16,19.2,4,290,4,160,12,'normal',Vector2(-3.2,51.2),6,1)
+	if frame == 18:
+		create_hitbox(19.2,19.2,4,270,6.6,100,5,'normal',Vector2(0,60.8),6,1)
+	if frame == 35:
+		return true
+
+func DOWN_SMASH():
+	if frame == 4:
+		create_hitbox(86.4,32.8,11*charge,45,8,170,8,'normal',Vector2(0,-8.8),0,0.7)
+	if frame == 32:
+		return true
+
+func UP_SMASH():
+	if frame == 10:
+		create_hitbox(19.2,89.6,7*charge,45,140,0,3,'normal',Vector2(-28.8,-44.8),3,1)
+		create_hitbox(19.2,89.6,7*charge,170,140,0,3,'normal',Vector2(32.8,-44.8),3,1)
+	if frame == 25:
+		create_hitbox(42.4,108.8,8*charge,90,6,120,4,'normal',Vector2(-2.4,-63.2),0,1)
+		create_hitbox(19.2,19.2,8*charge,90,6,120,4,'normal',Vector2(-3.2,-32),0,1)
+	if frame == 55:
+		return true
+
+func FORWARD_SMASH():
+	if frame == 14:
+		create_hitbox(67.2,44.8,15*charge,45,8,110,4,'none',Vector2(22.4,-3.2),0,0.4)
+	if frame == 42:
+		return true
+
+
+func updateframes():
+	frame += 1#round(60*delta)
+	$Frames.text = str(frame)
+	$Health.text = str(percentage)+\" %\"
+func frame():
+	frame = 0
+
+################################################################################################
+################################################################################################
+func play_animation(animation_name):
+	$Sprite/AnimationPlayer.play(animation_name)
+	#$State.text = animation_name
+################################################################################################
+################################################################################################
+var movement
+
+func _physics_process(delta):
+	selfState = states.text
+	#print (str(selfState))
+	#velocity.y# += GRAVITY * (delta)
+	#movement = move_and_slide(velocity,Vector2.UP)#*time_scale
+
+	match id:
+		1:
+			Globals.player_1[\"percentage\"] = percentage
+			Globals.player_1[\"stocks\"] = stocks
+		2:
+			Globals.player_2[\"percentage\"] = percentage
+			Globals.player_2[\"stocks\"] = stocks
+
+
+
+
+"
+
+[sub_resource type="GDScript" id=2]
+script/source = "extends StateMachine
+var id
+var cooldown_gun =0
+func _ready():
+	self.id = get_parent().id
+	add_state('STAND')
+	add_state('JUMP_SQUAT')
+	add_state('FULL_HOP')
+	add_state('SHORT_HOP')
+	add_state('MOONWALK')
+	add_state('DASH')
+	add_state('RUN')
+	add_state('WALK')
+	add_state('TURN')
+	add_state('CROUCH')
+	add_state('AIR')
+	add_state('FREE_FALL')
+	add_state('AIR_DODGE')
+	add_state(\"LANDING\")
+	add_state('LEDGE_CATCH')
+	add_state('LEDGE_HOLD')
+	add_state('LEDGE_CLIMB')
+	add_state('LEDGE_JUMP')
+	add_state('LEDGE_ROLL')
+	add_state('HITSTUN')
+	add_state('TUMBLE')
+	add_state('PARRY')
+	add_state('ROLL_RIGHT')
+	add_state('ROLL_LEFT')
+	add_state('TECH')
+	add_state('TECH_GROUND')
+	add_state('TECH_FORWARD')
+	add_state('TECH_BACKWARD')
+	add_state('GROUND_ATTACK')
+	add_state(\"UP_TILT\") #could make it so that uptilt code is stored
+#in players own script and returns a true value when carried out
+	add_state('DOWN_TILT')
+	add_state('FORWARD_TILT')
+	add_state('JAB')
+	add_state('JAB_1')
+	add_state('SPECIAL')
+	add_state('DOWN_SPECIAL')
+	add_state('FORWARD_SPECIAL')
+	add_state('NEUTRAL_SPECIAL')
+	add_state('UP_SPECIAL')
+	add_state('UP_SPECIAL_1')
+	add_state('AIR_ATTACK')
+	add_state('NAIR')
+	add_state('UAIR')
+	add_state('BAIR')
+	add_state('FAIR')
+	add_state('DAIR')
+	add_state('SMASH_ATTACK')
+	add_state('DOWN_SMASH')
+	add_state('DOWN_SMASH_1')
+	add_state('UP_SMASH')
+	add_state('UP_SMASH_1')
+	add_state('FORWARD_SMASH')
+	add_state('FORWARD_SMASH_1')
+	add_state('RESPAWN')
+	add_state('DEAD')
+
+	call_deferred(\"set_state\", states.STAND)
+
+func state_logic(delta):
+	parent.updateframes()
+	#parent.$Frames.text = str(frame)
+	parent._physics_process(delta)
+#	parent._handinputs()
+#	parent.velocity.y += parent.GRAVITY * (delta)
+	parent.down_buffer()
+	parent.up_buffer()
+	parent.right_buffer()
+	parent.left_buffer()
+	parent.shield_buffer()
+#	print (parent.shield_buffer)
+	#parent._reset_Jumps()
+	parent.techwindow()
+	parent.invis_frames()
+	parent.cooldown()
+	if parent.regrab > 0:
+		parent.regrab-=1
+	char_angle_reset()
+
+
+func get_transition(delta):
+	var snap = Vector2.DOWN if !AIREAL() else Vector2.ZERO
+	parent.movement =  parent.move_and_slide_with_snap(parent.velocity*2,snap,Vector2.UP)
+	
+	Platform_Drop()
+	
+
+	if Falling() == true:
+		return states.AIR
+
+
+	if parent.frame >0:
+		if Landing() == true:
+			parent.frame()
+			return states.LANDING
+
+
+	if Ledge() == true:
+		parent.frame()
+		return states.LEDGE_CATCH
+	
+	var PlatDrop
+	PlatDrop = Platform_Drop()
+	
+	if parent.invis_frames == 0:
+		enable_HurtBox()
+	
+	if Ledge() == false :
+		parent.reset_ledge()
+
+	if right_stick()== true && TILT() == true:
+		if Input.is_action_pressed(\"r_up_%s\" %id):
+			parent.frame()
+			return states.UP_TILT
+		if Input.is_action_pressed(\"r_right_%s\" %id):
+			parent.frame()
+			parent.turn(false)
+			return states.FORWARD_TILT
+		if Input.is_action_pressed(\"r_down_%s\" %id):
+			parent.frame()
+			return states.DOWN_TILT
+		if Input.is_action_pressed(\"r_left_%s\" %id):
+			parent.frame()
+			parent.turn(true)
+			return states.FORWARD_TILT
+
+	if right_stick()== true && AIREAL() == true:
+		if Input.is_action_pressed(\"r_up_%s\" %id):
+			parent.frame()
+			return states.UAIR
+		match parent.direction():
+			1:
+				if Input.is_action_pressed(\"r_left_%s\" % id):
+					parent.frame()
+					return states.BAIR
+				if Input.is_action_pressed(\"r_right_%s\" % id):
+					parent.frame()
+					return states.FAIR
+			-1:
+				if Input.is_action_pressed(\"r_right_%s\" % id):
+					parent.frame()
+					return states.BAIR
+				if Input.is_action_pressed(\"r_left_%s\" % id):
+					parent.frame()
+					return states.FAIR
+		if Input.is_action_pressed(\"r_down_%s\" %id):
+			parent.frame()
+			return states.DAIR
+
+	if Input.is_action_just_pressed(\"attack_%s\" % id) && Input.is_action_pressed(\"down_%s\" % id) && parent.down_buffer < 4 && TILT()== true:#&& TILT() == true:
+		if TILT() == true:
+			parent.frame()
+			return states.SMASH_ATTACK
+	if Input.is_action_just_pressed(\"attack_%s\" % id) && Input.is_action_pressed(\"up_%s\" %id) && parent.up_buffer < 4 && TILT()== true:#&& TILT() == true:
+		if TILT() == true:
+			parent.frame()
+			return states.SMASH_ATTACK
+	if Input.is_action_pressed(\"right_%s\" %id) && Input.is_action_just_pressed(\"attack_%s\" % id) && parent.right_buffer < 4 && TILT()== true:#&& TILT() == true:
+		if TILT() == true:
+			parent.turn(false)
+			parent.frame()
+			return states.SMASH_ATTACK
+	if Input.is_action_pressed(\"left_%s\" %id) && Input.is_action_just_pressed(\"attack_%s\" % id) && parent.left_buffer < 4 && TILT()== true:#&& TILT() == true:
+		if TILT() == true:
+			parent.turn(true)
+			parent.frame()
+			return states.SMASH_ATTACK
+
+	if Input.is_action_just_pressed(\"attack_%s\" % id) && TILT() == true:
+		parent.frame()
+		return states.GROUND_ATTACK
+
+	if Input.is_action_just_pressed(\"attack_%s\" % id) && AIREAL() == true:
+			if Input.is_action_pressed(\"up_%s\" % id):
+				parent.frame()
+				return states.UAIR
+			if Input.is_action_pressed(\"down_%s\" % id):
+				parent.frame()
+				return states.DAIR
+			match parent.direction():
+				1:
+					if Input.is_action_pressed(\"left_%s\" % id):
+						parent.frame()
+						return states.BAIR
+					if Input.is_action_pressed(\"right_%s\" % id):
+						parent.frame()
+						return states.FAIR
+				-1:
+					if Input.is_action_pressed(\"right_%s\" % id):
+						parent.frame()
+						return states.BAIR
+					if Input.is_action_pressed(\"left_%s\" % id):
+						parent.frame()
+						return states.FAIR
+			parent.frame()
+			return states.NAIR
+
+	if Input.is_action_just_pressed(\"special_%s\" % id) && SPECIAL() == true:
+		parent.frame()
+		return states.SPECIAL
+
+	if Input.is_action_pressed(\"shield_%s\" % id) && can_roll() == true && parent.cooldown == 0 && parent.shield_buffer ==2:
+		if Input.is_action_pressed(\"right_%s\" % id):
+			parent.frame()
+			return states.ROLL_RIGHT
+		elif Input.is_action_pressed(\"left_%s\" % id):
+			parent.frame()
+			return states.ROLL_LEFT
+		else:
+			parent.frame()
+			return states.PARRY
+
+	match state:
+		states.STAND:
+			Edge_Hog()
+			parent._reset_Jumps()
+			if Input.is_action_just_pressed(\"jump_%s\" % id):
+				parent.frame()
+				return states.JUMP_SQUAT
+			if Input.is_action_pressed(\"down_%s\" % id):
+				parent.frame()
+				#sound_play($\"../Fastfall\")
+				return states.CROUCH
+			if Input.get_action_strength(\"right_%s\" % id) == 1:
+				parent.velocity.x = parent.RUNSPEED
+				parent.frame()
+				parent.turn(false)
+				#sound_play($\"../Dash_Right\")
+				return states.DASH
+			if Input.get_action_strength(\"right_%s\" % id) <1 && Input.get_action_strength(\"right_%s\" % id) >0.1:
+				parent.velocity.x = parent.WALKSPEED
+				parent.frame()
+				parent.turn(false)
+				#sound_play($\"../Dash_Right\")
+				return states.WALK
+			if Input.get_action_strength(\"left_%s\" % id) == 1:
+				parent.velocity.x = -parent.RUNSPEED
+				parent.frame()
+				parent.turn(true)
+				#sound_play($\"../Dash_Left\")
+				return states.DASH
+			if Input.get_action_strength(\"left_%s\" % id) < 1  && Input.get_action_strength(\"left_%s\" % id) >0.1:
+				parent.velocity.x = parent.WALKSPEED
+				parent.frame()
+				parent.turn(true)
+				#sound_play($\"../Dash_Right\")
+				return states.WALK
+			if parent.velocity.x > 0 and state == states.STAND:
+				parent.velocity.x += -parent.TRACTION*1
+				parent.velocity.x = clamp(parent.velocity.x,0,parent.velocity.x)
+			elif parent.velocity.x < 0 and state == states.STAND:
+				parent.velocity.x += parent.TRACTION*1
+				parent.velocity.x = clamp(parent.velocity.x,parent.velocity.x,0)
+
+				
+		states.JUMP_SQUAT:
+			if parent.frame < parent.jump_squat_duration:
+				if not parent.buffer_dodge:
+					parent.buffer_dodge = Input.is_action_just_pressed(\"shield_%s\" % id)
+			if parent.frame == parent.jump_squat_duration:
+				if (Input.is_action_pressed(\"shield_%s\" % id)) and (Input.is_action_pressed(\"left_%s\" % id) or Input.is_action_pressed(\"right_%s\" % id)):
+					if	Input.is_action_pressed(\"right_%s\" % id):
+						parent.velocity.x = parent.air_dodge_speed/parent.perfect_wavedash_modifier
+					if Input.is_action_pressed(\"left_%s\" % id):
+						parent.velocity.x = -parent.air_dodge_speed/parent.perfect_wavedash_modifier
+					parent.lag_frames = 6
+					parent.frame()
+					return states.LANDING
+
+
+				elif not Input.is_action_pressed(\"jump_%s\" % id):
+					parent.velocity.x = lerp(parent.velocity.x,0,0.08)
+					parent.frame()
+					return states.SHORT_HOP
+				else:
+					parent.velocity.x = lerp(parent.velocity.x,0,0.08)
+					parent.frame()
+					return states.FULL_HOP
+				parent.buffer_dodge = false
+
+		states.FULL_HOP:
+			if Input.is_action_just_released(\"shield_%s\" % id):
+				parent.frame()
+				return states.AIR_DODGE
+			parent.velocity.y = -parent.MAX_JUMPFORCE
+			sound_play($\"../Jump\")
+			parent.frame()
+			return states.AIR
+
+
+		states.SHORT_HOP:
+			if Input.is_action_just_pressed(\"shield_%s\" % id):
+				parent.frame()
+				return states.AIR_DODGE
+			parent.velocity.y = -parent.JUMPFORCE
+			sound_play($\"../Jump\")
+			parent.frame()
+			return states.AIR
+
+		states.MOONWALK:
+			if Input.is_action_just_pressed(\"jump_%s\" % id):
+				parent.frame()
+				return states.JUMP_SQUAT
+
+			elif Input.is_action_pressed(\"left_%s\" % id) && parent.direction() == 1:
+				if parent.velocity.x > 0:
+					parent.frame()
+				parent.velocity.x += -parent.AIR_ACCEL * Input.get_action_strength(\"left_%s\" % id)
+				parent.velocity.x = clamp(parent.velocity.x,-parent.DASHSPEED*1.4,parent.velocity.x)
+				if parent.frame <= parent.dash_duration*2:
+					parent.turn(false)
+					return states.MOONWALK
+				else:
+					parent.turn(true)
+					parent.frame()
+					return states.STAND
+
+			elif Input.is_action_pressed(\"right_%s\" % id) && parent.direction() == -1:
+				if parent.velocity.x < 0:
+					parent.frame()
+				parent.velocity.x += parent.AIR_ACCEL * Input.get_action_strength(\"right_%s\" % id)
+				parent.velocity.x = clamp(parent.velocity.x,parent.velocity.x,parent.DASHSPEED*1.5)
+				if parent.frame <= parent.dash_duration*2:
+					parent.turn(true)
+					return states.MOONWALK
+				else:
+					parent.turn(false)
+					parent.frame()
+					return states.STAND
+
+			else:
+				if parent.frame >= parent.dash_duration-1:
+					for state in states:
+						if state != \"JUMP_SQUAT\":
+							sound_play($\"../Dash_Stop\")
+							return states.STAND
+			if PlatDrop == true:
+				return states.AIR
+
+		states.DASH:
+			Edge_Hog()
+			#add moonwalking, In ROA it's done so that if 'crouch'
+			#is pressed during a dash, then back character will accelerate backwards
+			#whilst facing forwards during the dash frames.
+			if Input.is_action_just_pressed(\"jump_%s\" % id):
+				parent.frame()
+				return states.JUMP_SQUAT
+
+			elif Input.is_action_pressed(\"left_%s\" % id):
+				if parent.velocity.x > 0:
+					sound_play($\"../Dash_Left\")
+					parent.frame()
+				parent.velocity.x = -parent.DASHSPEED
+				if parent.frame <= parent.dash_duration-1:
+					if Input.is_action_just_pressed(\"down_%s\" % id):
+						parent.frame()
+						return states.MOONWALK
+					parent.turn(true)
+					return states.DASH
+				else:
+					parent.turn(true)
+					parent.frame()
+					return states.RUN
+
+			elif Input.is_action_pressed(\"right_%s\" % id):
+				if parent.velocity.x < 0:
+					sound_play($\"../Dash_Right\")
+					parent.frame()
+				parent.velocity.x =parent.DASHSPEED
+				if parent.frame <= parent.dash_duration-1:
+					if Input.is_action_just_pressed(\"down_%s\" % id):
+						parent.frame()
+						return states.MOONWALK
+					parent.turn(false)
+					return states.DASH
+				else:
+					parent.turn(false)
+					parent.frame()
+					return states.RUN
+			else:
+				if parent.frame >= parent.dash_duration-1:
+					for state in states:
+						if state != \"JUMP_SQUAT\":
+							sound_play($\"../Dash_Stop\")
+							parent.frame()
+							return states.STAND
+			if PlatDrop == true:
+				parent.frame()
+				return states.AIR
+			#Edge_Hog()
+
+		states.RUN:
+			if Input.is_action_just_pressed(\"jump_%s\" % id):
+				parent.frame()
+				return states.JUMP_SQUAT 
+			if Input.is_action_just_pressed(\"down_%s\" % id):
+				parent.frame()
+				return states.CROUCH
+			if Input.get_action_strength(\"left_%s\" % id):
+				if parent.velocity.x <= 0:
+					parent.velocity.x = -parent.RUNSPEED
+					parent.turn(true)
+				else:
+					parent.frame()
+					return states.TURN
+			elif Input.get_action_strength(\"right_%s\" % id):
+				if parent.velocity.x >= 0:
+					parent.velocity.x = parent.RUNSPEED
+					parent.turn(false)
+				else:
+					parent.frame()
+					return states.TURN
+			else:
+				#if parent.velocity.x > 0:
+				#	parent.velocity.x =  parent.velocity.x - parent.TRACTION*1
+				#	parent.velocity.x = clamp(parent.velocity.x,0,parent.velocity.x)
+				#elif parent.velocity.x < 0:
+				#	parent.velocity.x =  parent.velocity.x + parent.TRACTION*1
+				#	parent.velocity.x = clamp(parent.velocity.x,parent.velocity.x,0)
+			#	#Add a \"DashStop\" Animation here to show fox slowing down
+				#else:
+				parent.frame()
+				return states.STAND
+			if PlatDrop == true:
+				parent.frame()
+				return states.AIR
+
+		states.WALK:
+			if parent.frame < 5:
+				if Input.get_action_strength(\"left_%s\" % id) == 1:
+					parent.velocity.x = -parent.RUNSPEED
+					parent.frame()
+					parent.turn(true)
+					#sound_play($\"../Dash_Left\")
+					return states.DASH
+				if Input.get_action_strength(\"right_%s\" % id) == 1:
+					parent.velocity.x = parent.RUNSPEED
+					parent.frame()
+					parent.turn(false)
+					#sound_play($\"../Dash_Left\")
+					return states.DASH
+			if Input.is_action_just_pressed(\"jump_%s\" % id):
+				parent.frame()
+				return states.JUMP_SQUAT 
+			if Input.is_action_just_pressed(\"down_%s\" % id):
+				parent.frame()
+				return states.CROUCH
+			if Input.get_action_strength(\"left_%s\" % id):
+				parent.velocity.x = -parent.WALKSPEED* Input.get_action_strength(\"left_%s\" % id)
+				parent.turn(true)
+			elif Input.get_action_strength(\"right_%s\" % id):
+				parent.velocity.x = parent.WALKSPEED* Input.get_action_strength(\"right_%s\" % id)
+				parent.turn(false)
+			else:
+				parent.frame()
+				return states.STAND
+			if PlatDrop == true:
+				parent.frame()
+				return states.AIR
+			Edge_Hog()
+
+		states.TURN:
+			sound_play($\"../Dash_Stop\")
+			if Input.is_action_just_pressed(\"jump_%s\" % id):
+				parent.frame()
+				return states.JUMP_SQUAT 
+			if parent.velocity.x > 0:
+				parent.turn(true)
+				parent.velocity.x += -parent.TRACTION*1
+				parent.velocity.x = clamp(parent.velocity.x,0,parent.velocity.x)
+			elif parent.velocity.x < 0:
+				parent.turn(false)
+				parent.velocity.x += parent.TRACTION*1
+				parent.velocity.x = clamp(parent.velocity.x,parent.velocity.x,0)
+			else:
+				if not Input.is_action_pressed(\"left_%s\" % id) and not Input.is_action_pressed(\"right_%s\" % id):
+					parent.frame()
+					return states.STAND
+				else:
+					parent.frame()
+					return states.RUN
+
+		states.CROUCH:
+			if Input.is_action_just_pressed(\"jump_%s\" % id):
+				parent.frame()
+				return states.JUMP_SQUAT 
+			if Input.is_action_just_released(\"down_%s\" % id):
+				sound_play($\"../Dash_Stop\")
+				parent.frame()
+				return states.STAND
+			elif parent.velocity.x > 0:
+				if parent.velocity.x>parent.RUNSPEED:		
+					parent.velocity.x +=  -(parent.TRACTION*4)
+					parent.velocity.x = clamp(parent.velocity.x,0,parent.velocity.x)
+				else:	
+					parent.velocity.x +=  -(parent.TRACTION/2)
+					parent.velocity.x = clamp(parent.velocity.x,0,parent.velocity.x)
+			elif parent.velocity.x < 0:
+				if abs(parent.velocity.x)>parent.RUNSPEED:		
+					parent.velocity.x +=  (parent.TRACTION*4)
+					parent.velocity.x = clamp(parent.velocity.x,parent.velocity.x,0)
+				else:	
+					parent.velocity.x += (parent.TRACTION/2)
+					parent.velocity.x = clamp(parent.velocity.x,parent.velocity.x,0)
+			if PlatDrop == true:
+				parent.frame()
+				return states.AIR
+
+
+		states.AIR:
+			AIRMOVEMENT()
+			if Input.is_action_just_pressed(\"shield_%s\" % id):
+				parent.frame()
+				return states.AIR_DODGE
+			if Input.is_action_just_pressed(\"jump_%s\" % id) and parent.airJump > 0:
+				parent.fastfall = false
+				parent.velocity.x = 0
+				parent.velocity.y = -parent.DOUBLEJUMPFORCE
+				parent.airJump -= 1
+				sound_play($\"../Air Jump\")
+				sound_play($\"../Air_jump_2\")
+				if Input.is_action_pressed(\"left_%s\" % id):
+					parent.velocity.x = -parent.MAXAIRSPEED
+				elif Input.is_action_pressed(\"right_%s\" % id):
+					parent.velocity.x = parent.MAXAIRSPEED
+
+			if Input.is_action_just_pressed(\"special_%s\" % id) && Input.is_action_pressed(\"up_%s\" % id):
+				parent.frame()
+				return states.UP_SPECIAL
+			if Input.is_action_just_pressed(\"special_%s\" % id) && Input.is_action_pressed(\"down_%s\" % id):
+				#parent.frame()
+				#parent.cooldown = 30
+				print(parent.cooldown)
+				if parent.cooldown == 0:
+					parent.frame()
+					return states.DOWN_SPECIAL
+				else:
+					parent.frame()
+					return states.AIR
+			if Input.is_action_just_pressed(\"special_%s\" % id) && Input.is_action_pressed(\"left_%s\" % id):
+				parent.turn(true)
+				parent.frame()
+				return states.FORWARD_SPECIAL
+			if Input.is_action_just_pressed(\"special_%s\" % id) && Input.is_action_pressed(\"right_%s\" % id):
+				parent.turn(false)
+				parent.frame()
+				return states.FORWARD_SPECIAL
+			if Input.is_action_just_pressed(\"special_%s\" % id):
+				parent.frame()
+				return states.NEUTRAL_SPECIAL
+
+
+				#parent.airJump - 1
+
+		states.FREE_FALL:
+			if parent.velocity.y <parent. MAXFALLSPEED:
+				parent.velocity.y +=parent.FALLSPEED
+
+			if Input.is_action_just_pressed(\"down_%s\" % id) and parent.velocity.y > 0 and not parent.fastfall :
+				parent.velocity.y = parent.MAXFALLSPEED
+				parent.fastfall = true
+
+			if  abs(parent.velocity.x) >=  abs(parent.MAXAIRSPEED):
+				if parent.velocity.x > 0:
+					if Input.is_action_pressed(\"left_%s\" % id):
+						parent.velocity.x += -parent.AIR_ACCEL
+					elif Input.is_action_pressed(\"right_%s\" % id):
+							parent.velocity.x = parent.velocity.x
+				if parent.velocity.x < 0:
+					if Input.is_action_pressed(\"left_%s\" % id):
+						parent.velocity.x = parent.velocity.x
+					elif Input.is_action_pressed(\"right_%s\" % id):
+						parent.velocity.x += parent.AIR_ACCEL
+					
+			elif abs(parent.velocity.x) < abs(parent.MAXAIRSPEED):
+				if Input.is_action_pressed(\"left_%s\" % id):
+					parent.velocity.x += -parent.AIR_ACCEL
+				if Input.is_action_pressed(\"right_%s\" % id):
+					parent.velocity.x += parent.AIR_ACCEL
+			if not Input.is_action_pressed(\"left_%s\" % id) and not Input.is_action_pressed(\"right_%s\" % id):
+				#print('Air Deaccel')
+				if parent.velocity.x < 0:
+					parent.velocity.x += (parent.AIR_ACCEL/ 2)
+				elif parent.velocity.x > 0:
+					parent.velocity.x += (-parent.AIR_ACCEL / 2)
+					
+
+		states.LANDING:
+			Edge_Hog()
+			parent.connected = false
+			if parent.tech_frames <20:
+				return states.TECH
+			if parent.frame <= parent.landing_frames + parent.lag_frames:
+				if parent.frame == 1:
+					pass
+				if parent.velocity.x > 0:
+					parent.velocity.x =  parent.velocity.x - parent.TRACTION/2
+					parent.velocity.x = clamp(parent.velocity.x, 0 , parent.velocity.x)
+				elif parent.velocity.x < 0:
+					parent.velocity.x =  parent.velocity.x + parent.TRACTION/2
+					parent.velocity.x = clamp(parent.velocity.x, parent.velocity.x, 0 )
+				if Input.is_action_just_pressed(\"jump_%s\" % id): #and Input.is_action_pressed(\"shield\"):
+					parent.frame()
+					return states.JUMP_SQUAT
+			else:
+				if Input.is_action_pressed(\"down_%s\" % id):
+					parent.lag_frames = 0
+					parent.frame()
+					return states.CROUCH
+				else:
+					parent.frame()
+					parent.lag_frames = 0
+					return states.STAND
+				parent.lag_frames = 0
+
+		states.AIR_DODGE:
+			sound_play($\"../Shoulder Press\")
+			if parent.frame == 1:
+				parent.velocity.x =0 
+				parent.velocity.y =0
+				
+				var deadzone = (Input.get_action_strength(\"right_%s\" % id) - Input.get_action_strength(\"left_%s\" % id) in range(-0.2,1.2) and Input.get_action_strength(\"up_%s\" % id) - Input.get_action_strength(\"down_%s\" % id) in range(-0.2,1.2))
+				var direction = Vector2(Input.get_action_strength(\"right_%s\" % id) - Input.get_action_strength(\"left_%s\" % id),Input.get_action_strength(\"down_%s\" % id) - Input.get_action_strength(\"up_%s\" % id))
+				if deadzone:
+					direction = Vector2(0,0)
+				parent.velocity = parent.air_dodge_speed*direction.normalized()
+				if abs(parent.velocity.x)==abs(parent.velocity.y):
+					parent.velocity.x = parent.velocity.x/1.15
+					parent.velocity.y = parent.velocity.y/1.15
+				parent.lag_frames = 3
+
+			if parent.frame >= 4 and parent.frame <= 10:
+				parent.hurtbox.disabled = true
+				sound_play($\"../Airdodge\")
+				if parent.frame == 5:
+				#	audio.playsfx(audio_path('air_dodge'),0.74)
+					pass
+				parent.velocity.x = parent.velocity.x/1.15
+				parent.velocity.y = parent.velocity.y/1.15
+			if parent.frame >=10 and parent.frame < 20:		
+				parent.velocity.x = 0
+				parent.velocity.y = 0
+			elif parent.frame == 20:
+				parent.lag_frames = 8
+				parent.frame = 0
+				parent.frame()
+				return states.FREE_FALL
+			if parent.is_on_floor():
+				parent.frame = 0
+				if parent.velocity.y > 0:
+					parent.velocity.y = 0
+				parent._reset_Jumps()
+				parent.reset_platform()
+				parent.fastfall = false
+				parent.frame()
+				return states.LANDING
+
+
+
+		states.LEDGE_CATCH:
+				parent.hurtbox.disabled = true
+				if parent.frame > 7:
+					parent.lag_frames = 0
+					parent._reset_Jumps()
+					parent.frame()
+					return states.LEDGE_HOLD
+
+
+
+		states.LEDGE_HOLD:
+			if parent.frame <=30:
+				parent.hurtbox.disabled = true
+			else:
+				parent.hurtbox.disabled = false
+			if parent.frame >=390: #3.5 seconds
+				self.parent.position.y += -25
+				parent.frame()
+				return states.TUMBLE
+			if Input.is_action_just_pressed(\"down_%s\" % id):
+				parent.fastfall = true
+				parent.regrab = 30
+				parent.reset_ledge()
+				self.parent.position.y += -25
+				parent.catch = false
+				parent.frame()
+				return states.AIR
+				#Hack, should be Air dodge collision shape extents.y and halved
+				#Feels EXTREMELY nice like this tho
+				#parent.self.position.y += -25
+			#Facing Right
+			elif parent.Ledge_Grab_F.get_cast_to().x>0:
+				if Input.is_action_just_pressed(\"left_%s\" % id):
+					parent.velocity.x = (parent.AIR_ACCEL/2)
+					parent.regrab = 30
+					parent.reset_ledge()
+					self.parent.position.y += -25
+					parent.catch = false
+					parent.frame()
+					return states.AIR
+					#Same as above
+					#parent.self.position.y += -25
+				
+				elif Input.is_action_just_pressed(\"right_%s\" % id):
+					parent.frame()
+					return states.LEDGE_CLIMB
+				elif Input.is_action_just_pressed(\"shield_%s\" % id):
+					parent.frame()
+					return states.LEDGE_ROLL
+				elif Input.is_action_just_pressed(\"jump_%s\" % id):
+					parent.frame()
+					return states.LEDGE_JUMP
+
+					
+						
+			#Facing Left
+			elif parent.Ledge_Grab_F.get_cast_to().x<0:
+				if Input.is_action_just_pressed(\"right_%s\" % id):
+					parent.velocity.x = (parent.AIR_ACCEL/2)
+					parent.regrab = 30
+					parent.reset_ledge()
+					self.parent.position.y += -25
+					parent.frame()
+					return states.AIR
+					#Same as above
+					#parent.self.position.y += -25
+				
+				elif Input.is_action_just_pressed(\"left_%s\" % id):
+					parent.frame()
+					return states.LEDGE_CLIMB
+				elif Input.is_action_just_pressed(\"shield_%s\" % id):
+					parent.frame()
+					return states.LEDGE_ROLL
+				elif Input.is_action_just_pressed(\"jump_%s\" % id):
+					parent.frame()
+					return states.LEDGE_JUMP
+
+		states.LEDGE_CLIMB:
+			if parent.frame == 1:
+				parent.hurtbox.disabled = true
+			if parent.frame == 5:
+				parent.position.y -=25
+			if parent.frame == 10:
+				parent.position.y -=25
+			
+			if parent.frame == 20:
+				parent.position.y -=25	
+			
+			if parent.frame == 22:
+				parent.catch = false
+				parent.position.y -=25
+				parent.position.x +=50*parent.direction()
+				
+			if parent.frame==25:
+				parent.velocity.y=0
+				parent.velocity.x=0
+				parent.move_and_collide(Vector2(parent.direction()*20,50))
+				parent.hurtbox.disabled = false
+			if parent.frame==30:
+				parent.reset_ledge()
+				parent.frame()
+				return states.STAND
+
+		states.LEDGE_JUMP:
+				if parent.frame >14:
+					if Input.is_action_just_pressed(\"attack_%s\" % id):
+						parent.frame()
+						return states.AIR_ATTACK
+					if Input.is_action_just_pressed(\"special_%s\" % id):
+						parent.frame()
+						return states.SPECIAL
+				if parent.frame == 5:
+					parent.reset_ledge()
+					parent.position.y -=20
+				if parent.frame == 10:
+					parent.catch = false
+					parent.position.y -=20
+					if Input.is_action_just_pressed(\"jump_%s\" % id) and parent.airJump > 0:
+						parent.fastfall = false
+						parent.velocity.y = -parent.DOUBLEJUMPFORCE
+						parent.velocity.x = 0
+						parent.airJump -= 1
+						parent.frame()
+						return states.AIR
+				if parent.frame == 15:
+					parent.position.y -=20	
+					parent.velocity.y -=parent.DOUBLEJUMPFORCE#*1.5
+					parent.velocity.x +=220*parent.direction()
+					if Input.is_action_just_pressed(\"jump_%s\" % id) and parent.airJump > 0:
+						parent.fastfall = false
+						parent.velocity.y = -parent.DOUBLEJUMPFORCE
+						parent.velocity.x = 0
+						parent.airJump -= 1
+						parent.frame()
+						return states.AIR
+					if Input.is_action_just_pressed(\"attack_%s\" % id):
+						parent.frame()
+						return states.AIR_ATTACK
+				elif parent.frame > 15 and parent.frame <20:
+					parent.velocity.y+=parent.FALLSPEED
+					if Input.is_action_just_pressed(\"jump_%s\" % id) and parent.airJump > 0:
+						parent.fastfall = false
+						parent.velocity.y = -parent.DOUBLEJUMPFORCE
+						parent.velocity.x = 0
+						parent.airJump -= 1
+						parent.frame()
+						return states.AIR
+					if Input.is_action_just_pressed(\"attack_%s\" % id):
+						parent.frame()
+						return states.AIR_ATTACK
+				if parent.frame==20:
+					parent.frame()
+					return states.AIR
+
+		states.LEDGE_ROLL:
+			if parent.frame == 1:
+				parent.hurtbox.disabled = true
+			if parent.frame == 5:
+				parent.position.y -=30
+			if parent.frame == 10:
+				parent.position.y -=30
+			
+			if parent.frame == 20:
+				parent.catch = false
+				parent.position.y -=30
+			
+			if parent.frame == 22:
+				parent.position.y -=30
+				parent.position.x +=50*parent.direction()
+			
+			if parent.frame >22 and parent.frame<28:
+				parent.position.x +=30*parent.direction()
+				parent.hurtbox.disabled = false
+		
+			if parent.frame==29:
+				parent.move_and_collide(Vector2(parent.direction()*20,50))
+			if parent.frame==30:
+				parent.velocity.y=0
+				parent.velocity.x=0
+				parent.reset_ledge()
+				parent.frame()
+				return states.STAND
+
+		states.HITSTUN:
+			#print (parent.velocity.x)
+			if parent.knockback >= 18:
+				var bounce = parent.move_and_collide(parent.velocity *delta)
+				if bounce:
+					parent.velocity = parent.velocity.bounce(bounce.normal) * 0.6
+#				if parent.velocity.y < 0:
+#					parent.velocity.y +=parent.vdecay#*0.1
+#				if parent.velocity.x < 0:
+#					parent.velocity.x += (parent.hdecay)#/4 * -1
+#					parent.velocity.x = clamp(parent.velocity.x,parent.velocity.x,0)
+#				if parent.velocity.x > 0:
+#					parent.velocity.x -= parent.hdecay#/4
+#					parent.velocity.x = clamp(parent.velocity.x,0,parent.velocity.x)
+			if parent.velocity.y < 0:
+				parent.velocity.y +=parent.vdecay*0.5
+				parent.velocity.y = clamp(parent.velocity.y,parent.velocity.y,0)
+			if parent.velocity.x < 0:
+				parent.velocity.x += (parent.hdecay)*0.4 *-1#/5 * -1
+				parent.velocity.x = clamp(parent.velocity.x,parent.velocity.x,0)
+			elif parent.velocity.x > 0:
+				parent.velocity.x -= parent.hdecay*0.4#/5
+				parent.velocity.x = clamp(parent.velocity.x,0,parent.velocity.x)
+			#print (\"knockback: \"+ str(parent.knockback))
+			if parent.frame == parent.hitstun:
+				#print (\"knocback is\" + str(parent.knockback))
+				if parent.knockback >= 24:
+					parent.frame()
+					return states.TUMBLE
+				else:
+					parent.frame()
+					return states.AIR
+
+
+		states.TUMBLE:
+		#	parent.catch = false
+			AIRMOVEMENT()
+			if Input.is_action_just_pressed(\"jump_%s\" % id) and parent.airJump > 0:
+				parent.fastfall = false
+				parent.velocity.y = -parent.DOUBLEJUMPFORCE
+				parent.airJump -= 1
+				if Input.is_action_pressed(\"left_%s\" % id):
+					parent.velocity.x = -parent.MAXAIRSPEED
+				elif Input.is_action_pressed(\"right_%s\" % id):
+					parent.velocity.x = parent.MAXAIRSPEED
+				return states.AIR
+			if AIREAL() == true:
+				pass
+			if Input.is_action_pressed(\"shield_%s\" % id) and parent.shield_buffer >= 5:
+				parent.frame()
+				return states.AIR_DODGE
+			
+			if Input.is_action_just_pressed(\"shield_%s\" % id) and parent.cooldown == 0:
+				parent.tech()
+				parent.cooldown = 40
+			else:
+				if Landing() == true:
+					if parent.tech_frames>=20:
+						parent.lag_frames = 7
+					parent.frame()
+					return states.LANDING
+			if parent.GroundL.is_colliding() and not parent.GroundR.is_colliding():
+				Edge_Hog()
+
+		states.PARRY:
+				if parent.velocity.x > 0:
+					parent.velocity.x += -parent.TRACTION*10
+					parent.velocity.x = clamp(parent.velocity.x,0,parent.velocity.x)
+				elif parent.velocity.x < 0:
+					parent.velocity.x +=  parent.TRACTION*10
+					parent.velocity.x = clamp(parent.velocity.x,parent.velocity.x,0)
+				if parent.frame >=3 && parent.frame<=20:
+					parent.hurtbox.disabled = true
+				if parent.frame>=21:
+					parent.hurtbox.disabled = false
+				if parent.frame == 30:
+					parent.frame()
+					return states.STAND
+
+		states.ROLL_RIGHT:
+			parent.turn(false)
+			if parent.frame == 1:
+				parent.velocity.x = 0
+			if parent.frame==4:
+				parent.velocity.x = parent.ROLL_DISTANCE
+				parent.hurtbox.disabled = true
+			if parent.frame == 20:
+				parent.hurtbox.disabled = false
+			if parent.frame >19:
+				parent.velocity.x =  parent.velocity.x - parent.TRACTION*5
+				parent.velocity.x = clamp(parent.velocity.x,0,parent.velocity.x)
+				if parent.velocity.x == 0:
+					parent.cooldown = 20
+					parent.lag_frames=10
+					parent.frame()
+					return states.LANDING
+		states.ROLL_LEFT:
+			parent.turn(true)
+			if parent.frame == 1:
+				parent.velocity.x = 0
+			if parent.frame==4:
+				parent.velocity.x = -parent.ROLL_DISTANCE
+				parent.hurtbox.disabled = true
+			if parent.frame == 20:
+				parent.hurtbox.disabled = false
+			if parent.frame > 19:
+				print(parent.frame)
+				parent.velocity.x =  parent.velocity.x + parent.TRACTION*5
+				parent.velocity.x = clamp(parent.velocity.x,parent.velocity.x,0)
+				if parent.velocity.x == 0:
+					parent.cooldown = 20
+					parent.lag_frames=10
+					parent.frame()
+					return states.LANDING
+		states.TECH:
+			if (Input.is_action_pressed(\"left_%s\" % id) or Input.is_action_pressed(\"right_%s\" % id)):
+				parent.frame()
+				if Input.is_action_pressed(\"left_%s\" % id):
+					parent.turn(false)
+					parent.frame()
+					return states.TECH_FORWARD
+				if Input.is_action_pressed(\"right_%s\" % id):
+					parent.turn(true)
+					parent.frame()
+					return states.TECH_BACKWARD
+			else:
+				parent.frame()
+				return states.TECH_GROUND
+
+		states.TECH_GROUND:
+			parent.hurtbox.disabled = true
+			if parent.frame==15:
+				parent.hurtbox.disabled = false
+			if parent.frame==19:
+				if Input.is_action_pressed(\"down_%s\" % id):
+					parent.frame()
+					return states.CROUCH
+				else:
+					parent.frame()
+					return states.STAND
+
+		states.TECH_FORWARD:
+			Edge_Hog()
+			parent.hurtbox.disabled = true
+			if parent.frame==4:
+				parent.velocity.x = -parent.ROLL_DISTANCE*1.25
+			if parent.frame==15:
+				parent.hurtbox.disabled = false
+			if parent.frame==19:
+					parent.lag_frames=20
+					parent.frame()
+					return states.LANDING
+
+		states.TECH_BACKWARD:
+			Edge_Hog()
+			parent.hurtbox.disabled = true
+			if parent.frame==4:
+				parent.velocity.x = parent.ROLL_DISTANCE*1.25
+			if parent.frame==15:
+				parent.hurtbox.disabled = false
+			if parent.frame==19:
+					parent.lag_frames=20
+					parent.frame()
+					return states.LANDING
+
+		states.UP_TILT:
+			if parent.frame == 0:
+				parent.frame()
+				parent.UP_TILT()
+			if parent.frame >= 1:
+				if parent.velocity.x > 0:
+					parent.velocity.x += -parent.TRACTION*3
+					parent.velocity.x = clamp(parent.velocity.x,0,parent.velocity.x)
+				elif parent.velocity.x < 0:
+					parent.velocity.x +=  parent.TRACTION*3
+					parent.velocity.x = clamp(parent.velocity.x,parent.velocity.x,0)
+			if parent.UP_TILT() == true:
+				parent.frame()
+				return states.STAND
+
+		states.DOWN_TILT:
+			parent.invis_frames = 0
+			if parent.frame == 0:
+				parent.DOWN_TILT()
+			if parent.frame >= 1:
+				if parent.velocity.x > 0:
+					parent.velocity.x += -parent.TRACTION*3
+					parent.velocity.x = clamp(parent.velocity.x,0,parent.velocity.x)
+				elif parent.velocity.x < 0:
+					parent.velocity.x +=  parent.TRACTION*3
+					parent.velocity.x = clamp(parent.velocity.x,parent.velocity.x,0)
+			if parent.DOWN_TILT() == true:
+				if Input.is_action_pressed(\"down_%s\" % id):
+					parent.frame()
+					return states.CROUCH
+				else:
+					parent.frame()
+					return states.STAND
+
+		states.FORWARD_TILT:
+			parent.invis_frames = 0
+			Edge_Hog()
+			if parent.frame <= 1:
+				if parent.velocity.x > 0:
+					if parent.velocity.x > parent.DASHSPEED:
+						parent.velocity.x = parent.DASHSPEED
+					parent.velocity.x =  parent.velocity.x - parent.TRACTION*2
+					parent.velocity.x = clamp(parent.velocity.x,0,parent.velocity.x)
+				elif parent.velocity.x < 0:
+					if parent.velocity.x < -parent.DASHSPEED:
+						parent.velocity.x = -parent.DASHSPEED
+					parent.velocity.x =  parent.velocity.x + parent.TRACTION*2
+					parent.velocity.x = clamp(parent.velocity.x,parent.velocity.x,0)
+				parent.FORWARD_TILT()
+			if parent.FORWARD_TILT() == true and parent.frame > 12:
+				if Input.is_action_pressed(\"left_%s\" % id):
+					if parent.velocity.x < -parent.DASHSPEED:
+						parent.velocity.x = -parent.DASHSPEED
+					parent.velocity.x =  parent.velocity.x + parent.TRACTION/2
+					parent.velocity.x = clamp(parent.velocity.x,parent.velocity.x,0)
+					parent.frame()
+					return states.WALK
+				if Input.is_action_pressed(\"right_%s\" % id):
+					if parent.velocity.x > parent.DASHSPEED:
+						parent.velocity.x = parent.DASHSPEED
+					parent.velocity.x =  parent.velocity.x - parent.TRACTION/2
+					parent.velocity.x = clamp(parent.velocity.x,0,parent.velocity.x)
+					parent.frame()
+					return states.WALK
+				else:
+					parent.frame()
+					return states.STAND
+
+		states.JAB:
+			parent.invis_frames = 0
+			if parent.frame <= 1:
+				if parent.velocity.x > 0:
+					if parent.velocity.x > parent.DASHSPEED:
+						parent.velocity.x = parent.DASHSPEED
+					parent.velocity.x =  parent.velocity.x - parent.TRACTION*20
+					parent.velocity.x = clamp(parent.velocity.x,0,parent.velocity.x)
+				elif parent.velocity.x < 0:
+					if parent.velocity.x < -parent.DASHSPEED:
+						parent.velocity.x = -parent.DASHSPEED
+					parent.velocity.x =  parent.velocity.x + parent.TRACTION*20
+					parent.velocity.x = clamp(parent.velocity.x,parent.velocity.x,0)
+				parent.JAB()
+			if parent.JAB() == true:
+				if Input.is_action_pressed(\"down_%s\" % id):
+					parent.frame()
+					return states.CROUCH
+				else:
+					parent.frame()
+					return states.STAND
+			if parent.JAB() == false:
+				parent.frame()
+				return states.JAB_1
+		states.JAB_1:
+			parent.invis_frames = 0
+			if parent.frame <= 1:
+				if parent.velocity.x > 0:
+					if parent.velocity.x > parent.DASHSPEED:
+						parent.velocity.x = parent.DASHSPEED
+					parent.velocity.x =  parent.velocity.x - parent.TRACTION*20
+					parent.velocity.x = clamp(parent.velocity.x,0,parent.velocity.x)
+				elif parent.velocity.x < 0:
+					if parent.velocity.x < -parent.DASHSPEED:
+						parent.velocity.x = -parent.DASHSPEED
+					parent.velocity.x =  parent.velocity.x + parent.TRACTION*20
+					parent.velocity.x = clamp(parent.velocity.x,parent.velocity.x,0)
+				parent.JAB_1()
+			if parent.JAB_1() == true:
+				if Input.is_action_pressed(\"down_%s\" % id):
+					parent.frame()
+					return states.CROUCH
+				else:
+					parent.frame()
+					return states.STAND
+
+		states.SMASH_ATTACK:
+			parent.invis_frames = 0
+			if Input.is_action_pressed(\"up_%s\" % id):
+				parent.frame()
+				return states.UP_SMASH
+			if Input.is_action_pressed(\"down_%s\" % id):
+				parent.frame()
+				return states.DOWN_SMASH
+			if (Input.is_action_pressed(\"left_%s\" % id) or Input.is_action_pressed(\"right_%s\" % id)):
+				parent.frame()
+				if Input.is_action_pressed(\"left_%s\" % id):
+					parent.turn(true)
+					parent.frame()
+					return states.FORWARD_SMASH
+				if Input.is_action_pressed(\"right_%s\" % id):
+					parent.turn(false)
+					parent.frame()
+					return states.FORWARD_SMASH
+
+		states.GROUND_ATTACK:
+			parent.invis_frames = 0
+			if Input.is_action_pressed(\"up_%s\" % id):
+				parent.frame()
+				return states.UP_TILT
+			if Input.is_action_pressed(\"down_%s\" % id):
+				parent.frame()
+				return states.DOWN_TILT
+			if (Input.is_action_pressed(\"left_%s\" % id) or Input.is_action_pressed(\"right_%s\" % id)):
+				parent.frame()
+				if Input.is_action_pressed(\"left_%s\" % id):
+					parent.turn(true)
+					parent.frame()
+					return states.FORWARD_TILT
+				if Input.is_action_pressed(\"right_%s\" % id):
+					parent.turn(false)
+					parent.frame()
+					return states.FORWARD_TILT
+			parent.frame()
+			return states.JAB
+
+
+		states.SPECIAL:
+			parent.invis_frames = 0
+			if Input.is_action_pressed(\"up_%s\" % id):
+				parent.frame()
+				return states.UP_SPECIAL
+			if Input.is_action_pressed(\"down_%s\" % id):
+				#parent.frame()
+				#parent.cooldown = 30
+				print(parent.cooldown)
+				if parent.cooldown == 0:
+					parent.frame()
+					return states.DOWN_SPECIAL
+				else:
+					parent.frame()
+					return states.AIR
+			if Input.is_action_pressed(\"left_%s\" % id):
+				parent.turn(true)
+				parent.frame()
+				return states.FORWARD_SPECIAL
+			elif Input.is_action_pressed(\"right_%s\" % id):
+				parent.turn(false)
+				parent.frame()
+				return states.FORWARD_SPECIAL
+			else:
+				parent.frame()
+				return states.NEUTRAL_SPECIAL
+
+			if Input.is_action_pressed(\"up_%s\" % id):
+				parent.frame()
+				return states.UP_SPECIAL
+			if Input.is_action_pressed(\"down_%s\" % id):
+				parent.frame()
+				return states.DOWN_SPECIAL
+			if (Input.is_action_pressed(\"left_%s\" % id) or Input.is_action_pressed(\"right_%s\" % id)):
+				parent.frame()
+				if Input.is_action_pressed(\"left_%s\" % id):
+					parent.turn(true)
+					parent.frame()
+					return states.FORWARD_SPECIAL
+				if Input.is_action_pressed(\"right_%s\" % id):
+					parent.turn(false)
+					parent.frame()
+					return states.FORWARD_SPECIAL
+			parent.frame()
+			return states.NEUTRAL_SPECIAL
+
+
+		states.NEUTRAL_SPECIAL:
+			parent.invis_frames = 0
+			if parent.direction() == -1:
+				parent.spritez.position.x == -64
+			#if parent.frame <= 1:
+			if AIREAL() == false:
+				#if parent.frame <= 1:
+				if parent.velocity.x > 0:
+					if parent.velocity.x > parent.DASHSPEED:
+						parent.velocity.x = parent.DASHSPEED
+					parent.velocity.x =  parent.velocity.x - parent.TRACTION*10
+					parent.velocity.x = clamp(parent.velocity.x,0,parent.velocity.x)
+				elif parent.velocity.x < 0:
+					if parent.velocity.x < -parent.DASHSPEED:
+						parent.velocity.x = -parent.DASHSPEED
+					parent.velocity.x =  parent.velocity.x + parent.TRACTION*10
+					parent.velocity.x = clamp(parent.velocity.x,parent.velocity.x,0)
+				if cooldown_gun == 1:
+					cooldown_gun -= 1
+				#	parent.frame()
+				if cooldown_gun == 0:
+					cooldown_gun += 1
+				#	parent.frame()
+					parent.NEUTRAL_SPECIAL()
+			if AIREAL() == true:
+				AIRMOVEMENT()
+				if parent.frame <= 1:
+					if cooldown_gun == 1:
+						cooldown_gun =- 1
+					if cooldown_gun == 0:
+						cooldown_gun += 1
+						parent.frame()
+						parent.NEUTRAL_SPECIAL()
+			if parent.NEUTRAL_SPECIAL() == true:
+				if AIREAL() == true:
+					return states.AIR
+				if AIREAL() == false:
+					if parent.velocity.x > 0:
+							parent.velocity.x +=  -(parent.DASHSPEED*1.25)
+							parent.velocity.x = clamp(parent.velocity.x,0,parent.velocity.x)
+					elif parent.velocity.x < 0:
+							parent.velocity.x +=  (parent.DASHSPEED*1.25)
+							parent.velocity.x = clamp(parent.velocity.x,parent.velocity.x,0)
+					if Input.is_action_pressed(\"down_%s\" % id):
+						parent.frame()
+						return states.CROUCH
+					else:
+						print ('yo')
+						parent.frame()
+						return states.LANDING
+
+
+		states.FORWARD_SPECIAL:
+			parent.invis_frames = 0
+			if AIREAL() == false:
+				if parent.frame <= 1:
+					parent.velocity.x = 0
+				Edge_Hog()
+			if AIREAL() == true:
+				AIRMOVEMENT()
+				if parent.frame >= 1 and parent.frame <= 10:
+					if parent.velocity.y < 0:
+						parent.velocity.y = -100
+						parent.velocity.x = 0
+					else:
+						parent.velocity.y = -200
+				if parent.frame >=1 and parent.frame <=15: 
+					parent.velocity.x = 0
+		#		if parent.velocity.y < 0:
+		#			parent.velocity.y +=parent.FALLSPEED*8
+		#			parent.velocity.y = clamp(parent.velocity.y,parent.velocity.y,0)
+		#		if parent.velocity.y > 0:
+		#			parent.velocity.y += -(parent.FALLSPEED*8)
+		#			parent.velocity.y = clamp(parent.velocity.y,0,parent.velocity.y)
+		#		if parent.frame <= 1:
+		#			parent.velocity.x = 0
+			if parent.FORWARD_SPECIAL() == true:
+				if AIREAL() == false:
+					Edge_Hog()
+					if Input.is_action_pressed(\"down_%s\" % id):
+						parent.frame()
+						return states.CROUCH
+					else:
+						if parent.velocity.x > 0:
+								parent.velocity.x +=  -(parent.DASHSPEED*1.25)
+								parent.velocity.x = clamp(parent.velocity.x,0,parent.velocity.x)
+						elif parent.velocity.x < 0:
+								parent.velocity.x +=  (parent.DASHSPEED*1.25)
+								parent.velocity.x = clamp(parent.velocity.x,parent.velocity.x,0)
+						parent.frame()
+						return states.STAND
+				else:
+			#		if parent.velocity.x < 0:
+			#			parent.velocity.x += parent.AIR_ACCEL*15
+			#			parent.velocity.x = clamp(parent.velocity.x,parent.velocity.x,0)
+			#		elif parent.velocity.x > 0:
+			#			parent.velocity.x += -parent.AIR_ACCEL*15
+			#			parent.velocity.x = clamp(parent.velocity.x,0,parent.velocity.x)
+					parent.frame()
+					return states.AIR
+
+		states.DOWN_SPECIAL:
+			parent.invis_frames = 0
+			#parent.cooldown = 30
+			if AIREAL() == false:
+				parent.velocity.x = 0
+				if parent.frame == 1:
+					parent.DOWN_SPECIAL()
+			else:
+				parent.fastfall = false
+				#print (parent.cooldown)
+				if parent.velocity.y < parent.FALLINGSPEED:
+					parent.velocity.y +=parent.FALLSPEED*8
+					parent.velocity.y = clamp(parent.velocity.y,parent.velocity.y,0)
+				else:
+					parent.velocity.y +=-parent.FALLSPEED*8
+					parent.velocity.y = clamp(parent.velocity.y,parent.velocity.y,0)
+				if parent.velocity.x < 0:
+					parent.velocity.x = 0
+					parent.velocity.x = clamp(parent.velocity.x,parent.velocity.x,0)
+				elif parent.velocity.x > 0:
+					parent.velocity.x = 0
+					parent.velocity.x = clamp(parent.velocity.x,0,parent.velocity.x)
+				if parent.frame == 1:
+					parent.DOWN_SPECIAL()
+			if Input.is_action_just_pressed(\"jump_%s\" % id):
+				parent.frame()
+				return states.JUMP_SQUAT
+			if parent.DOWN_SPECIAL() == true:
+				if AIREAL() == false:
+					if Input.is_action_pressed(\"down_%s\" % id):
+						parent.cooldown = 0
+						parent.frame()
+						return states.CROUCH
+					else:
+						parent.cooldown = 0
+						parent.frame()
+						return states.STAND
+				else:
+					parent.cooldown = 30
+					parent.frame()
+					return states.AIR
+				
+
+		states.UP_SPECIAL:
+			AIRMOVEMENT()
+			parent.invis_frames = 0
+			var direction = Input.get_action_strength(\"right_%s\" % id) - Input.get_action_strength(\"left_%s\" % id)
+			if direction > 0:
+				parent.turn(false)
+			else:
+				parent.turn(true)
+			if parent.frame == 11:
+				parent.velocity.x = 0
+				parent.velocity.y = -parent.JUMPFORCE
+			if parent.frame == 35:
+				parent.velocity.y += -parent.JUMPFORCE*2.8
+			if parent.UP_SPECIAL() == true:
+				parent.frame()
+				parent.lag_frames = 25
+				return states.FREE_FALL
+
+		states.AIR_ATTACK:
+			parent.invis_frames = 0
+			AIRMOVEMENT()
+			if Input.is_action_pressed(\"up_%s\" % id):
+				parent.frame()
+				return states.UAIR
+			if Input.is_action_pressed(\"down_%s\" % id):
+				parent.frame()
+				return states.DAIR
+			match parent.direction():
+				1:
+					if Input.is_action_pressed(\"left_%s\" % id):
+						parent.frame()
+						return states.BAIR
+					if Input.is_action_pressed(\"right_%s\" % id):
+						parent.frame()
+						return states.FAIR
+				-1:
+					if Input.is_action_pressed(\"right_%s\" % id):
+						parent.frame()
+						return states.BAIR
+					if Input.is_action_pressed(\"left_%s\" % id):
+						parent.frame()
+						return states.FAIR
+			parent.frame()
+			return states.NAIR
+
+
+		states.NAIR:
+			parent.invis_frames = 0
+			AIRMOVEMENT()
+			if parent.frame == 0:
+				print ('nair')
+				parent.NAIR()
+			if parent.NAIR() == true:
+				parent.lag_frames = 0
+				parent.frame()
+				return states.AIR
+			else:
+				parent.lag_frames = 5
+
+		states.UAIR:
+			parent.invis_frames = 0
+			AIRMOVEMENT()
+			if parent.frame == 0:
+				print ('uair')
+				parent.UAIR()
+			if Input.is_action_just_pressed(\"jump_%s\" % id) and parent.airJump > 0:
+				parent.fastfall = false
+				parent.velocity.x = 0
+				parent.velocity.y = -parent.DOUBLEJUMPFORCE
+				parent.airJump -= 1
+				sound_play($\"../Air Jump\")
+				sound_play($\"../Air_jump_2\")
+				if Input.is_action_pressed(\"left_%s\" % id):
+					parent.velocity.x = -parent.MAXAIRSPEED
+				elif Input.is_action_pressed(\"right_%s\" % id):
+					parent.velocity.x = parent.MAXAIRSPEED
+			if parent.UAIR() == true:
+				parent.lag_frames = 0
+				parent.frame()
+				return states.AIR
+			else:
+				parent.lag_frames = 10
+
+		states.BAIR:
+			parent.invis_frames = 0
+			AIRMOVEMENT()
+			if parent.frame == 0:
+				print ('bair')
+				parent.BAIR()
+			if parent.frame == 6:
+				parent.velocity.x = parent.direction()*parent.JUMPFORCE/1.5
+			if parent.BAIR() == true:
+				parent.lag_frames = 0
+				parent.frame()
+				return states.AIR
+			else:
+				parent.lag_frames = 15
+
+		states.FAIR:
+			parent.invis_frames = 0
+			AIRMOVEMENT()
+			if Input.is_action_just_pressed(\"jump_%s\" % id) and parent.airJump > 0:
+				parent.fastfall = false
+				parent.velocity.x = 0
+				parent.velocity.y = -parent.DOUBLEJUMPFORCE
+				parent.airJump -= 1
+				sound_play($\"../Air Jump\")
+				sound_play($\"../Air_jump_2\")
+				if Input.is_action_pressed(\"left_%s\" % id):
+					parent.velocity.x = -parent.MAXAIRSPEED
+				elif Input.is_action_pressed(\"right_%s\" % id):
+					parent.velocity.x = parent.MAXAIRSPEED
+				return states.AIR
+			if parent.frame == 0:
+				print ('fair')
+				parent.FAIR()
+			if parent.frame == 12:
+				parent.velocity.x = -parent.direction()*parent.JUMPFORCE
+			if parent.FAIR() == true:
+				parent.lag_frames = 30
+				parent.frame()
+				return states.FAIR
+			else:
+				parent.lag_frames = 10
+
+		states.DAIR:
+			parent.invis_frames = 0
+			AIRMOVEMENT()
+			if parent.frame == 0:
+				print ('bair')
+				parent.DAIR()
+			if parent.DAIR() == true:
+				parent.lag_frames = 0
+				return states.AIR
+			else:
+				parent.lag_frames = 8
+
+		states.DOWN_SMASH:
+			Edge_Hog()
+			parent.invis_frames = 0
+			if AIREAL() == false:
+					if parent.velocity.x > 0:
+						parent.velocity.x += -parent.TRACTION/7
+						parent.velocity.x = clamp(parent.velocity.x,0,parent.velocity.x)
+					elif parent.velocity.x < 0:
+						parent.velocity.x +=  parent.TRACTION/7
+						parent.velocity.x = clamp(parent.velocity.x,parent.velocity.x,0)
+					Edge_Hog()
+			if AIREAL() == true:
+					if parent.velocity.y < parent.FALLINGSPEED:
+						parent.velocity.y +=parent.FALLSPEED
+					if parent.velocity.x < 0:
+						parent.velocity.x += parent.AIR_ACCEL/ 10
+					elif parent.velocity.x > 0:
+						parent.velocity.x += -parent.AIR_ACCEL / 10
+			if parent.frame < 5 && !Input.is_action_pressed(\"attack_%s\" %id):
+				parent.charge = 1
+				#return states.DOWN_SMASH
+			if parent.frame >= 5 && parent.frame <= 10 && !Input.is_action_pressed(\"attack_%s\" %id):
+				parent.charge = 1.1
+				parent.frame()
+				return states.DOWN_SMASH_1
+			if parent.frame >= 11 && parent.frame <= 20 && !Input.is_action_pressed(\"attack_%s\" %id):
+				parent.charge = 1.1
+				parent.frame()
+				return states.DOWN_SMASH_1
+			if parent.frame >= 21 && parent.frame <= 40 && !Input.is_action_pressed(\"attack_%s\" %id):
+				parent.charge = 1.2
+				parent.frame()
+				return states.DOWN_SMASH_1
+			if parent.frame >= 41 && parent.frame <= 50 && !Input.is_action_pressed(\"attack_%s\" %id):
+				parent.charge = 1.2
+				parent.frame()
+				return states.DOWN_SMASH_1
+			if parent.frame >= 51 && !Input.is_action_pressed(\"attack_%s\" %id):
+				parent.charge = 1.3
+				parent.frame()
+				return states.DOWN_SMASH_1
+			if parent.frame == 63:
+				parent.charge = 1.4
+				parent.frame()
+				return states.DOWN_SMASH_1
+		states.DOWN_SMASH_1:
+			parent.invis_frames = 0
+			if AIREAL() == false:
+					if parent.velocity.x > 0:
+						parent.velocity.x += -parent.TRACTION/7
+						parent.velocity.x = clamp(parent.velocity.x,0,parent.velocity.x)
+					elif parent.velocity.x < 0:
+						parent.velocity.x +=  parent.TRACTION/7
+						parent.velocity.x = clamp(parent.velocity.x,parent.velocity.x,0)
+			if AIREAL() == true:
+					if parent.velocity.y < parent.FALLINGSPEED:
+						parent.velocity.y +=parent.FALLSPEED
+					if parent.velocity.x < 0:
+						parent.velocity.x += parent.AIR_ACCEL/ 10
+					elif parent.velocity.x > 0:
+						parent.velocity.x += -parent.AIR_ACCEL / 10
+			if parent.DOWN_SMASH() == true:
+				Edge_Hog()
+				if Input.is_action_pressed(\"down_%s\" % id):
+					parent.frame()
+					return states.CROUCH
+				else:
+					parent.frame()
+					return states.STAND
+
+		states.UP_SMASH:
+			Edge_Hog()
+			parent.invis_frames = 0
+			if AIREAL() == false:
+					if parent.velocity.x > 0:
+						parent.velocity.x += -parent.TRACTION/7
+						parent.velocity.x = clamp(parent.velocity.x,0,parent.velocity.x)
+					elif parent.velocity.x < 0:
+						parent.velocity.x +=  parent.TRACTION/7
+						parent.velocity.x = clamp(parent.velocity.x,parent.velocity.x,0)
+					Edge_Hog()
+			if AIREAL() == true:
+					if parent.velocity.y < parent.FALLINGSPEED:
+						parent.velocity.y +=parent.FALLSPEED
+					if parent.velocity.x < 0:
+						parent.velocity.x += parent.AIR_ACCEL/ 10
+					elif parent.velocity.x > 0:
+						parent.velocity.x += -parent.AIR_ACCEL / 10
+			if parent.frame < 5 && !Input.is_action_pressed(\"down_%s\" %id):
+				parent.charge = 1
+		#		return states.UP_SMASH
+			if parent.frame >= 5 && parent.frame <= 10 && !Input.is_action_pressed(\"attack_%s\" %id):
+				parent.charge = 1.1
+				parent.frame()
+				return states.UP_SMASH_1
+			if parent.frame >= 11 && parent.frame <= 20 && !Input.is_action_pressed(\"attack_%s\" %id):
+				parent.charge = 1.1
+				parent.frame()
+				return states.UP_SMASH_1
+			if parent.frame >= 21 && parent.frame <= 40 && !Input.is_action_pressed(\"attack_%s\" %id):
+				parent.charge = 1.2
+				parent.frame()
+				return states.UP_SMASH_1
+			if parent.frame >= 41 && parent.frame <= 50 && !Input.is_action_pressed(\"attack_%s\" %id):
+				parent.charge = 1.2
+				parent.frame()
+				return states.UP_SMASH_1
+			if parent.frame >= 51 && !Input.is_action_pressed(\"attack_%s\" %id):
+				parent.charge = 1.3
+				parent.frame()
+				return states.UP_SMASH_1
+			if parent.frame == 63:
+				parent.charge = 1.4
+				parent.frame()
+				return states.UP_SMASH_1
+		states.UP_SMASH_1:
+			Edge_Hog()
+			parent.invis_frames = 0
+			if AIREAL() == false:
+					if parent.velocity.x > 0:
+						parent.velocity.x += -parent.TRACTION/3
+						parent.velocity.x = clamp(parent.velocity.x,0,parent.velocity.x)
+					elif parent.velocity.x < 0:
+						parent.velocity.x +=  parent.TRACTION/3
+						parent.velocity.x = clamp(parent.velocity.x,parent.velocity.x,0)
+			if AIREAL() == true:
+					if parent.velocity.y < parent.FALLINGSPEED:
+						parent.velocity.y +=parent.FALLSPEED
+					if parent.velocity.x < 0:
+						parent.velocity.x += parent.AIR_ACCEL/ 10
+					elif parent.velocity.x > 0:
+						parent.velocity.x += -parent.AIR_ACCEL / 10
+			if parent.UP_SMASH() == true:
+				if Input.is_action_pressed(\"down_%s\" % id):
+					parent.frame()
+					return states.CROUCH
+				else:
+					parent.frame()
+					return states.STAND
+
+
+		states.FORWARD_SMASH:
+			Edge_Hog()
+			parent.invis_frames = 0
+			print (AIREAL())
+			if AIREAL() == false:
+					if parent.velocity.x > 0:
+						parent.velocity.x += -parent.TRACTION*10
+						parent.velocity.x = clamp(parent.velocity.x,0,parent.velocity.x)
+					elif parent.velocity.x < 0:
+						parent.velocity.x += parent.TRACTION*10
+						parent.velocity.x = clamp(parent.velocity.x,parent.velocity.x,0)
+					Edge_Hog()
+			if AIREAL() == true:
+					if parent.velocity.y < parent.FALLINGSPEED:
+						parent.velocity.y +=parent.FALLSPEED
+					if parent.velocity.x > 0:
+						parent.velocity.x += -parent.TRACTION/3
+						parent.velocity.x = clamp(parent.velocity.x,0,parent.velocity.x)
+					elif parent.velocity.x < 0:
+						parent.velocity.x +=  parent.TRACTION/3
+						parent.velocity.x = clamp(parent.velocity.x,parent.velocity.x,0)
+			if parent.frame >= 5 && parent.frame <= 10 && !Input.is_action_pressed(\"attack_%s\" %id) :
+				parent.charge = 1.1
+				#parent.frame()
+			#	return states.FORWARD_SMASH_1
+			if parent.frame >= 11 && parent.frame <= 20 && !Input.is_action_pressed(\"attack_%s\" %id) :
+				parent.charge = 1.1
+				parent.frame()
+				return states.FORWARD_SMASH_1
+			if parent.frame >= 21 && parent.frame <= 40 && !Input.is_action_pressed(\"attack_%s\" %id) :
+				parent.charge = 1.2
+				parent.frame()
+				return states.FORWARD_SMASH_1
+			if parent.frame >= 41 && parent.frame <= 50 && !Input.is_action_pressed(\"attack_%s\" %id) :
+				parent.charge = 1.2
+				parent.frame()
+				return states.FORWARD_SMASH_1
+			if parent.frame >= 51 && !Input.is_action_pressed(\"attack_%s\" %id) :
+				parent.charge = 1.3
+				parent.frame()
+				return states.FORWARD_SMASH_1
+			if parent.frame == 63:
+				parent.charge = 1.4
+				parent.frame()
+				return states.FORWARD_SMASH_1
+				
+		states.FORWARD_SMASH_1:
+			Edge_Hog()
+			parent.invis_frames = 0
+			if AIREAL() == false:
+				parent.velocity.x = parent.DASHSPEED*parent.direction()*0.9
+			if AIREAL() == true:
+					if parent.velocity.y < parent.FALLINGSPEED:
+						parent.velocity.y +=parent.FALLSPEED
+					if parent.velocity.x > 0:
+						parent.velocity.x += -parent.TRACTION/3
+						parent.velocity.x = clamp(parent.velocity.x,0,parent.velocity.x)
+					elif parent.velocity.x < 0:
+						parent.velocity.x +=  parent.TRACTION/3
+						parent.velocity.x = clamp(parent.velocity.x,parent.velocity.x,0)
+			if parent.FORWARD_SMASH() == true:
+				if parent.velocity.x > 0:
+					parent.velocity.x += -parent.TRACTION
+					parent.velocity.x = clamp(parent.velocity.x,0,parent.velocity.x)
+				if parent.velocity.x < 0:
+					parent.velocity.x += parent.TRACTION
+					parent.velocity.x = clamp(parent.velocity.x,parent.velocity.x,0)
+				if Input.is_action_pressed(\"down_%s\" % id):
+					parent.frame()
+					return states.CROUCH
+				else:
+					parent.frame()
+					return states.STAND
+
+		states.RESPAWN:
+			if parent.frame == 1:
+				if parent.RESPAWN() == false:
+					parent.RESPAWN()
+			parent.velocity = Vector2(0,0)
+			if parent.frame <= 300 and parent.frame >= 30: #5 seconds
+				parent.hurtbox.disabled = true
+				if Input.is_action_just_pressed(\"right_%s\" % id):
+					parent.frame()
+					parent.DESPAWN()
+					parent.invis_frames = 120 #2 seconds
+					return states.AIR
+				elif Input.is_action_just_pressed(\"left_%s\" % id):
+					parent.frame()
+					parent.DESPAWN()
+					parent.invis_frames = 120 #2 seconds
+					return states.AIR
+				elif Input.is_action_just_pressed(\"jump_%s\" % id) and parent.airJump > 0:
+					parent.fastfall = false
+					parent.velocity.x = 0
+					parent.velocity.y = -parent.DOUBLEJUMPFORCE
+					parent.airJump -= 1
+					#sound_play($\"../Air Jump\")
+					#sound_play($\"../Air_jump_2\")
+					if Input.is_action_pressed(\"left_%s\" % id):
+						parent.velocity.x = -parent.MAXAIRSPEED
+					elif Input.is_action_pressed(\"right_%s\" % id):
+						parent.velocity.x = parent.MAXAIRSPEED
+					parent.DESPAWN()
+					parent.invis_frames = 120 #2 seconds
+					return states.AIR
+				elif Input.is_action_pressed(\"down_%s\" % id) and parent.down_buffer == 1 and parent.velocity.y > -150 and not parent.fastfall :
+					#sound_play($\"../Fastfall\")
+					parent.velocity.y = parent.MAXFALLSPEED
+					parent.fastfall = true
+					if parent.fastfall == true:
+						parent.set_collision_mask_bit(2,false)
+						parent.velocity.y = parent.MAXFALLSPEED
+					parent.DESPAWN()
+					parent.invis_frames = 120 #2 seconds
+					return states.AIR
+			elif parent.frame >390:
+				parent.frame()
+				parent.DESPAWN()
+				parent.invis_frames = 120 #2 seconds
+				return states.AIR
+
+		states.DEAD:
+			parent.lag_frames = 0
+			parent.velocity.x = 0
+			parent.velocity.y = 0
+
+
+func enter_state(new_state, old_state):
+	match new_state:
+		states.STAND:
+			parent.play_animation('STAND')
+			parent.states.text = str('STAND')
+		states.RUN:
+			parent.play_animation('RUN')
+			parent.states.text = str('RUN')
+		states.WALK:
+			parent.play_animation('WALK')
+			parent.states.text = str('WALK')
+		states.FULL_HOP:
+			parent.play_animation('AIR')
+			parent.states.text = str('FULL_HOP')
+		states.SHORT_HOP:
+			parent.play_animation('AIR')
+			parent.states.text = str('SHORT_HOP')
+		states.MOONWALK:
+			parent.play_animation('WALK')
+			parent.states.text = str('MOONWALK')
+		states.DASH:
+			parent.play_animation('DASH')
+			parent.states.text = str('DASH')
+		states.JUMP_SQUAT:
+			parent.play_animation('JUMP_SQUAT')
+			parent.states.text = str('JUMP_SQUAT')
+		states.TURN:
+			parent.play_animation('TURN')
+			parent.states.text = str('TURN')
+		states.CROUCH:
+			parent.play_animation('CROUCH')
+			parent.states.text = str('CROUCH')
+		states.AIR:
+			parent.play_animation('AIR')
+			parent.states.text = str('AIR')
+		states.FREE_FALL:
+			parent.play_animation('FREE_FALL')
+			parent.states.text = str('FREE_FALL')
+		states.LANDING:
+			parent.play_animation('LANDING')
+			parent.states.text = str('LANDING')
+		states.AIR_DODGE:
+			parent.play_animation('AIR_DODGE')
+			parent.states.text = str('AIR_DODGE')
+		states.LEDGE_CATCH:
+			parent.play_animation('LEDGE_CATCH')
+			parent.states.text = str('LEDGE_CATCH')
+			sound_play($\"../Ledge\")
+			sound_play($\"../LedgeSFX\")
+		states.LEDGE_HOLD:
+			parent.play_animation('LEDGE_CATCH')
+			parent.states.text = str('LEDGE_HOLD')
+		states.LEDGE_JUMP:
+			parent.play_animation('AIR')
+			parent.states.text = str('LEDGE_JUMP')
+		states.LEDGE_CLIMB:
+			parent.play_animation('ROLL_FORWARD')
+			parent.states.text = str('LEDGE_CLIMB')
+		states.LEDGE_ROLL:
+			parent.play_animation('ROLL_FORWARD')
+			parent.states.text = str('LEDGE_ROLL')
+		states.HITSTUN:
+			parent.play_animation('HITSTUN')
+			parent.states.text = str('HITSTUN')
+		states.TUMBLE:
+			parent.play_animation('TUMBLE')
+			parent.states.text = str('TUMBLE')
+		states.PARRY:
+			parent.play_animation('PARRY')
+			parent.states.text = str('PARRY')
+		states.ROLL_RIGHT:
+			parent.play_animation('TECH_GROUND')
+			parent.states.text = str('ROLL_RIGHT')
+		states.ROLL_LEFT:
+			parent.play_animation('TECH_GROUND')
+			parent.states.text = str('ROLL_LEFT')
+		states.TECH_GROUND:
+			parent.play_animation('TECH_GROUND')
+			parent.states.text = str('TECH_GROUND')
+		states.TECH_FORWARD:
+			parent.play_animation('TECH_GROUND')
+			parent.states.text = str('TECH_FORWARD')
+		states.TECH_BACKWARD:
+			parent.play_animation('TECH_GROUND')
+			parent.states.text = str('TECH_BACKWARD')
+		states.UP_TILT:
+			parent.play_animation('UP_TILT')
+			parent.states.text = str('UP_TILT')
+		states.DOWN_TILT:
+			if parent.direction() == 1:
+				parent.play_animation('DOWN_TILT')
+			else:
+				 parent.play_animation('DOWN_TILT_1')
+			parent.states.text = str('DOWN_TILT')
+		states.FORWARD_TILT:
+			parent.play_animation('FORWARD_TILT')
+			parent.states.text = str('FORWARD_TILT')
+		states.JAB:
+			parent.play_animation('JAB')
+			parent.states.text = str('JAB')
+		states.JAB_1:
+			parent.play_animation('JAB_1')
+			parent.states.text = str('JAB_1')
+		states.GROUND_ATTACK:
+			#parent.play_animation('STAND')
+			parent.states.text = str('GROUND_ATTACK')
+		states.SPECIAL:
+			#parent.play_animation('STAND')
+			parent.states.text = str('SPECIAL')
+		states.FORWARD_SPECIAL:
+			parent.play_animation('FORWARD_SPECIAL')
+			parent.states.text = str('FORWARD_SPECIAL')
+		states.NEUTRAL_SPECIAL:
+			parent.play_animation('NEUTRAL_SPECIAL')
+			parent.states.text = str('NEUTRAL_SPECIAL')
+		states.UP_SPECIAL:
+			parent.play_animation('UP_SPECIAL')
+			parent.states.text = str('UP_SPECIAL')
+		states.UP_SPECIAL_1:
+			parent.play_animation('UP_SPECIAL_1')
+			parent.states.text = str('UP_SPECIAL_1')
+		states.DOWN_SPECIAL:
+			parent.play_animation('DOWN_SPECIAL')
+			parent.states.text = str('DOWN_SPECIAL')
+		states.NAIR:
+			parent.play_animation('NAIR')
+			parent.states.text = str('NAIR')
+		states.UAIR:
+			parent.play_animation('UAIR')
+			parent.states.text = str('UAIR')
+		states.BAIR:
+			parent.play_animation('BAIR')
+			parent.states.text = str('BAIR')
+		states.FAIR:
+			parent.play_animation('FAIR')
+			parent.states.text = str('FAIR')
+		states.DAIR:
+			parent.play_animation('DAIR')
+			parent.states.text = str('DAIR')
+		states.DOWN_SMASH:
+			parent.play_animation('DOWN_SMASH')
+			parent.states.text = str('DOWN_SMASH')
+		states.DOWN_SMASH_1:
+			parent.play_animation('DOWN_SMASH_1')
+			parent.states.text = str('DOWN_SMASH_1')
+		states.UP_SMASH:
+			parent.play_animation('UP_SMASH')
+			parent.states.text = str('UP_SMASH')
+		states.UP_SMASH_1:
+			parent.play_animation('UP_SMASH_1')
+			parent.states.text = str('UP_SMASH_1')
+		states.FORWARD_SMASH:
+			parent.play_animation('FORWARD_SMASH')
+			parent.states.text = str('FORWARD_SMASH')
+		states.FORWARD_SMASH_1:
+			parent.play_animation('FORWARD_SMASH_1')
+			parent.states.text = str('FORWARD_SMASH_1')
+		states.RESPAWN:
+			parent.play_animation('STAND')
+			parent.states.text = str('RESPAWN')
+		states.DEAD:
+			parent.play_animation('STAND')
+			parent.states.text = str('DEAD')
+			
+func exit_state(old_state, new_state):
+	if old_state == states.LANDING && new_state == states.AIR:
+		parent.lag_frames = 0
+
+func AIRMOVEMENT():
+	if parent.velocity.y < parent.FALLINGSPEED:
+		parent.velocity.y +=parent.FALLSPEED
+	if Input.is_action_pressed(\"down_%s\" % id) and parent.down_buffer == 1 and parent.velocity.y > -150 and not parent.fastfall :
+	#	sound_play($\"../Fastfall\")
+		parent.velocity.y = parent.MAXFALLSPEED
+		parent.fastfall = true
+	if parent.fastfall == true:
+		parent.set_collision_mask_bit(2,false)
+		parent.velocity.y = parent.MAXFALLSPEED
+		
+	if  abs(parent.velocity.x) >=  abs(parent.MAXAIRSPEED):
+		if parent.velocity.x > 0:
+			if Input.is_action_pressed(\"left_%s\" % id):
+				parent.velocity.x += -parent.AIR_ACCEL
+			elif Input.is_action_pressed(\"right_%s\" % id):
+					parent.velocity.x = parent.velocity.x
+		if parent.velocity.x < 0:
+			if Input.is_action_pressed(\"left_%s\" % id):
+				parent.velocity.x = parent.velocity.x
+			elif Input.is_action_pressed(\"right_%s\" % id):
+				parent.velocity.x += parent.AIR_ACCEL
+					
+				
+	elif abs(parent.velocity.x) < abs(parent.MAXAIRSPEED):
+		if Input.is_action_pressed(\"left_%s\" % id):
+			parent.velocity.x += -parent.AIR_ACCEL#*2
+		if Input.is_action_pressed(\"right_%s\" % id):
+			parent.velocity.x += parent.AIR_ACCEL#*2
+		
+	if not Input.is_action_pressed(\"left_%s\" % id) and not Input.is_action_pressed(\"right_%s\" % id):
+		#print('Air Deaccel')
+		if parent.velocity.x < 0:
+			parent.velocity.x += parent.AIR_ACCEL/ 5#10
+		elif parent.velocity.x > 0:
+			parent.velocity.x += -parent.AIR_ACCEL / 5#10
+
+func drop_platform():
+		if state_includes([states.RUN,states.WALK,states.STAND,states.CROUCH,states.DASH,states.LANDING,states.TURN,states.JUMP_SQUAT,states.MOONWALK,states.ROLL_RIGHT,states.ROLL_LEFT,states.PARRY]) and parent.down_buffer<10:
+			if Input.is_action_pressed(\"down_%s\" % id) and parent.frame > 4: #and (parent.GroundL.is_colliding() or parent.GroundR.is_colliding()):
+					if parent.GroundL.is_colliding():
+						var collider = parent.GroundL.get_collider()
+						if collider.get_node('Label').text == \"Platform\":
+							parent.set_collision_mask_bit(2,false)
+							parent.velocity.y = parent.FALLSPEED
+							return states.AIR
+							
+					if parent.GroundR.is_colliding():
+						var collider = parent.GroundR.get_collider()
+						if collider.get_node('Label').text == \"Platform\":
+							parent.set_collision_mask_bit(2,false)
+							parent.velocity.y = parent.FALLSPEED
+							return states.AIR
+							
+#func Collisions():
+#	if parent.is_on_floor():
+#				return states.LANDING
+#				parent.frame = 0
+#				if parent.velocity.y > 0:
+#					parent.velocity.y = 0
+#				parent._reset_Jumps()
+#				parent.reset_platform()
+#				parent.fastfall = false
+func Landing():
+	if state_includes([states.AIR,states.AIR_DODGE,states.FREE_FALL,states.TUMBLE,states.NAIR,states.UAIR,states.BAIR,states.FAIR,states.DAIR]):
+		if (parent.GroundL.is_colliding()) and parent.velocity.y > 0:
+				var collider =parent.GroundL.get_collider()
+				if collider.get_node('Label').text == 'Floor':
+					parent.frame = 0
+					if parent.velocity.y > 0:
+						parent.velocity.y = 0
+					parent._reset_Jumps()
+					parent.reset_platform()
+					parent.fastfall = false
+					return true
+			
+				if collider.get_node('Label').text == 'Platform' :
+					if parent.velocity.y > 0:
+						parent.velocity.y = 0
+					parent._reset_Jumps()
+					parent.reset_platform()
+					parent.fastfall = false
+					return true
+		elif parent.GroundR.is_colliding() and parent.velocity.y > 0:
+				var collider2 =parent.GroundR.get_collider()
+				if collider2.get_node('Label').text == 'Floor':
+					parent.frame = 0
+					if parent.velocity.y > 0:
+						parent.velocity.y = 0
+					parent._reset_Jumps()
+					parent.reset_platform()
+					parent.fastfall = false
+					return true
+			
+				if collider2.get_node('Label').text == 'Platform' :
+					if parent.velocity.y > 0:
+						parent.velocity.y = 0
+					parent._reset_Jumps()
+					parent.reset_platform()
+					parent.fastfall = false
+					return true
+
+
+func Falling():
+	if state_includes([states.RUN,states.WALK,states.STAND,states.CROUCH,states.DASH,states.LANDING,states.TURN,states.JUMP_SQUAT,states.MOONWALK,states.ROLL_RIGHT,states.ROLL_LEFT,states.PARRY]):
+		if not parent.GroundL.is_colliding() and not parent.GroundR.is_colliding():
+			return true
+			#print(rayL.get_collider())
+			#print('FALLING')
+			#state = AIR
+			#Hack for weird relandings issues
+			#position.y+=20
+			#velocity.y = fall_speed
+			#velocity.x=velocity.x/3
+
+func Ledge():
+	if state_includes([states.AIR,states.FREE_FALL,states.UP_SPECIAL_1,states.TUMBLE,states.FAIR,states.BAIR]):
+		if (parent.Ledge_Grab_F.is_colliding()): 
+			var collider = parent.Ledge_Grab_F.get_collider()
+			if collider.get_node('Label').text =='Ledge_L' and !Input.get_action_strength(\"down_%s\" % id) > 0.6 and parent.regrab == 0 && !collider.is_grabbed:# and parent.Ledge_Grab_F.get_cast_to().x>0:# and not collider.is_grabbed:
+#			Play Audio																																													audio.playsfx(audio_path('ledge'),0.7)
+				if state_includes([states.AIR,states.FREE_FALL,]):
+					if parent.velocity.y < 0:
+						return false
+				parent.frame = 0
+				parent.velocity.x=0
+				parent.velocity.y=0
+				self.parent.position.x = collider.position.x - 20#- collider.get_collision().shape.get_extents().x
+				self.parent.position.y = collider.position.y - 2#+ collider.get_collision().shape.get_extents().y
+				parent.turn(false)
+				parent._reset_Jumps()
+				parent.fastfall = false
+				#parent.last_ledge = collider
+				#collider.get_node('Label').text = 'Ledge_LC'
+				collider.is_grabbed = true
+				parent.last_ledge = collider
+				return true
+				#state = LEDGE_CATCH
+
+			if collider.get_node('Label').text =='Ledge_R' and !Input.get_action_strength(\"down_%s\" % id) > 0.6 and parent.regrab == 0 && !collider.is_grabbed:# and parent.Ledge_Grab_F.get_cast_to().x<0: and not collider.is_grabbed:
+				#audio.playsfx(audio_path('ledge'),0.7)
+				if state_includes([states.AIR,states.FREE_FALL,]):
+					if parent.velocity.y < 0:
+						return false
+				parent.frame = 0
+				parent.velocity.x=0
+				parent.velocity.y=0
+				self.parent.position.x = collider.position.x + 20# + (parent.shapez.shape.get_extents().x)*2
+				self.parent.position.y = collider.position.y + 1# + parent.shapez.shape.get_extents().y
+				parent.turn(true)
+				parent._reset_Jumps()
+				parent.fastfall = false
+				#parent.last_ledge = collider
+			#	collider.get_node('Label').text = 'Ledge_RC'
+				collider.is_grabbed = true
+				parent.last_ledge = collider
+				return true
+
+		if (parent.Ledge_Grab_B.is_colliding()): 
+			var collider = parent.Ledge_Grab_B.get_collider()
+			if collider.get_node('Label').text =='Ledge_L' and !Input.get_action_strength(\"down_%s\" % id) > 0.6 and parent.regrab == 0 && !collider.is_grabbed:# and parent.Ledge_Grab_F.get_cast_to().x>0:# and not collider.is_grabbed:
+#			Play Audio																																													audio.playsfx(audio_path('ledge'),0.7)
+				if state_includes([states.AIR,states.FREE_FALL,]):
+					if parent.velocity.y < 0:
+						return false
+				parent.frame = 0
+				parent.velocity.x=0
+				parent.velocity.y=0
+				self.parent.position.x = collider.position.x - 20#- collider.get_collision().shape.get_extents().x
+				self.parent.position.y = collider.position.y - 1#+ collider.get_collision().shape.get_extents().y
+				parent.turn(false)
+				parent._reset_Jumps()
+				parent.fastfall = false
+				#parent.last_ledge = collider
+			#	collider.get_node('Label').text = 'Ledge_LC'
+				collider.is_grabbed = true
+				parent.last_ledge = collider
+				return true
+				#state = LEDGE_CATCH
+
+			if collider.get_node('Label').text =='Ledge_R' and !Input.get_action_strength(\"down_%s\" % id) > 0.6 and parent.regrab == 0 && !collider.is_grabbed:# and parent.Ledge_Grab_F.get_cast_to().x<0: and not collider.is_grabbed:
+				#audio.playsfx(audio_path('ledge'),0.7)
+				if state_includes([states.AIR,states.FREE_FALL,]):
+					if parent.velocity.y < 0:
+						return false
+				parent.frame = 0
+				parent.velocity.x=0
+				parent.velocity.y=0
+				self.parent.position.x = collider.position.x + 20# + (parent.shapez.shape.get_extents().x)*2
+				self.parent.position.y = collider.position.y + 1# + parent.shapez.shape.get_extents().y
+				parent.turn(true)
+				parent._reset_Jumps()
+				parent.fastfall = false
+			#	parent.last_ledge = collider
+			#	collider.get_node('Label').text = 'Ledge_RC'
+				collider.is_grabbed = true
+				parent.last_ledge = collider
+				return true
+
+				#state = LEDGE_CATCH
+
+func state_includes(state_array):
+	for each_state in state_array:
+		if state == each_state:
+			return true
+	return false
+
+func Platform_Drop():
+	if state_includes([states.RUN,states.WALK,states.STAND,states.CROUCH,states.DASH,states.LANDING,states.TURN,states.JUMP_SQUAT,states.MOONWALK,states.ROLL_RIGHT,states.ROLL_LEFT,states.PARRY]) and parent.down_buffer<10:
+		if Input.is_action_pressed(\"down_%s\" % id) and parent.frame > 4 and (parent.GroundL.is_colliding() or parent.GroundR.is_colliding()):
+				if parent.GroundL.is_colliding():
+					var collider = parent.GroundL.get_collider ( )
+					if collider.get_node('Label').text == \"Platform\":
+						parent.velocity.y = parent.FALLSPEED
+						self.parent.set_collision_mask_bit(2,false)
+						return true#states.AIR
+				elif parent.GroundR.is_colliding():
+					var collider = parent.GroundR.get_collider ( )
+					if collider.get_node('Label').text == \"Platform\":
+						self.parent.set_collision_mask_bit(2,false)
+						parent.velocity.y = parent.FALLSPEED
+						return true
+
+func right_stick():
+	if Input.is_action_just_pressed(\"r_up_%s\" %id):
+		return true
+	if Input.is_action_just_pressed(\"r_right_%s\" %id):
+		return true
+	if Input.is_action_just_pressed(\"r_down_%s\" %id):
+		return true
+	if Input.is_action_just_pressed(\"r_left_%s\" %id):
+		return true
+
+func TILT():
+	if state_includes([states.STAND,states.MOONWALK,states.DASH,states.RUN,states.WALK,states.CROUCH,states.TURN,states.JUMP_SQUAT]):
+		Platform_Drop()
+		return true
+
+func AIREAL():
+	if state_includes([states.UP_SPECIAL,states.DOWN_SPECIAL,states.NEUTRAL_SPECIAL,states.FORWARD_SPECIAL,states.JUMP_SQUAT,states.AIR,states.DOWN_SMASH,states.DOWN_SMASH_1,states.FORWARD_SMASH,states.FORWARD_SMASH_1,states.UP_SMASH,states.UP_SMASH_1,states.TUMBLE]):
+		if !(parent.GroundL.is_colliding() and parent.GroundR.is_colliding()):
+			return true
+		else:
+			return false
+
+func SPECIAL():
+	if state_includes([states.LANDING,states.STAND,states.WALK,states.DASH,states.RUN,states.TURN,states.MOONWALK,states.CROUCH,states.TUMBLE]):
+		Platform_Drop()
+		return true
+
+func GROUND_ATTACKS():
+	if Input.is_action_just_pressed(\"attack_%s\" % id) && TILT() == true:
+		parent.frame()
+		return states.JAB
+	if Input.is_action_just_pressed(\"attack_%s\" % id) && Input.is_action_pressed(\"up_%s\" % id) && TILT() == true:
+		parent.frame()
+		return states.UP_TILT
+	if Input.is_action_just_pressed(\"attack_%s\" % id) && Input.is_action_pressed(\"down_%s\" % id) && TILT() == true:
+		parent.frame()
+		return states.DOWN_TILT
+	if Input.is_action_just_pressed(\"attack_%s\" % id) && (Input.is_action_pressed(\"left_%s\" % id) or Input.is_action_pressed(\"right_%s\" % id)) && TILT() == true:
+		parent.frame()
+		if Input.is_action_pressed(\"left_%s\" % id):
+			parent.turn(true)
+			parent.frame()
+			return states.FORWARD_TILT
+		if Input.is_action_pressed(\"right_%s\" % id):
+			parent.turn(false)
+			parent.frame()
+			return states.FORWARD_TILT
+
+func sound_play(sound):
+	null
+	#if sound.playing == false:
+	 #return sound.play()
+
+func Edge_Hog():
+	if !parent.GroundL.is_colliding() && parent.direction() == -1:
+		parent.velocity.x = 0
+	if !parent.GroundR.is_colliding() && parent.direction() == 1:
+		parent.velocity.x = 0
+
+func char_angle_reset():
+		if !state_includes([states.UP_SPECIAL,states.UP_SPECIAL_1]):
+			parent.shapez.rotation_degrees  = 0
+			parent.spritez.rotation_degrees  = 0
+
+func can_roll():
+	if state_includes([states.STAND,states.DASH,states.MOONWALK,states.RUN,states.WALK,states.CROUCH,states.TURN]):
+		Platform_Drop()
+		return true
+
+func enable_HurtBox():
+	if !state_includes([states.PARRY,states.AIR_DODGE,states.ROLL_RIGHT,states.ROLL_LEFT,states.LEDGE_CATCH,states.LEDGE_HOLD,states.LEDGE_CLIMB,states.LEDGE_ROLL,states.TECH,states.TECH_GROUND,states.TECH_FORWARD,states.TECH_BACKWARD]):
+		parent.hurtbox.disabled = false
+		
+"
+
+[sub_resource type="Animation" id=3]
+resource_name = "AIR"
+length = 0.283334
+loop = true
+step = 0.0166667
+tracks/0/type = "value"
+tracks/0/path = NodePath(".:modulate")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Color( 1, 1, 1, 1 ) ]
+}
+tracks/1/type = "value"
+tracks/1/path = NodePath("../Raycasts/Ledge_Grab_F:position")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( -11.605, -40 ) ]
+}
+tracks/2/type = "value"
+tracks/2/path = NodePath(".:animation")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 1,
+"values": [ "jump1" ]
+}
+tracks/3/type = "value"
+tracks/3/path = NodePath(".:frame")
+tracks/3/interp = 0
+tracks/3/loop_wrap = true
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/keys = {
+"times": PoolRealArray( 0, 0.05, 0.1, 0.166667, 0.216667, 0.266667 ),
+"transitions": PoolRealArray( 1, 1, 1, 1, 1, 1 ),
+"update": 1,
+"values": [ 0, 1, 2, 3, 4, 5 ]
+}
+tracks/4/type = "value"
+tracks/4/path = NodePath(".:position")
+tracks/4/interp = 1
+tracks/4/loop_wrap = true
+tracks/4/imported = false
+tracks/4/enabled = true
+tracks/4/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, -9.91667 ) ]
+}
+tracks/5/type = "value"
+tracks/5/path = NodePath(".:scale")
+tracks/5/interp = 1
+tracks/5/loop_wrap = true
+tracks/5/imported = false
+tracks/5/enabled = true
+tracks/5/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 1.364, 1.364 ) ]
+}
+tracks/6/type = "value"
+tracks/6/path = NodePath(".:offset")
+tracks/6/interp = 1
+tracks/6/loop_wrap = true
+tracks/6/imported = false
+tracks/6/enabled = true
+tracks/6/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, 8 ) ]
+}
+
+[sub_resource type="Animation" id=4]
+resource_name = "AIR 2"
+length = 0.533334
+step = 0.0166667
+tracks/0/type = "value"
+tracks/0/path = NodePath(".:modulate")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Color( 1, 1, 1, 1 ) ]
+}
+tracks/1/type = "value"
+tracks/1/path = NodePath("../Raycasts/Ledge_Grab_F:position")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( -11.605, -40 ) ]
+}
+tracks/2/type = "value"
+tracks/2/path = NodePath(".:animation")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 1,
+"values": [ "jump2" ]
+}
+tracks/3/type = "value"
+tracks/3/path = NodePath(".:frame")
+tracks/3/interp = 2
+tracks/3/loop_wrap = true
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/keys = {
+"times": PoolRealArray( 0, 0.133333, 0.2, 0.266667, 0.333333 ),
+"transitions": PoolRealArray( 280959, 280959, 280959, 1e-05, 1e-05 ),
+"update": 0,
+"values": [ 0, 1, 2, 3, 4 ]
+}
+tracks/4/type = "value"
+tracks/4/path = NodePath(".:position")
+tracks/4/interp = 1
+tracks/4/loop_wrap = true
+tracks/4/imported = false
+tracks/4/enabled = true
+tracks/4/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, -3.25 ) ]
+}
+tracks/5/type = "value"
+tracks/5/path = NodePath(".:scale")
+tracks/5/interp = 1
+tracks/5/loop_wrap = true
+tracks/5/imported = false
+tracks/5/enabled = true
+tracks/5/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 1.19379, 1.19379 ) ]
+}
+tracks/6/type = "value"
+tracks/6/path = NodePath(".:offset")
+tracks/6/interp = 1
+tracks/6/loop_wrap = true
+tracks/6/imported = false
+tracks/6/enabled = true
+tracks/6/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, 8 ) ]
+}
+
+[sub_resource type="Animation" id=5]
+length = 0.6
+tracks/0/type = "value"
+tracks/0/path = NodePath(".:animation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 1,
+"values": [ "AIR_DODGE" ]
+}
+tracks/1/type = "value"
+tracks/1/path = NodePath(".:frame")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 1,
+"values": [ 0 ]
+}
+tracks/2/type = "value"
+tracks/2/path = NodePath(".:modulate")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/keys = {
+"times": PoolRealArray( 0, 0.4, 0.5 ),
+"transitions": PoolRealArray( 1, 42.2242, 42.2242 ),
+"update": 0,
+"values": [ Color( 0.505882, 0.505882, 0.505882, 1 ), Color( 0.505882, 0.505882, 0.505882, 1 ), Color( 0.160784, 0.137255, 0.137255, 1 ) ]
+}
+tracks/3/type = "value"
+tracks/3/path = NodePath("../Raycasts/Ledge_Grab_F:position")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, -16 ) ]
+}
+tracks/4/type = "value"
+tracks/4/path = NodePath(".:position")
+tracks/4/interp = 1
+tracks/4/loop_wrap = true
+tracks/4/imported = false
+tracks/4/enabled = true
+tracks/4/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, -7.356 ) ]
+}
+tracks/5/type = "value"
+tracks/5/path = NodePath(".:scale")
+tracks/5/interp = 1
+tracks/5/loop_wrap = true
+tracks/5/imported = false
+tracks/5/enabled = true
+tracks/5/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 1.35897, 1.35897 ) ]
+}
+tracks/6/type = "value"
+tracks/6/path = NodePath(".:offset")
+tracks/6/interp = 1
+tracks/6/loop_wrap = true
+tracks/6/imported = false
+tracks/6/enabled = true
+tracks/6/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, 8 ) ]
+}
+
+[sub_resource type="Animation" id=6]
+resource_name = "BAIR"
+length = 0.450001
+step = 0.0166667
+tracks/0/type = "value"
+tracks/0/path = NodePath(".:modulate")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Color( 1, 1, 1, 1 ) ]
+}
+tracks/1/type = "value"
+tracks/1/path = NodePath("../Raycasts/Ledge_Grab_F:position")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( -24.605, -40 ) ]
+}
+tracks/2/type = "value"
+tracks/2/path = NodePath(".:animation")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 1,
+"values": [ "BAIR" ]
+}
+tracks/3/type = "value"
+tracks/3/path = NodePath(".:frame")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/keys = {
+"times": PoolRealArray( 0, 0.05, 0.0833333, 0.283333, 0.350001, 0.416667 ),
+"transitions": PoolRealArray( 1, 1, 1, 1, 1, 1 ),
+"update": 1,
+"values": [ 0, 1, 2, 4, 5, 6 ]
+}
+tracks/4/type = "value"
+tracks/4/path = NodePath(".:scale")
+tracks/4/interp = 1
+tracks/4/loop_wrap = true
+tracks/4/imported = false
+tracks/4/enabled = true
+tracks/4/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 1.35897, 1.35897 ) ]
+}
+tracks/5/type = "value"
+tracks/5/path = NodePath(".:position")
+tracks/5/interp = 1
+tracks/5/loop_wrap = true
+tracks/5/imported = false
+tracks/5/enabled = true
+tracks/5/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 4.8, -6.52267 ) ]
+}
+tracks/6/type = "value"
+tracks/6/path = NodePath(".:offset")
+tracks/6/interp = 1
+tracks/6/loop_wrap = true
+tracks/6/imported = false
+tracks/6/enabled = true
+tracks/6/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, 8 ) ]
+}
+
+[sub_resource type="Animation" id=7]
+length = 0.6
+tracks/0/type = "value"
+tracks/0/path = NodePath(".:animation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 1,
+"values": [ "crouch" ]
+}
+tracks/1/type = "value"
+tracks/1/path = NodePath(".:frame")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray( 0, 0.5 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 1,
+"values": [ 0, 1 ]
+}
+tracks/2/type = "value"
+tracks/2/path = NodePath(".:modulate")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Color( 1, 1, 1, 1 ) ]
+}
+tracks/3/type = "value"
+tracks/3/path = NodePath("../Raycasts/Ledge_Grab_F:position")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, -8 ) ]
+}
+tracks/4/type = "value"
+tracks/4/path = NodePath(".:position")
+tracks/4/interp = 1
+tracks/4/loop_wrap = true
+tracks/4/imported = false
+tracks/4/enabled = true
+tracks/4/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, -11.516 ) ]
+}
+tracks/5/type = "value"
+tracks/5/path = NodePath(".:scale")
+tracks/5/interp = 1
+tracks/5/loop_wrap = true
+tracks/5/imported = false
+tracks/5/enabled = true
+tracks/5/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 1.43619, 1.43619 ) ]
+}
+tracks/6/type = "value"
+tracks/6/path = NodePath(".:offset")
+tracks/6/interp = 1
+tracks/6/loop_wrap = true
+tracks/6/imported = false
+tracks/6/enabled = true
+tracks/6/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, 8 ) ]
+}
+
+[sub_resource type="Animation" id=8]
+resource_name = "DAIR"
+length = 0.583334
+step = 0.0166667
+tracks/0/type = "value"
+tracks/0/path = NodePath(".:modulate")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Color( 1, 1, 1, 1 ) ]
+}
+tracks/1/type = "value"
+tracks/1/path = NodePath("../Raycasts/Ledge_Grab_F:position")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( -24.605, -40 ) ]
+}
+tracks/2/type = "value"
+tracks/2/path = NodePath(".:animation")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 1,
+"values": [ "DAIR" ]
+}
+tracks/3/type = "value"
+tracks/3/path = NodePath(".:frame")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/keys = {
+"times": PoolRealArray( 0, 0.05, 0.216667, 0.3 ),
+"transitions": PoolRealArray( 1, 1, 1, 1 ),
+"update": 0,
+"values": [ 0, 1, 2, 3 ]
+}
+tracks/4/type = "value"
+tracks/4/path = NodePath(".:position")
+tracks/4/interp = 1
+tracks/4/loop_wrap = true
+tracks/4/imported = false
+tracks/4/enabled = true
+tracks/4/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, -8.838 ) ]
+}
+tracks/5/type = "value"
+tracks/5/path = NodePath(".:scale")
+tracks/5/interp = 1
+tracks/5/loop_wrap = true
+tracks/5/imported = false
+tracks/5/enabled = true
+tracks/5/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 1.32984, 1.32984 ) ]
+}
+tracks/6/type = "value"
+tracks/6/path = NodePath(".:offset")
+tracks/6/interp = 1
+tracks/6/loop_wrap = true
+tracks/6/imported = false
+tracks/6/enabled = true
+tracks/6/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, 8 ) ]
+}
+
+[sub_resource type="Animation" id=9]
+length = 0.1
+loop = true
+tracks/0/type = "value"
+tracks/0/path = NodePath(".:animation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 1,
+"values": [ "DashStart" ]
+}
+tracks/1/type = "value"
+tracks/1/path = NodePath(".:frame")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 1,
+"values": [ 0 ]
+}
+tracks/2/type = "value"
+tracks/2/path = NodePath(".:modulate")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Color( 1, 1, 1, 1 ) ]
+}
+tracks/3/type = "value"
+tracks/3/path = NodePath(".:position")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, -11.9527 ) ]
+}
+tracks/4/type = "value"
+tracks/4/path = NodePath(".:scale")
+tracks/4/interp = 1
+tracks/4/loop_wrap = true
+tracks/4/imported = false
+tracks/4/enabled = true
+tracks/4/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 1.38312, 1.38312 ) ]
+}
+tracks/5/type = "value"
+tracks/5/path = NodePath(".:offset")
+tracks/5/interp = 1
+tracks/5/loop_wrap = true
+tracks/5/imported = false
+tracks/5/enabled = true
+tracks/5/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, 8 ) ]
+}
+
+[sub_resource type="Animation" id=10]
+length = 0.383334
+step = 0.0166667
+tracks/0/type = "value"
+tracks/0/path = NodePath(".:modulate")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Color( 1, 1, 1, 1 ) ]
+}
+tracks/1/type = "value"
+tracks/1/path = NodePath("../Raycasts/Ledge_Grab_F:position")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, -16 ) ]
+}
+tracks/2/type = "value"
+tracks/2/path = NodePath(".:animation")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 1,
+"values": [ "DASH_ATTACK" ]
+}
+tracks/3/type = "value"
+tracks/3/path = NodePath(".:frame")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/keys = {
+"times": PoolRealArray( 0, 0.183333, 0.283333 ),
+"transitions": PoolRealArray( 1, 1, 1 ),
+"update": 1,
+"values": [ 0, 1, 2 ]
+}
+tracks/4/type = "value"
+tracks/4/path = NodePath(".:position")
+tracks/4/interp = 1
+tracks/4/loop_wrap = true
+tracks/4/imported = false
+tracks/4/enabled = true
+tracks/4/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, -10.716 ) ]
+}
+tracks/5/type = "value"
+tracks/5/path = NodePath(".:offset")
+tracks/5/interp = 1
+tracks/5/loop_wrap = true
+tracks/5/imported = false
+tracks/5/enabled = true
+tracks/5/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, 8 ) ]
+}
+
+[sub_resource type="Animation" id=11]
+resource_name = "DOWN_SMASH"
+length = 1.06667
+loop = true
+step = 0.0166667
+tracks/0/type = "value"
+tracks/0/path = NodePath(".:modulate")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 0.0333334, 0.0500001, 0.116667, 0.133334, 0.2, 0.216667, 0.283334, 0.300001, 0.366667, 0.383334, 0.433333, 0.450001, 0.533334, 0.550001, 0.633335, 0.650001, 0.700001, 0.716668, 0.783335, 0.800002, 0.866668, 0.883335, 0.950002, 0.966669, 1.03333, 1.05, 1.06667 ),
+"transitions": PoolRealArray( 1, 1e-05, 1e-05, 1, 1e-05, 1e-05, 1, 1, 1e-05, 1e-05, 1, 1, 1e-05, 1e-05, 1, 1, 1e-05, 1e-05, 1, 1, 1e-05, 1e-05, 1, 1, 1e-05, 1e-05, 1, 1e-05 ),
+"update": 0,
+"values": [ Color( 1, 1, 1, 1 ), Color( 1, 1, 1, 1 ), Color( 1, 1, 0, 1 ), Color( 1, 1, 0, 1 ), Color( 1, 1, 1, 1 ), Color( 1, 1, 1, 1 ), Color( 1, 1, 0, 1 ), Color( 1, 1, 0, 1 ), Color( 1, 1, 1, 1 ), Color( 1, 1, 1, 1 ), Color( 1, 1, 0, 1 ), Color( 1, 1, 0, 1 ), Color( 1, 1, 1, 1 ), Color( 1, 1, 1, 1 ), Color( 1, 1, 0, 1 ), Color( 1, 1, 0, 1 ), Color( 1, 1, 1, 1 ), Color( 1, 1, 1, 1 ), Color( 1, 1, 0, 1 ), Color( 1, 1, 0, 1 ), Color( 1, 1, 1, 1 ), Color( 1, 1, 1, 1 ), Color( 1, 1, 0, 1 ), Color( 1, 1, 0, 1 ), Color( 1, 1, 1, 1 ), Color( 1, 1, 1, 1 ), Color( 1, 1, 0, 1 ), Color( 1, 1, 1, 1 ) ]
+}
+tracks/1/type = "value"
+tracks/1/path = NodePath("../Raycasts/Ledge_Grab_F:position")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, -16 ) ]
+}
+tracks/2/type = "value"
+tracks/2/path = NodePath(".:animation")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 1,
+"values": [ "DOWN_SMASH" ]
+}
+tracks/3/type = "value"
+tracks/3/path = NodePath(".:frame")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 1,
+"values": [ 0 ]
+}
+tracks/4/type = "value"
+tracks/4/path = NodePath(".:scale")
+tracks/4/interp = 1
+tracks/4/loop_wrap = true
+tracks/4/imported = false
+tracks/4/enabled = true
+tracks/4/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 1.38312, 1.38312 ) ]
+}
+tracks/5/type = "value"
+tracks/5/path = NodePath(".:position")
+tracks/5/interp = 1
+tracks/5/loop_wrap = true
+tracks/5/imported = false
+tracks/5/enabled = true
+tracks/5/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, -12.786 ) ]
+}
+tracks/6/type = "value"
+tracks/6/path = NodePath(".:frames")
+tracks/6/interp = 1
+tracks/6/loop_wrap = true
+tracks/6/imported = false
+tracks/6/enabled = true
+tracks/6/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 1,
+"values": [ ExtResource( 1 ) ]
+}
+tracks/7/type = "value"
+tracks/7/path = NodePath(".:offset")
+tracks/7/interp = 1
+tracks/7/loop_wrap = true
+tracks/7/imported = false
+tracks/7/enabled = true
+tracks/7/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, 8 ) ]
+}
+
+[sub_resource type="Animation" id=12]
+resource_name = "DOWN_SMASH_1"
+length = 0.533334
+step = 0.0166667
+tracks/0/type = "value"
+tracks/0/path = NodePath(".:animation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 1,
+"values": [ "DOWN_SMASH" ]
+}
+tracks/1/type = "value"
+tracks/1/path = NodePath(".:modulate")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Color( 1, 1, 1, 1 ) ]
+}
+tracks/2/type = "value"
+tracks/2/path = NodePath(".:frame")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/keys = {
+"times": PoolRealArray( 0, 0.0833333, 0.133333, 0.216667, 0.333333, 0.433333 ),
+"transitions": PoolRealArray( 1, 1, 1, 1, 1, 1 ),
+"update": 1,
+"values": [ 1, 2, 3, 4, 5, 6 ]
+}
+tracks/3/type = "value"
+tracks/3/path = NodePath(".:position")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, -12.7193 ) ]
+}
+tracks/4/type = "value"
+tracks/4/path = NodePath(".:scale")
+tracks/4/interp = 1
+tracks/4/loop_wrap = true
+tracks/4/imported = false
+tracks/4/enabled = true
+tracks/4/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 1.38312, 1.38312 ) ]
+}
+tracks/5/type = "value"
+tracks/5/path = NodePath(".:frames")
+tracks/5/interp = 1
+tracks/5/loop_wrap = true
+tracks/5/imported = false
+tracks/5/enabled = true
+tracks/5/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 1,
+"values": [ ExtResource( 1 ) ]
+}
+tracks/6/type = "value"
+tracks/6/path = NodePath(".:offset")
+tracks/6/interp = 1
+tracks/6/loop_wrap = true
+tracks/6/imported = false
+tracks/6/enabled = true
+tracks/6/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, 8 ) ]
+}
+
+[sub_resource type="Animation" id=13]
+length = 0.500001
+step = 0.0166667
+tracks/0/type = "value"
+tracks/0/path = NodePath(".:animation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 1,
+"values": [ "DOWN_SPECIAL" ]
+}
+tracks/1/type = "value"
+tracks/1/path = NodePath(".:frame")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray( 0, 0.1, 0.15, 0.2, 0.266667 ),
+"transitions": PoolRealArray( 1, 1, 1, 1, 1 ),
+"update": 1,
+"values": [ 0, 1, 2, 3, 4 ]
+}
+tracks/2/type = "value"
+tracks/2/path = NodePath(".:modulate")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Color( 1, 1, 1, 1 ) ]
+}
+tracks/3/type = "value"
+tracks/3/path = NodePath("../Raycasts/Ledge_Grab_F:position")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 3.395, -31 ) ]
+}
+tracks/4/type = "value"
+tracks/4/path = NodePath(".:position")
+tracks/4/interp = 1
+tracks/4/loop_wrap = true
+tracks/4/imported = false
+tracks/4/enabled = true
+tracks/4/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, 25.614 ) ]
+}
+tracks/5/type = "value"
+tracks/5/path = NodePath(".:scale")
+tracks/5/interp = 1
+tracks/5/loop_wrap = true
+tracks/5/imported = false
+tracks/5/enabled = true
+tracks/5/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 1.38312, 1.38312 ) ]
+}
+tracks/6/type = "value"
+tracks/6/path = NodePath(".:offset")
+tracks/6/interp = 1
+tracks/6/loop_wrap = true
+tracks/6/imported = false
+tracks/6/enabled = true
+tracks/6/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, 8 ) ]
+}
+
+[sub_resource type="Animation" id=14]
+length = 0.416667
+step = 0.0166667
+tracks/0/type = "value"
+tracks/0/path = NodePath(".:modulate")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Color( 1, 1, 1, 1 ) ]
+}
+tracks/1/type = "value"
+tracks/1/path = NodePath("../Raycasts/Ledge_Grab_F:position")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, -16 ) ]
+}
+tracks/2/type = "value"
+tracks/2/path = NodePath(".:animation")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 1,
+"values": [ "DOWN_TILT" ]
+}
+tracks/3/type = "value"
+tracks/3/path = NodePath(".:frame")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/keys = {
+"times": PoolRealArray( 0, 0.0833333, 0.15, 0.3 ),
+"transitions": PoolRealArray( 5.39477, 6.87596, 0.257094, 1 ),
+"update": 0,
+"values": [ 0, 1, 3, 4 ]
+}
+tracks/4/type = "value"
+tracks/4/path = NodePath(".:scale")
+tracks/4/interp = 1
+tracks/4/loop_wrap = true
+tracks/4/imported = false
+tracks/4/enabled = true
+tracks/4/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 1.38312, 1.38312 ) ]
+}
+tracks/5/type = "value"
+tracks/5/path = NodePath(".:position")
+tracks/5/interp = 1
+tracks/5/loop_wrap = true
+tracks/5/imported = false
+tracks/5/enabled = true
+tracks/5/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 85.6, -1.6 ) ]
+}
+tracks/6/type = "value"
+tracks/6/path = NodePath(".:offset")
+tracks/6/interp = 1
+tracks/6/loop_wrap = true
+tracks/6/imported = false
+tracks/6/enabled = true
+tracks/6/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, 0 ) ]
+}
+
+[sub_resource type="Animation" id=15]
+resource_name = "DOWN_TILT_1"
+length = 0.416667
+step = 0.0166667
+tracks/0/type = "value"
+tracks/0/path = NodePath(".:modulate")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Color( 1, 1, 1, 1 ) ]
+}
+tracks/1/type = "value"
+tracks/1/path = NodePath("../Raycasts/Ledge_Grab_F:position")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, -16 ) ]
+}
+tracks/2/type = "value"
+tracks/2/path = NodePath(".:animation")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 1,
+"values": [ "DOWN_TILT" ]
+}
+tracks/3/type = "value"
+tracks/3/path = NodePath(".:frame")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/keys = {
+"times": PoolRealArray( 0, 0.0833333, 0.15, 0.3 ),
+"transitions": PoolRealArray( 5.39477, 6.87596, 0.257094, 1 ),
+"update": 0,
+"values": [ 0, 1, 3, 4 ]
+}
+tracks/4/type = "value"
+tracks/4/path = NodePath(".:scale")
+tracks/4/interp = 1
+tracks/4/loop_wrap = true
+tracks/4/imported = false
+tracks/4/enabled = true
+tracks/4/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 1.38312, 1.38312 ) ]
+}
+tracks/5/type = "value"
+tracks/5/path = NodePath(".:position")
+tracks/5/interp = 1
+tracks/5/loop_wrap = true
+tracks/5/imported = false
+tracks/5/enabled = true
+tracks/5/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( -91.2, -1.6 ) ]
+}
+tracks/6/type = "value"
+tracks/6/path = NodePath(".:offset")
+tracks/6/interp = 1
+tracks/6/loop_wrap = true
+tracks/6/imported = false
+tracks/6/enabled = true
+tracks/6/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, 0 ) ]
+}
+
+[sub_resource type="Animation" id=16]
+length = 0.600001
+step = 0.0166667
+tracks/0/type = "value"
+tracks/0/path = NodePath(".:modulate")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Color( 1, 1, 1, 1 ) ]
+}
+tracks/1/type = "value"
+tracks/1/path = NodePath("../Raycasts/Ledge_Grab_F:position")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( -24.605, -40 ) ]
+}
+tracks/2/type = "value"
+tracks/2/path = NodePath(".:animation")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 1,
+"values": [ "FAIR" ]
+}
+tracks/3/type = "value"
+tracks/3/path = NodePath(".:frame")
+tracks/3/interp = 0
+tracks/3/loop_wrap = false
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/keys = {
+"times": PoolRealArray( 0, 0.05, 0.216667, 0.3, 0.450001 ),
+"transitions": PoolRealArray( 1, 1, 1, 1, 1 ),
+"update": 0,
+"values": [ 0, 1, 2, 3, 1 ]
+}
+tracks/4/type = "value"
+tracks/4/path = NodePath(".:position")
+tracks/4/interp = 1
+tracks/4/loop_wrap = true
+tracks/4/imported = false
+tracks/4/enabled = true
+tracks/4/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, -10.348 ) ]
+}
+tracks/5/type = "value"
+tracks/5/path = NodePath(".:scale")
+tracks/5/interp = 1
+tracks/5/loop_wrap = true
+tracks/5/imported = false
+tracks/5/enabled = true
+tracks/5/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 1.27886, 1.27886 ) ]
+}
+tracks/6/type = "value"
+tracks/6/path = NodePath(".:offset")
+tracks/6/interp = 1
+tracks/6/loop_wrap = true
+tracks/6/imported = false
+tracks/6/enabled = true
+tracks/6/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, 8 ) ]
+}
+
+[sub_resource type="Animation" id=17]
+length = 1.06667
+loop = true
+step = 0.0166667
+tracks/0/type = "value"
+tracks/0/path = NodePath(".:modulate")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 0.0333334, 0.0500001, 0.116667, 0.133334, 0.2, 0.216667, 0.283334, 0.300001, 0.366667, 0.383334, 0.433333, 0.450001, 0.533334, 0.550001, 0.633335, 0.650001, 0.700001, 0.716668, 0.783335, 0.800002, 0.866668, 0.883335, 0.950002, 0.966669, 1.03333, 1.05, 1.06667 ),
+"transitions": PoolRealArray( 1, 1e-05, 1e-05, 1, 1e-05, 1e-05, 1, 1, 1e-05, 1e-05, 1, 1, 1e-05, 1e-05, 1, 1, 1e-05, 1e-05, 1, 1, 1e-05, 1e-05, 1, 1, 1e-05, 1e-05, 1, 1e-05 ),
+"update": 0,
+"values": [ Color( 1, 1, 1, 1 ), Color( 1, 1, 1, 1 ), Color( 1, 1, 0, 1 ), Color( 1, 1, 0, 1 ), Color( 1, 1, 1, 1 ), Color( 1, 1, 1, 1 ), Color( 1, 1, 0, 1 ), Color( 1, 1, 0, 1 ), Color( 1, 1, 1, 1 ), Color( 1, 1, 1, 1 ), Color( 1, 1, 0, 1 ), Color( 1, 1, 0, 1 ), Color( 1, 1, 1, 1 ), Color( 1, 1, 1, 1 ), Color( 1, 1, 0, 1 ), Color( 1, 1, 0, 1 ), Color( 1, 1, 1, 1 ), Color( 1, 1, 1, 1 ), Color( 1, 1, 0, 1 ), Color( 1, 1, 0, 1 ), Color( 1, 1, 1, 1 ), Color( 1, 1, 1, 1 ), Color( 1, 1, 0, 1 ), Color( 1, 1, 0, 1 ), Color( 1, 1, 1, 1 ), Color( 1, 1, 1, 1 ), Color( 1, 1, 0, 1 ), Color( 1, 1, 1, 1 ) ]
+}
+tracks/1/type = "value"
+tracks/1/path = NodePath("../Raycasts/Ledge_Grab_F:position")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, -16 ) ]
+}
+tracks/2/type = "value"
+tracks/2/path = NodePath(".:animation")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 1,
+"values": [ "FORWARD_SMASH" ]
+}
+tracks/3/type = "value"
+tracks/3/path = NodePath(".:frame")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 1,
+"values": [ 0 ]
+}
+tracks/4/type = "value"
+tracks/4/path = NodePath(".:scale")
+tracks/4/interp = 1
+tracks/4/loop_wrap = true
+tracks/4/imported = false
+tracks/4/enabled = true
+tracks/4/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 1.27886, 1.27886 ) ]
+}
+tracks/5/type = "value"
+tracks/5/path = NodePath(".:position")
+tracks/5/interp = 1
+tracks/5/loop_wrap = true
+tracks/5/imported = false
+tracks/5/enabled = true
+tracks/5/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, -8.748 ) ]
+}
+tracks/6/type = "value"
+tracks/6/path = NodePath(".:frames")
+tracks/6/interp = 1
+tracks/6/loop_wrap = true
+tracks/6/imported = false
+tracks/6/enabled = true
+tracks/6/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 1,
+"values": [ ExtResource( 1 ) ]
+}
+tracks/7/type = "value"
+tracks/7/path = NodePath(".:offset")
+tracks/7/interp = 1
+tracks/7/loop_wrap = true
+tracks/7/imported = false
+tracks/7/enabled = true
+tracks/7/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, 8 ) ]
+}
+
+[sub_resource type="Animation" id=18]
+length = 0.700001
+step = 0.0166667
+tracks/0/type = "value"
+tracks/0/path = NodePath(".:animation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 1,
+"values": [ "FORWARD_SMASH" ]
+}
+tracks/1/type = "value"
+tracks/1/path = NodePath(".:modulate")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Color( 1, 1, 1, 1 ) ]
+}
+tracks/2/type = "value"
+tracks/2/path = NodePath(".:frame")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/keys = {
+"times": PoolRealArray( 0, 0.1, 0.216667, 0.266667, 0.3, 0.6 ),
+"transitions": PoolRealArray( 1, 1, 1, 1, 1, 1 ),
+"update": 1,
+"values": [ 1, 2, 3, 4, 5, 7 ]
+}
+tracks/3/type = "value"
+tracks/3/path = NodePath(".:position")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, -8.748 ) ]
+}
+tracks/4/type = "value"
+tracks/4/path = NodePath(".:scale")
+tracks/4/interp = 1
+tracks/4/loop_wrap = true
+tracks/4/imported = false
+tracks/4/enabled = true
+tracks/4/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 1.27886, 1.27886 ) ]
+}
+tracks/5/type = "value"
+tracks/5/path = NodePath(".:frames")
+tracks/5/interp = 1
+tracks/5/loop_wrap = true
+tracks/5/imported = false
+tracks/5/enabled = true
+tracks/5/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 1,
+"values": [ ExtResource( 1 ) ]
+}
+tracks/6/type = "value"
+tracks/6/path = NodePath(".:offset")
+tracks/6/interp = 1
+tracks/6/loop_wrap = true
+tracks/6/imported = false
+tracks/6/enabled = true
+tracks/6/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, 8 ) ]
+}
+
+[sub_resource type="Animation" id=19]
+length = 0.533334
+step = 0.0166667
+tracks/0/type = "value"
+tracks/0/path = NodePath(".:modulate")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Color( 1, 1, 1, 1 ) ]
+}
+tracks/1/type = "value"
+tracks/1/path = NodePath(".:animation")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 1,
+"values": [ "FORWARD_SPECIAL" ]
+}
+tracks/2/type = "value"
+tracks/2/path = NodePath(".:frames")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 1,
+"values": [ ExtResource( 1 ) ]
+}
+tracks/3/type = "value"
+tracks/3/path = NodePath("../Raycasts/Ledge_Grab_F:position")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, -16 ) ]
+}
+tracks/4/type = "value"
+tracks/4/path = NodePath(".:frame")
+tracks/4/interp = 1
+tracks/4/loop_wrap = true
+tracks/4/imported = false
+tracks/4/enabled = true
+tracks/4/keys = {
+"times": PoolRealArray( 0, 0.0666667, 0.1, 0.166667, 0.3 ),
+"transitions": PoolRealArray( 1, 1, 1, 1, 1 ),
+"update": 1,
+"values": [ 0, 1, 2, 3, 4 ]
+}
+tracks/5/type = "value"
+tracks/5/path = NodePath(".:scale")
+tracks/5/interp = 1
+tracks/5/loop_wrap = true
+tracks/5/imported = false
+tracks/5/enabled = true
+tracks/5/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 1.172, 1.172 ) ]
+}
+tracks/6/type = "value"
+tracks/6/path = NodePath(".:position")
+tracks/6/interp = 1
+tracks/6/loop_wrap = true
+tracks/6/imported = false
+tracks/6/enabled = true
+tracks/6/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, -4.27699 ) ]
+}
+tracks/7/type = "value"
+tracks/7/path = NodePath(".:offset")
+tracks/7/interp = 1
+tracks/7/loop_wrap = true
+tracks/7/imported = false
+tracks/7/enabled = true
+tracks/7/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, 8 ) ]
+}
+
+[sub_resource type="Animation" id=20]
+length = 0.4
+loop = true
+step = 0.0166667
+tracks/0/type = "value"
+tracks/0/path = NodePath(".:animation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 1,
+"values": [ "FREE_FALL" ]
+}
+tracks/1/type = "value"
+tracks/1/path = NodePath(".:modulate")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray( 0, 0.4 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 0,
+"values": [ Color( 0.160784, 0.137255, 0.137255, 1 ), Color( 0.160784, 0.137255, 0.137255, 1 ) ]
+}
+tracks/2/type = "value"
+tracks/2/path = NodePath("../Raycasts/Ledge_Grab_F:position")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, -16 ) ]
+}
+tracks/3/type = "value"
+tracks/3/path = NodePath(".:frame")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1e-05 ),
+"update": 0,
+"values": [ 0 ]
+}
+tracks/4/type = "value"
+tracks/4/path = NodePath(".:position")
+tracks/4/interp = 1
+tracks/4/loop_wrap = true
+tracks/4/imported = false
+tracks/4/enabled = true
+tracks/4/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, -12 ) ]
+}
+tracks/5/type = "value"
+tracks/5/path = NodePath(".:scale")
+tracks/5/interp = 1
+tracks/5/loop_wrap = true
+tracks/5/imported = false
+tracks/5/enabled = true
+tracks/5/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 1.40797, 1.40797 ) ]
+}
+tracks/6/type = "value"
+tracks/6/path = NodePath(".:offset")
+tracks/6/interp = 1
+tracks/6/loop_wrap = true
+tracks/6/imported = false
+tracks/6/enabled = true
+tracks/6/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, 8 ) ]
+}
+
+[sub_resource type="Animation" id=21]
+length = 0.0166667
+loop = true
+step = 0.0166667
+tracks/0/type = "value"
+tracks/0/path = NodePath(".:animation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 1,
+"values": [ "HITSTUN" ]
+}
+tracks/1/type = "value"
+tracks/1/path = NodePath(".:frame")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 1,
+"values": [ 0 ]
+}
+tracks/2/type = "value"
+tracks/2/path = NodePath(".:modulate")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/keys = {
+"times": PoolRealArray( 0, 0.0166667 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 0,
+"values": [ Color( 1, 1, 0, 0.8 ), Color( 0.67451, 0.505882, 0.152941, 0.8 ) ]
+}
+tracks/3/type = "value"
+tracks/3/path = NodePath("../Raycasts/Ledge_Grab_F:position")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, -35.643 ) ]
+}
+tracks/4/type = "value"
+tracks/4/path = NodePath(".:position")
+tracks/4/interp = 1
+tracks/4/loop_wrap = true
+tracks/4/imported = false
+tracks/4/enabled = true
+tracks/4/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, -12.8 ) ]
+}
+tracks/5/type = "value"
+tracks/5/path = NodePath(".:scale")
+tracks/5/interp = 1
+tracks/5/loop_wrap = true
+tracks/5/imported = false
+tracks/5/enabled = true
+tracks/5/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 1.40797, 1.40797 ) ]
+}
+tracks/6/type = "value"
+tracks/6/path = NodePath(".:offset")
+tracks/6/interp = 1
+tracks/6/loop_wrap = true
+tracks/6/imported = false
+tracks/6/enabled = true
+tracks/6/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, 8 ) ]
+}
+
+[sub_resource type="Animation" id=22]
+length = 0.333334
+loop = true
+step = 0.0166667
+tracks/0/type = "value"
+tracks/0/path = NodePath(".:modulate")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Color( 1, 1, 1, 1 ) ]
+}
+tracks/1/type = "value"
+tracks/1/path = NodePath("../Raycasts/Ledge_Grab_F:position")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, -16 ) ]
+}
+tracks/2/type = "value"
+tracks/2/path = NodePath(".:animation")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 1,
+"values": [ "JAB" ]
+}
+tracks/3/type = "value"
+tracks/3/path = NodePath(".:frame")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 5.39477 ),
+"update": 0,
+"values": [ 0 ]
+}
+tracks/4/type = "value"
+tracks/4/path = NodePath(".:position")
+tracks/4/interp = 1
+tracks/4/loop_wrap = true
+tracks/4/imported = false
+tracks/4/enabled = true
+tracks/4/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, -8 ) ]
+}
+tracks/5/type = "value"
+tracks/5/path = NodePath(".:scale")
+tracks/5/interp = 1
+tracks/5/loop_wrap = true
+tracks/5/imported = false
+tracks/5/enabled = true
+tracks/5/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 1.28463, 1.28463 ) ]
+}
+tracks/6/type = "value"
+tracks/6/path = NodePath(".:offset")
+tracks/6/interp = 1
+tracks/6/loop_wrap = true
+tracks/6/imported = false
+tracks/6/enabled = true
+tracks/6/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, 8 ) ]
+}
+
+[sub_resource type="Animation" id=23]
+length = 0.533334
+step = 0.0166667
+tracks/0/type = "value"
+tracks/0/path = NodePath(".:modulate")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Color( 1, 1, 1, 1 ) ]
+}
+tracks/1/type = "value"
+tracks/1/path = NodePath("../Raycasts/Ledge_Grab_F:position")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, -16 ) ]
+}
+tracks/2/type = "value"
+tracks/2/path = NodePath(".:animation")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 1,
+"values": [ "JAB" ]
+}
+tracks/3/type = "value"
+tracks/3/path = NodePath(".:frame")
+tracks/3/interp = 1
+tracks/3/loop_wrap = false
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/keys = {
+"times": PoolRealArray( 0, 0.183333, 0.216667, 0.466668 ),
+"transitions": PoolRealArray( 1, 1, 0.146763, 1 ),
+"update": 1,
+"values": [ 0, 5, 4, 6 ]
+}
+tracks/4/type = "value"
+tracks/4/path = NodePath(".:position")
+tracks/4/interp = 1
+tracks/4/loop_wrap = true
+tracks/4/imported = false
+tracks/4/enabled = true
+tracks/4/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, -8 ) ]
+}
+tracks/5/type = "value"
+tracks/5/path = NodePath(".:offset")
+tracks/5/interp = 1
+tracks/5/loop_wrap = true
+tracks/5/imported = false
+tracks/5/enabled = true
+tracks/5/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, 8 ) ]
+}
+
+[sub_resource type="Animation" id=24]
+length = 0.1
+loop = true
+tracks/0/type = "value"
+tracks/0/path = NodePath(".:animation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 0.1 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 1,
+"values": [ "Jump_Squat", "Jump_Squat" ]
+}
+tracks/1/type = "value"
+tracks/1/path = NodePath(".:frame")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 1,
+"values": [ 0 ]
+}
+tracks/2/type = "value"
+tracks/2/path = NodePath("../Raycasts/Ledge_Grab_F:position")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, -2 ) ]
+}
+tracks/3/type = "value"
+tracks/3/path = NodePath("../Raycasts/Ledge_Grab_F:scale")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 2.95052, 3.61339 ) ]
+}
+tracks/4/type = "value"
+tracks/4/path = NodePath(".:modulate")
+tracks/4/interp = 1
+tracks/4/loop_wrap = true
+tracks/4/imported = false
+tracks/4/enabled = true
+tracks/4/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Color( 1, 1, 1, 1 ) ]
+}
+tracks/5/type = "value"
+tracks/5/path = NodePath(".:position")
+tracks/5/interp = 1
+tracks/5/loop_wrap = true
+tracks/5/imported = false
+tracks/5/enabled = true
+tracks/5/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, -13.856 ) ]
+}
+tracks/6/type = "value"
+tracks/6/path = NodePath(".:scale")
+tracks/6/interp = 1
+tracks/6/loop_wrap = true
+tracks/6/imported = false
+tracks/6/enabled = true
+tracks/6/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 1.50244, 1.50244 ) ]
+}
+tracks/7/type = "value"
+tracks/7/path = NodePath(".:offset")
+tracks/7/interp = 1
+tracks/7/loop_wrap = true
+tracks/7/imported = false
+tracks/7/enabled = true
+tracks/7/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, 8 ) ]
+}
+
+[sub_resource type="Animation" id=25]
+length = 0.1
+loop = true
+tracks/0/type = "value"
+tracks/0/path = NodePath(".:animation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 1,
+"values": [ "LANDING" ]
+}
+tracks/1/type = "value"
+tracks/1/path = NodePath(".:frame")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 1,
+"values": [ 0 ]
+}
+tracks/2/type = "value"
+tracks/2/path = NodePath(".:modulate")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Color( 1, 1, 1, 1 ) ]
+}
+tracks/3/type = "value"
+tracks/3/path = NodePath(".:position")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, -14.4 ) ]
+}
+tracks/4/type = "value"
+tracks/4/path = NodePath(".:scale")
+tracks/4/interp = 1
+tracks/4/loop_wrap = true
+tracks/4/imported = false
+tracks/4/enabled = true
+tracks/4/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 1.50244, 1.50244 ) ]
+}
+tracks/5/type = "value"
+tracks/5/path = NodePath(".:offset")
+tracks/5/interp = 1
+tracks/5/loop_wrap = true
+tracks/5/imported = false
+tracks/5/enabled = true
+tracks/5/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, 8 ) ]
+}
+
+[sub_resource type="Animation" id=26]
+length = 0.1
+loop = true
+tracks/0/type = "value"
+tracks/0/path = NodePath(".:animation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 1,
+"values": [ "LEDGE_CATCH" ]
+}
+tracks/1/type = "value"
+tracks/1/path = NodePath(".:frame")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 1,
+"values": [ 1 ]
+}
+tracks/2/type = "value"
+tracks/2/path = NodePath("../Raycasts/Ledge_Grab_F:position")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, -40 ) ]
+}
+tracks/3/type = "value"
+tracks/3/path = NodePath(".:modulate")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Color( 1, 1, 1, 1 ) ]
+}
+tracks/4/type = "value"
+tracks/4/path = NodePath(".:position")
+tracks/4/interp = 1
+tracks/4/loop_wrap = true
+tracks/4/imported = false
+tracks/4/enabled = true
+tracks/4/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, 0 ) ]
+}
+tracks/5/type = "value"
+tracks/5/path = NodePath(".:scale")
+tracks/5/interp = 1
+tracks/5/loop_wrap = true
+tracks/5/imported = false
+tracks/5/enabled = true
+tracks/5/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 1.22893, 1.22893 ) ]
+}
+tracks/6/type = "value"
+tracks/6/path = NodePath(".:offset")
+tracks/6/interp = 1
+tracks/6/loop_wrap = true
+tracks/6/imported = false
+tracks/6/enabled = true
+tracks/6/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, 16 ) ]
+}
+
+[sub_resource type="Animation" id=27]
+length = 0.600001
+step = 0.0166667
+tracks/0/type = "value"
+tracks/0/path = NodePath(".:modulate")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Color( 1, 1, 1, 1 ) ]
+}
+tracks/1/type = "value"
+tracks/1/path = NodePath("../Raycasts/Ledge_Grab_F:position")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( -24.605, -40 ) ]
+}
+tracks/2/type = "value"
+tracks/2/path = NodePath(".:animation")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 1,
+"values": [ "NAIR" ]
+}
+tracks/3/type = "value"
+tracks/3/path = NodePath(".:frame")
+tracks/3/interp = 0
+tracks/3/loop_wrap = true
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/keys = {
+"times": PoolRealArray( 0, 0.0833333, 0.15, 0.233334, 0.283334, 0.333334, 0.400001, 0.450001 ),
+"transitions": PoolRealArray( 2.0134e-05, 2.0134e-05, 2.0134e-05, 2.0134e-05, 2.0134e-05, 2.0134e-05, 2.0134e-05, 2.0134e-05 ),
+"update": 1,
+"values": [ 0, 1, 2, 3, 4, 5, 6, 7 ]
+}
+tracks/4/type = "value"
+tracks/4/path = NodePath(".:position")
+tracks/4/interp = 1
+tracks/4/loop_wrap = true
+tracks/4/imported = false
+tracks/4/enabled = true
+tracks/4/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, -3.996 ) ]
+}
+tracks/5/type = "value"
+tracks/5/path = NodePath(".:scale")
+tracks/5/interp = 1
+tracks/5/loop_wrap = true
+tracks/5/imported = false
+tracks/5/enabled = true
+tracks/5/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 1.22893, 1.22893 ) ]
+}
+tracks/6/type = "value"
+tracks/6/path = NodePath(".:offset")
+tracks/6/interp = 1
+tracks/6/loop_wrap = true
+tracks/6/imported = false
+tracks/6/enabled = true
+tracks/6/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, 8 ) ]
+}
+
+[sub_resource type="Animation" id=28]
+length = 0.583334
+step = 0.0166667
+tracks/0/type = "value"
+tracks/0/path = NodePath(".:modulate")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Color( 1, 1, 1, 1 ) ]
+}
+tracks/1/type = "value"
+tracks/1/path = NodePath("../Raycasts/Ledge_Grab_F:position")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, -16 ) ]
+}
+tracks/2/type = "value"
+tracks/2/path = NodePath(".:animation")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 1,
+"values": [ "NEAUTRAL_SPECIAL" ]
+}
+tracks/3/type = "value"
+tracks/3/path = NodePath(".:frame")
+tracks/3/interp = 2
+tracks/3/loop_wrap = true
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/keys = {
+"times": PoolRealArray( 0, 0.283333, 0.35 ),
+"transitions": PoolRealArray( 1, 1, 1 ),
+"update": 0,
+"values": [ 0, 1, 2 ]
+}
+tracks/4/type = "value"
+tracks/4/path = NodePath(".:position")
+tracks/4/interp = 1
+tracks/4/loop_wrap = true
+tracks/4/imported = false
+tracks/4/enabled = false
+tracks/4/keys = {
+"times": PoolRealArray( 0, 0.7, 0.716667 ),
+"transitions": PoolRealArray( 1, 1, 1 ),
+"update": 0,
+"values": [ Vector2( 0, -12.796 ), Vector2( 64, -8 ), Vector2( 0, 0 ) ]
+}
+tracks/5/type = "method"
+tracks/5/path = NodePath("..")
+tracks/5/interp = 1
+tracks/5/loop_wrap = true
+tracks/5/imported = false
+tracks/5/enabled = true
+tracks/5/keys = {
+"times": PoolRealArray( 0.7 ),
+"transitions": PoolRealArray( 1 ),
+"values": [ {
+"args": [  ],
+"method": "reset_sprite"
+} ]
+}
+tracks/6/type = "value"
+tracks/6/path = NodePath(".:scale")
+tracks/6/interp = 1
+tracks/6/loop_wrap = true
+tracks/6/imported = false
+tracks/6/enabled = true
+tracks/6/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 1.3928, 1.3928 ) ]
+}
+tracks/7/type = "value"
+tracks/7/path = NodePath(".:offset")
+tracks/7/interp = 1
+tracks/7/loop_wrap = true
+tracks/7/imported = false
+tracks/7/enabled = true
+tracks/7/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, 8 ) ]
+}
+
+[sub_resource type="Animation" id=29]
+length = 0.500001
+step = 0.0166667
+tracks/0/type = "value"
+tracks/0/path = NodePath(".:modulate")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Color( 0.905882, 0.270588, 0.270588, 1 ) ]
+}
+tracks/1/type = "value"
+tracks/1/path = NodePath("../Raycasts/Ledge_Grab_F:position")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( -24.605, -40 ) ]
+}
+tracks/2/type = "value"
+tracks/2/path = NodePath(".:animation")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 1,
+"values": [ "PARRY" ]
+}
+tracks/3/type = "value"
+tracks/3/path = NodePath(".:frame")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/keys = {
+"times": PoolRealArray( 0, 0.0500001, 0.183334, 0.3, 0.416667 ),
+"transitions": PoolRealArray( 1, 1, 1, 1, 1 ),
+"update": 1,
+"values": [ 0, 1, 2, 3, 4 ]
+}
+tracks/4/type = "value"
+tracks/4/path = NodePath(".:position")
+tracks/4/interp = 1
+tracks/4/loop_wrap = true
+tracks/4/imported = false
+tracks/4/enabled = true
+tracks/4/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, -12.018 ) ]
+}
+tracks/5/type = "value"
+tracks/5/path = NodePath(".:scale")
+tracks/5/interp = 1
+tracks/5/loop_wrap = true
+tracks/5/imported = false
+tracks/5/enabled = true
+tracks/5/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 1.45573, 1.45573 ) ]
+}
+tracks/6/type = "value"
+tracks/6/path = NodePath(".:offset")
+tracks/6/interp = 1
+tracks/6/loop_wrap = true
+tracks/6/imported = false
+tracks/6/enabled = true
+tracks/6/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, 8 ) ]
+}
+
+[sub_resource type="Animation" id=30]
+length = 0.1
+loop = true
+tracks/0/type = "value"
+tracks/0/path = NodePath(".:animation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 1,
+"values": [ "ROLL_FORWARD" ]
+}
+tracks/1/type = "value"
+tracks/1/path = NodePath(".:frame")
+tracks/1/interp = 0
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ 0 ]
+}
+tracks/2/type = "value"
+tracks/2/path = NodePath(".:offset")
+tracks/2/interp = 0
+tracks/2/loop_wrap = true
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/keys = {
+"times": PoolRealArray( 0, 0.9 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 0,
+"values": [ Vector2( 0, 8 ), Vector2( 0, 5 ) ]
+}
+tracks/3/type = "value"
+tracks/3/path = NodePath(".:modulate")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Color( 1, 1, 1, 1 ) ]
+}
+tracks/4/type = "value"
+tracks/4/path = NodePath("../Raycasts/Ledge_Grab_F:position")
+tracks/4/interp = 1
+tracks/4/loop_wrap = true
+tracks/4/imported = false
+tracks/4/enabled = true
+tracks/4/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, -40 ) ]
+}
+tracks/5/type = "value"
+tracks/5/path = NodePath(".:scale")
+tracks/5/interp = 1
+tracks/5/loop_wrap = true
+tracks/5/imported = false
+tracks/5/enabled = true
+tracks/5/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 1.45573, 1.45573 ) ]
+}
+tracks/6/type = "value"
+tracks/6/path = NodePath(".:position")
+tracks/6/interp = 1
+tracks/6/loop_wrap = true
+tracks/6/imported = false
+tracks/6/enabled = true
+tracks/6/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, -13.618 ) ]
+}
+
+[sub_resource type="Animation" id=31]
+length = 0.300001
+loop = true
+step = 0.0166667
+tracks/0/type = "value"
+tracks/0/path = NodePath(".:animation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 1,
+"values": [ "dash" ]
+}
+tracks/1/type = "value"
+tracks/1/path = NodePath(".:frame")
+tracks/1/interp = 2
+tracks/1/loop_wrap = false
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray( 0, 0.100962, 0.183333, 0.266667 ),
+"transitions": PoolRealArray( 1e+06, 1e+06, 1e+06, 1e+06 ),
+"update": 0,
+"values": [ 0, 1, 2, 3 ]
+}
+tracks/2/type = "value"
+tracks/2/path = NodePath(".:modulate")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 1,
+"values": [ Color( 1, 1, 1, 1 ) ]
+}
+tracks/3/type = "value"
+tracks/3/path = NodePath("../Raycasts/Ledge_Grab_F:position")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, -16 ) ]
+}
+tracks/4/type = "value"
+tracks/4/path = NodePath(".:position")
+tracks/4/interp = 1
+tracks/4/loop_wrap = true
+tracks/4/imported = false
+tracks/4/enabled = true
+tracks/4/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, -11.715 ) ]
+}
+tracks/5/type = "value"
+tracks/5/path = NodePath(".:scale")
+tracks/5/interp = 1
+tracks/5/loop_wrap = true
+tracks/5/imported = false
+tracks/5/enabled = true
+tracks/5/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 1.36396, 1.36396 ) ]
+}
+tracks/6/type = "value"
+tracks/6/path = NodePath(".:offset")
+tracks/6/interp = 1
+tracks/6/loop_wrap = true
+tracks/6/imported = false
+tracks/6/enabled = true
+tracks/6/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, 8 ) ]
+}
+
+[sub_resource type="Animation" id=32]
+length = 0.583334
+loop = true
+step = 0.0166667
+tracks/0/type = "bezier"
+tracks/0/path = NodePath(".:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"points": PoolRealArray( 0, -0.25, 0, 0.25, 0, 1, -0.25, 0, 0.25, 0, 2, -0.25, 0, 0.25, 0, 3, -0.25, 0, 0.25, 0, 4, -0.25, 0, 0.25, 0 ),
+"times": PoolRealArray( 0, 0.133333, 0.233333, 0.35, 0.45 )
+}
+tracks/1/type = "value"
+tracks/1/path = NodePath(".:animation")
+tracks/1/interp = 2
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ "STAND" ]
+}
+tracks/2/type = "value"
+tracks/2/path = NodePath(".:modulate")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Color( 1, 1, 1, 1 ) ]
+}
+tracks/3/type = "value"
+tracks/3/path = NodePath("../Raycasts/Ledge_Grab_F:position")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, -16 ) ]
+}
+tracks/4/type = "value"
+tracks/4/path = NodePath(".:scale")
+tracks/4/interp = 1
+tracks/4/loop_wrap = true
+tracks/4/imported = false
+tracks/4/enabled = true
+tracks/4/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 1.36396, 1.36396 ) ]
+}
+tracks/5/type = "value"
+tracks/5/path = NodePath(".:position")
+tracks/5/interp = 1
+tracks/5/loop_wrap = true
+tracks/5/imported = false
+tracks/5/enabled = true
+tracks/5/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, -11.6483 ) ]
+}
+tracks/6/type = "value"
+tracks/6/path = NodePath(".:offset")
+tracks/6/interp = 1
+tracks/6/loop_wrap = true
+tracks/6/imported = false
+tracks/6/enabled = true
+tracks/6/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, 8 ) ]
+}
+
+[sub_resource type="Animation" id=33]
+length = 0.316667
+step = 0.0166667
+tracks/0/type = "value"
+tracks/0/path = NodePath(".:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 0.1, 0.183333, 0.25 ),
+"transitions": PoolRealArray( 1, 1, 1, 1 ),
+"update": 1,
+"values": [ 0, 1, 2, 3 ]
+}
+tracks/1/type = "value"
+tracks/1/path = NodePath(".:animation")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 1,
+"values": [ "TECH_GROUND" ]
+}
+tracks/2/type = "value"
+tracks/2/path = NodePath(".:modulate")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Color( 1, 1, 1, 1 ) ]
+}
+tracks/3/type = "value"
+tracks/3/path = NodePath("../Raycasts/Ledge_Grab_F:position")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( -24.605, -40 ) ]
+}
+tracks/4/type = "value"
+tracks/4/path = NodePath(".:position")
+tracks/4/interp = 1
+tracks/4/loop_wrap = true
+tracks/4/imported = false
+tracks/4/enabled = true
+tracks/4/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, -16.854 ) ]
+}
+tracks/5/type = "value"
+tracks/5/path = NodePath(".:scale")
+tracks/5/interp = 1
+tracks/5/loop_wrap = true
+tracks/5/imported = false
+tracks/5/enabled = true
+tracks/5/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 1.48409, 1.48409 ) ]
+}
+tracks/6/type = "value"
+tracks/6/path = NodePath(".:offset")
+tracks/6/interp = 1
+tracks/6/loop_wrap = true
+tracks/6/imported = false
+tracks/6/enabled = true
+tracks/6/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, 8 ) ]
+}
+
+[sub_resource type="Animation" id=34]
+length = 0.0166667
+step = 0.0166667
+tracks/0/type = "value"
+tracks/0/path = NodePath(".:animation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 1,
+"values": [ "HITSTUN" ]
+}
+tracks/1/type = "value"
+tracks/1/path = NodePath(".:frame")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 1,
+"values": [ 0 ]
+}
+tracks/2/type = "value"
+tracks/2/path = NodePath(".:modulate")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Color( 1, 1, 1, 1 ) ]
+}
+tracks/3/type = "value"
+tracks/3/path = NodePath("../Raycasts/Ledge_Grab_F:position")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, -35.643 ) ]
+}
+tracks/4/type = "value"
+tracks/4/path = NodePath(".:scale")
+tracks/4/interp = 1
+tracks/4/loop_wrap = true
+tracks/4/imported = false
+tracks/4/enabled = true
+tracks/4/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 1.48409, 1.48409 ) ]
+}
+tracks/5/type = "value"
+tracks/5/path = NodePath(".:position")
+tracks/5/interp = 1
+tracks/5/loop_wrap = true
+tracks/5/imported = false
+tracks/5/enabled = true
+tracks/5/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, -16.054 ) ]
+}
+tracks/6/type = "value"
+tracks/6/path = NodePath(".:offset")
+tracks/6/interp = 1
+tracks/6/loop_wrap = true
+tracks/6/imported = false
+tracks/6/enabled = true
+tracks/6/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, 8 ) ]
+}
+
+[sub_resource type="Animation" id=35]
+length = 0.1
+tracks/0/type = "value"
+tracks/0/path = NodePath(".:animation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 1,
+"values": [ "turn" ]
+}
+tracks/1/type = "value"
+tracks/1/path = NodePath(".:modulate")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Color( 1, 1, 1, 1 ) ]
+}
+tracks/2/type = "value"
+tracks/2/path = NodePath("../Raycasts/Ledge_Grab_F:position")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, -16 ) ]
+}
+tracks/3/type = "value"
+tracks/3/path = NodePath(".:position")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, -13.654 ) ]
+}
+tracks/4/type = "value"
+tracks/4/path = NodePath(".:scale")
+tracks/4/interp = 1
+tracks/4/loop_wrap = true
+tracks/4/imported = false
+tracks/4/enabled = true
+tracks/4/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 1.48409, 1.48409 ) ]
+}
+tracks/5/type = "value"
+tracks/5/path = NodePath(".:offset")
+tracks/5/interp = 1
+tracks/5/loop_wrap = true
+tracks/5/imported = false
+tracks/5/enabled = true
+tracks/5/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, 8 ) ]
+}
+
+[sub_resource type="Animation" id=36]
+length = 0.416667
+step = 0.0166667
+tracks/0/type = "value"
+tracks/0/path = NodePath(".:modulate")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Color( 1, 1, 1, 1 ) ]
+}
+tracks/1/type = "value"
+tracks/1/path = NodePath("../Raycasts/Ledge_Grab_F:position")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( -24.605, -40 ) ]
+}
+tracks/2/type = "value"
+tracks/2/path = NodePath(".:animation")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 1,
+"values": [ "UAIR" ]
+}
+tracks/3/type = "value"
+tracks/3/path = NodePath(".:frame")
+tracks/3/interp = 2
+tracks/3/loop_wrap = true
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/keys = {
+"times": PoolRealArray( 0, 0.05, 0.0833333, 0.116667, 0.183333, 0.25, 0.316667 ),
+"transitions": PoolRealArray( 222.861, 1, 1, 1, 1, 1, 1 ),
+"update": 0,
+"values": [ 0, 1, 2, 3, 4, 5, 6 ]
+}
+tracks/4/type = "value"
+tracks/4/path = NodePath(".:position")
+tracks/4/interp = 1
+tracks/4/loop_wrap = true
+tracks/4/imported = false
+tracks/4/enabled = true
+tracks/4/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, -7.155 ) ]
+}
+tracks/5/type = "value"
+tracks/5/path = NodePath(".:scale")
+tracks/5/interp = 1
+tracks/5/loop_wrap = true
+tracks/5/imported = false
+tracks/5/enabled = true
+tracks/5/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 1.28588, 1.28588 ) ]
+}
+tracks/6/type = "value"
+tracks/6/path = NodePath(".:offset")
+tracks/6/interp = 1
+tracks/6/loop_wrap = true
+tracks/6/imported = false
+tracks/6/enabled = true
+tracks/6/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, 8 ) ]
+}
+
+[sub_resource type="Animation" id=37]
+length = 1.06667
+loop = true
+step = 0.0166667
+tracks/0/type = "value"
+tracks/0/path = NodePath(".:modulate")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 0.0333334, 0.0500001, 0.116667, 0.133334, 0.2, 0.216667, 0.283334, 0.300001, 0.366667, 0.383334, 0.433333, 0.450001, 0.533334, 0.550001, 0.633335, 0.650001, 0.700001, 0.716668, 0.783335, 0.800002, 0.866668, 0.883335, 0.950002, 0.966669, 1.03333, 1.05, 1.06667 ),
+"transitions": PoolRealArray( 1, 1e-05, 1e-05, 1, 1e-05, 1e-05, 1, 1, 1e-05, 1e-05, 1, 1, 1e-05, 1e-05, 1, 1, 1e-05, 1e-05, 1, 1, 1e-05, 1e-05, 1, 1, 1e-05, 1e-05, 1, 1e-05 ),
+"update": 0,
+"values": [ Color( 1, 1, 1, 1 ), Color( 1, 1, 1, 1 ), Color( 1, 1, 0, 1 ), Color( 1, 1, 0, 1 ), Color( 1, 1, 1, 1 ), Color( 1, 1, 1, 1 ), Color( 1, 1, 0, 1 ), Color( 1, 1, 0, 1 ), Color( 1, 1, 1, 1 ), Color( 1, 1, 1, 1 ), Color( 1, 1, 0, 1 ), Color( 1, 1, 0, 1 ), Color( 1, 1, 1, 1 ), Color( 1, 1, 1, 1 ), Color( 1, 1, 0, 1 ), Color( 1, 1, 0, 1 ), Color( 1, 1, 1, 1 ), Color( 1, 1, 1, 1 ), Color( 1, 1, 0, 1 ), Color( 1, 1, 0, 1 ), Color( 1, 1, 1, 1 ), Color( 1, 1, 1, 1 ), Color( 1, 1, 0, 1 ), Color( 1, 1, 0, 1 ), Color( 1, 1, 1, 1 ), Color( 1, 1, 1, 1 ), Color( 1, 1, 0, 1 ), Color( 1, 1, 1, 1 ) ]
+}
+tracks/1/type = "value"
+tracks/1/path = NodePath("../Raycasts/Ledge_Grab_F:position")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, -16 ) ]
+}
+tracks/2/type = "value"
+tracks/2/path = NodePath(".:animation")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 1,
+"values": [ "UP_SMASH" ]
+}
+tracks/3/type = "value"
+tracks/3/path = NodePath(".:frame")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 1,
+"values": [ 0 ]
+}
+tracks/4/type = "value"
+tracks/4/path = NodePath(".:position")
+tracks/4/interp = 1
+tracks/4/loop_wrap = true
+tracks/4/imported = false
+tracks/4/enabled = true
+tracks/4/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, -48 ) ]
+}
+tracks/5/type = "value"
+tracks/5/path = NodePath(".:scale")
+tracks/5/interp = 1
+tracks/5/loop_wrap = true
+tracks/5/imported = false
+tracks/5/enabled = true
+tracks/5/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 1.22893, 1.22893 ) ]
+}
+tracks/6/type = "value"
+tracks/6/path = NodePath(".:offset")
+tracks/6/interp = 1
+tracks/6/loop_wrap = true
+tracks/6/imported = false
+tracks/6/enabled = true
+tracks/6/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, 8 ) ]
+}
+
+[sub_resource type="Animation" id=38]
+length = 0.916668
+step = 0.0166667
+tracks/0/type = "value"
+tracks/0/path = NodePath(".:animation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 1,
+"values": [ "UP_SMASH" ]
+}
+tracks/1/type = "value"
+tracks/1/path = NodePath(".:modulate")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Color( 1, 1, 1, 1 ) ]
+}
+tracks/2/type = "value"
+tracks/2/path = NodePath(".:frame")
+tracks/2/interp = 0
+tracks/2/loop_wrap = true
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/keys = {
+"times": PoolRealArray( 0, 0.15, 0.25, 0.3, 0.433333, 0.483334, 0.633335, 0.783335 ),
+"transitions": PoolRealArray( 1, 1, 1, 1, 1, 1, 1, 1 ),
+"update": 0,
+"values": [ 1, 2, 3, 4, 2, 3, 4, 6 ]
+}
+tracks/3/type = "value"
+tracks/3/path = NodePath(".:position")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, -48 ) ]
+}
+tracks/4/type = "value"
+tracks/4/path = NodePath(".:scale")
+tracks/4/interp = 1
+tracks/4/loop_wrap = true
+tracks/4/imported = false
+tracks/4/enabled = true
+tracks/4/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 1.22893, 1.22893 ) ]
+}
+tracks/5/type = "value"
+tracks/5/path = NodePath(".:frames")
+tracks/5/interp = 1
+tracks/5/loop_wrap = true
+tracks/5/imported = false
+tracks/5/enabled = true
+tracks/5/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 1,
+"values": [ ExtResource( 1 ) ]
+}
+tracks/6/type = "value"
+tracks/6/path = NodePath(".:offset")
+tracks/6/interp = 1
+tracks/6/loop_wrap = true
+tracks/6/imported = false
+tracks/6/enabled = true
+tracks/6/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, 8 ) ]
+}
+
+[sub_resource type="Animation" id=39]
+length = 0.883335
+step = 0.0166667
+tracks/0/type = "value"
+tracks/0/path = NodePath(".:modulate")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Color( 1, 1, 1, 1 ) ]
+}
+tracks/1/type = "value"
+tracks/1/path = NodePath("../Raycasts/Ledge_Grab_F:position")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( -24.605, -40 ) ]
+}
+tracks/2/type = "value"
+tracks/2/path = NodePath(".:animation")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 1,
+"values": [ "UP_SPECIAL" ]
+}
+tracks/3/type = "value"
+tracks/3/path = NodePath(".:frame")
+tracks/3/interp = 0
+tracks/3/loop_wrap = true
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/keys = {
+"times": PoolRealArray( 0, 0.183333, 0.333333, 0.4, 0.583333, 0.650001, 0.816667 ),
+"transitions": PoolRealArray( 1, 1, 1, 1, 1, 1, 1 ),
+"update": 0,
+"values": [ 0, 2, 3, 6, 2, 5, 6 ]
+}
+tracks/4/type = "value"
+tracks/4/path = NodePath(".:position")
+tracks/4/interp = 1
+tracks/4/loop_wrap = true
+tracks/4/imported = false
+tracks/4/enabled = true
+tracks/4/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( -0.0329295, 27.9004 ) ]
+}
+tracks/5/type = "value"
+tracks/5/path = NodePath(".:scale")
+tracks/5/interp = 1
+tracks/5/loop_wrap = true
+tracks/5/imported = false
+tracks/5/enabled = true
+tracks/5/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 1.22893, 1.22893 ) ]
+}
+tracks/6/type = "value"
+tracks/6/path = NodePath(".:offset")
+tracks/6/interp = 1
+tracks/6/loop_wrap = true
+tracks/6/imported = false
+tracks/6/enabled = true
+tracks/6/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, 8 ) ]
+}
+
+[sub_resource type="Animation" id=40]
+length = 0.350001
+loop = true
+step = 0.0166667
+tracks/0/type = "value"
+tracks/0/path = NodePath(".:modulate")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Color( 1, 1, 1, 1 ) ]
+}
+tracks/1/type = "value"
+tracks/1/path = NodePath("../Raycasts/Ledge_Grab_F:position")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( -24.605, -40 ) ]
+}
+tracks/2/type = "value"
+tracks/2/path = NodePath(".:animation")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 1,
+"values": [ "UP_SPECIAL" ]
+}
+tracks/3/type = "value"
+tracks/3/path = NodePath(".:frame")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/keys = {
+"times": PoolRealArray( 0, 0.1, 0.183333, 0.266667 ),
+"transitions": PoolRealArray( 1, 1, 1, 1 ),
+"update": 1,
+"values": [ 9, 10, 11, 8 ]
+}
+tracks/4/type = "value"
+tracks/4/path = NodePath(".:scale")
+tracks/4/interp = 1
+tracks/4/loop_wrap = true
+tracks/4/imported = false
+tracks/4/enabled = true
+tracks/4/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 1.22893, 1.22893 ) ]
+}
+tracks/5/type = "value"
+tracks/5/path = NodePath(".:position")
+tracks/5/interp = 1
+tracks/5/loop_wrap = true
+tracks/5/imported = false
+tracks/5/enabled = true
+tracks/5/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, 27.9 ) ]
+}
+tracks/6/type = "value"
+tracks/6/path = NodePath(".:offset")
+tracks/6/interp = 1
+tracks/6/loop_wrap = true
+tracks/6/imported = false
+tracks/6/enabled = true
+tracks/6/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, 8 ) ]
+}
+
+[sub_resource type="Animation" id=41]
+length = 0.25
+step = 0.0166667
+tracks/0/type = "value"
+tracks/0/path = NodePath(".:modulate")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Color( 1, 1, 1, 1 ) ]
+}
+tracks/1/type = "value"
+tracks/1/path = NodePath("../Raycasts/Ledge_Grab_F:position")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, -16 ) ]
+}
+tracks/2/type = "value"
+tracks/2/path = NodePath(".:animation")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 1,
+"values": [ "UP_TILT" ]
+}
+tracks/3/type = "value"
+tracks/3/path = NodePath(".:frame")
+tracks/3/interp = 2
+tracks/3/loop_wrap = true
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/keys = {
+"times": PoolRealArray( 0, 0.116667 ),
+"transitions": PoolRealArray( 0.0501211, 6.87596 ),
+"update": 0,
+"values": [ 0, 1 ]
+}
+tracks/4/type = "value"
+tracks/4/path = NodePath(".:scale")
+tracks/4/interp = 1
+tracks/4/loop_wrap = true
+tracks/4/imported = false
+tracks/4/enabled = true
+tracks/4/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 1.19379, 1.19379 ) ]
+}
+tracks/5/type = "value"
+tracks/5/path = NodePath(".:position")
+tracks/5/interp = 1
+tracks/5/loop_wrap = true
+tracks/5/imported = false
+tracks/5/enabled = true
+tracks/5/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, -4.8 ) ]
+}
+tracks/6/type = "value"
+tracks/6/path = NodePath(".:offset")
+tracks/6/interp = 1
+tracks/6/loop_wrap = true
+tracks/6/imported = false
+tracks/6/enabled = true
+tracks/6/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, 8 ) ]
+}
+
+[sub_resource type="Animation" id=42]
+length = 0.4
+loop = true
+step = 0.0166667
+tracks/0/type = "value"
+tracks/0/path = NodePath(".:animation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 1,
+"values": [ "walk" ]
+}
+tracks/1/type = "value"
+tracks/1/path = NodePath(".:frame")
+tracks/1/interp = 2
+tracks/1/loop_wrap = false
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray( 0, 0.1, 0.2, 0.3 ),
+"transitions": PoolRealArray( 11.5642, 0.225312, 0.482968, 0.0669858 ),
+"update": 0,
+"values": [ 0, 1, 2, 3 ]
+}
+tracks/2/type = "value"
+tracks/2/path = NodePath(".:scale")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 1.36396, 1.36396 ) ]
+}
+tracks/3/type = "value"
+tracks/3/path = NodePath(".:position")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, -11.715 ) ]
+}
+tracks/4/type = "value"
+tracks/4/path = NodePath(".:offset")
+tracks/4/interp = 1
+tracks/4/loop_wrap = true
+tracks/4/imported = false
+tracks/4/enabled = true
+tracks/4/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, 8 ) ]
+}
+
+[sub_resource type="RectangleShape2D" id=43]
+extents = Vector2( 30.0818, 45.645 )
+
+[sub_resource type="RectangleShape2D" id=44]
+extents = Vector2( 30.0818, 45.5399 )
+
+[sub_resource type="DynamicFontData" id=45]
+antialiased = false
+font_path = "res://impact.ttf"
+
+[sub_resource type="DynamicFont" id=46]
+size = 10
+extra_spacing_char = 2
+font_data = SubResource( 45 )
+
+[sub_resource type="DynamicFontData" id=47]
+antialiased = false
+font_path = "res://impact.ttf"
+
+[sub_resource type="DynamicFont" id=48]
+font_data = SubResource( 47 )
+
+[sub_resource type="DynamicFont" id=49]
+font_data = SubResource( 47 )
+
+[node name="SCOUT" type="KinematicBody2D"]
+scale = Vector2( 1.25, 1.25 )
+collision_mask = 6
+script = SubResource( 1 )
+hitbox = ExtResource( 7 )
+grabbox = ExtResource( 5 )
+projectile = ExtResource( 8 )
+explosion = ExtResource( 3 )
+angel_platform = ExtResource( 6 )
+
+[node name="StateMachine" type="Node" parent="."]
+script = SubResource( 2 )
+
+[node name="Sprite" type="AnimatedSprite" parent="."]
+position = Vector2( -0.0329295, 27.9004 )
+scale = Vector2( 1.22893, 1.22893 )
+frames = ExtResource( 1 )
+animation = "UP_SPECIAL"
+frame = 2
+offset = Vector2( 0, 8 )
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="Sprite"]
+anims/AIR = SubResource( 3 )
+"anims/AIR 2" = SubResource( 4 )
+anims/AIR_DODGE = SubResource( 5 )
+anims/BAIR = SubResource( 6 )
+anims/CROUCH = SubResource( 7 )
+anims/DAIR = SubResource( 8 )
+anims/DASH = SubResource( 9 )
+anims/DASH_ATTACK = SubResource( 10 )
+anims/DOWN_SMASH = SubResource( 11 )
+anims/DOWN_SMASH_1 = SubResource( 12 )
+anims/DOWN_SPECIAL = SubResource( 13 )
+anims/DOWN_TILT = SubResource( 14 )
+anims/DOWN_TILT_1 = SubResource( 15 )
+anims/FAIR = SubResource( 16 )
+anims/FORWARD_SMASH = SubResource( 17 )
+anims/FORWARD_SMASH_1 = SubResource( 18 )
+anims/FORWARD_SPECIAL = SubResource( 19 )
+anims/FORWARD_TILT = ExtResource( 2 )
+anims/FREE_FALL = SubResource( 20 )
+anims/HITSTUN = SubResource( 21 )
+anims/JAB = SubResource( 22 )
+anims/JAB_1 = SubResource( 23 )
+anims/JUMP_SQUAT = SubResource( 24 )
+anims/LANDING = SubResource( 25 )
+anims/LEDGE_CATCH = SubResource( 26 )
+anims/MarioAnim = ExtResource( 35 )
+anims/NAIR = SubResource( 27 )
+anims/NEUTRAL_SPECIAL = SubResource( 28 )
+anims/PARRY = SubResource( 29 )
+anims/ROLL_FORWARD = SubResource( 30 )
+anims/RUN = SubResource( 31 )
+anims/STAND = SubResource( 32 )
+anims/TECH_GROUND = SubResource( 33 )
+anims/TUMBLE = SubResource( 34 )
+anims/TURN = SubResource( 35 )
+anims/UAIR = SubResource( 36 )
+anims/UP_SMASH = SubResource( 37 )
+anims/UP_SMASH_1 = SubResource( 38 )
+anims/UP_SPECIAL = SubResource( 39 )
+anims/UP_SPECIAL_1 = SubResource( 40 )
+anims/UP_TILT = SubResource( 41 )
+anims/WALK = SubResource( 42 )
+
+[node name="Collisionbox" type="CollisionShape2D" parent="."]
+position = Vector2( 0, -0.6 )
+shape = SubResource( 43 )
+
+[node name="HurtBox" type="Area2D" parent="."]
+position = Vector2( -0.19323, -0.218393 )
+collision_mask = 6
+__meta__ = {
+"_edit_group_": true
+}
+
+[node name="Hurtbox" type="CollisionShape2D" parent="HurtBox"]
+modulate = Color( 1, 0, 0.494118, 1 )
+shape = SubResource( 44 )
+
+[node name="Raycasts" type="Node2D" parent="."]
+position = Vector2( -4, -6 )
+
+[node name="GroundL" type="RayCast2D" parent="Raycasts"]
+position = Vector2( -25.8, 47.4 )
+enabled = true
+cast_to = Vector2( 0, 10 )
+collision_mask = 6
+collide_with_areas = true
+
+[node name="GroundR" type="RayCast2D" parent="Raycasts"]
+position = Vector2( 33.8, 49 )
+enabled = true
+cast_to = Vector2( 0, 10 )
+collision_mask = 6
+collide_with_areas = true
+
+[node name="Ledge_Grab_F" type="RayCast2D" parent="Raycasts"]
+position = Vector2( -24.605, -40 )
+scale = Vector2( 2.95052, 3.61339 )
+enabled = true
+cast_to = Vector2( 20, 0 )
+collision_mask = 8
+collide_with_areas = true
+
+[node name="Ledge_Grab_B" type="RayCast2D" parent="Raycasts"]
+position = Vector2( 4, -40 )
+scale = Vector2( 2.95052, 3.61339 )
+enabled = true
+cast_to = Vector2( -11, 0 )
+collision_mask = 8
+collide_with_areas = true
+
+[node name="State" type="Label" parent="."]
+visible = false
+margin_left = -74.5144
+margin_top = -98.3984
+margin_right = -34.5144
+margin_bottom = -84.3984
+rect_scale = Vector2( 3.82211, 3.82211 )
+custom_fonts/font = SubResource( 46 )
+text = "IDLE"
+align = 1
+valign = 1
+uppercase = true
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="Frames" type="Label" parent="."]
+visible = false
+margin_left = -163.012
+margin_top = -54.7448
+margin_right = -123.012
+margin_bottom = -33.7448
+rect_scale = Vector2( 3.82211, 3.82211 )
+custom_fonts/font = SubResource( 48 )
+text = "0"
+align = 1
+valign = 1
+uppercase = true
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="Health" type="Label" parent="."]
+visible = false
+margin_left = -72.0
+margin_top = -176.0
+margin_right = -32.0
+margin_bottom = -155.0
+rect_scale = Vector2( 3.82211, 3.82211 )
+custom_fonts/font = SubResource( 49 )
+text = "0"
+align = 1
+valign = 1
+uppercase = true
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="gun_pos" type="Position2D" parent="."]
+position = Vector2( 24, -24 )

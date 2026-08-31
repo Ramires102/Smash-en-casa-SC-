@@ -1,0 +1,10 @@
+[gd_scene load_steps=2 format=2]
+
+[ext_resource path="res://ASSETS/CSS/Hand.tscn" type="PackedScene" id=1]
+
+[node name="Hand_2" instance=ExtResource( 1 )]
+id = 2
+
+[node name="Label2" parent="HandArea" index="1"]
+modulate = Color( 0, 0.345098, 1, 1 )
+text = "p2"

@@ -1,33 +1,29 @@
 class_name CharacterController
 extends Node
 
-@export var character: CharacterBody3D
-@export var facing_angle: float = 90.0
+@export var character: Character
 
-# Smash Ultimate physics (loaded from CharacterData)
-var run_speed: float = 1.76
+
+# Valores de físicas 2D (cargados de CharacterData)
+var run_speed: float = 2.18
 var walk_speed: float = 1.05
-var initial_dash_speed: float = 1.98
-var traction: float = 0.08
-var jump_velocity: float = 14.0
-var short_hop_velocity: float = 10.5
-var air_speed: float = 1.0
-var air_acceleration: float = 0.05
-var air_friction: float = 0.01
+var initial_dash_speed: float = 2.35
+var traction: float = 0.11
+var jump_velocity: float = 14.2
+var short_hop_velocity: float = 10.8
+var air_speed: float = 1.08
+var air_acceleration: float = 0.055
+var air_friction: float = 0.012
 var smash_gravity: float = 0.09
-var smash_fall_speed: float = 1.60
-var smash_fast_fall_speed: float = 2.56
+var smash_fall_speed: float = 1.62
+var smash_fast_fall_speed: float = 2.55
 
-# Escala para convertir unidades de Smash a unidades de Godot 3D
-const SPEED_SCALE: float = 6.0
-const GRAVITY_SCALE: float = 60.0
-const WALK_SPEED_MULT: float = 0.82
-const WALK_RUN_CAP_RATIO: float = 0.72
+# Factores de escala 2D nativos (Píxeles/segundo)
+const SPEED_SCALE_2D: float = 160.0
+const JUMP_SCALE_2D: float = 38.0
+const GRAVITY_SCALE_2D: float = 260.0
 
 var facing_direction: float = 1.0
-
-# Ajustes de control terrestre
-const GROUND_ACCEL_MULT: float = 1.0
 
 func setup(data: CharacterData) -> void:
 	if data:
@@ -44,97 +40,97 @@ func setup(data: CharacterData) -> void:
 		smash_fall_speed = data.fall_speed
 		smash_fast_fall_speed = data.fast_fall_speed
 
-func get_input_vector(player_input: PlayerInput = null) -> Vector2:
-	return player_input.movement if player_input else Vector2.ZERO
 
-# ── Movimiento Terrestre ───────────────────────────────────────────────────
+# ── Movimiento Terrestre 2D (px/s) ──────────────────────────────────────────
 func get_run_speed() -> float:
-	return run_speed * SPEED_SCALE
+	return run_speed * SPEED_SCALE_2D
 
 func get_walk_speed() -> float:
-	var walk_target: float = walk_speed * SPEED_SCALE * WALK_SPEED_MULT
-	var run_cap: float = get_run_speed() * WALK_RUN_CAP_RATIO
-	return min(walk_target, run_cap)
+	return walk_speed * (SPEED_SCALE_2D * 0.65)
 
 func get_initial_dash_speed() -> float:
-	return initial_dash_speed * SPEED_SCALE
+	return initial_dash_speed * (SPEED_SCALE_2D * 1.15)
 
 func get_traction() -> float:
-	return traction * SPEED_SCALE * 60.0 # Tasa de frenado por segundo
-
-func get_ground_acceleration() -> float:
-	return get_traction() * GROUND_ACCEL_MULT
+	return traction * 60.0 * 180.0
 
 func accelerate_ground_velocity(target_speed_x: float, delta: float, accel_multiplier: float = 1.0) -> void:
 	if character == null:
 		return
-	var accel: float = max(1.0, get_ground_acceleration() * accel_multiplier)
+	var accel: float = max(50.0, get_traction() * accel_multiplier)
 	character.velocity.x = move_toward(character.velocity.x, target_speed_x, accel * delta)
 
-# ── Salto y Movimiento Aéreo (Air Drift) ──────────────────────────────────
+# ── Salto y Gravedad 2D (px/s) ──────────────────────────────────────────────
 func get_jump_velocity() -> float:
-	return jump_velocity
+	return jump_velocity * JUMP_SCALE_2D
 
 func get_short_hop_velocity() -> float:
-	return short_hop_velocity
+	return short_hop_velocity * JUMP_SCALE_2D
 
 func get_air_speed() -> float:
-	return air_speed * SPEED_SCALE
+	return air_speed * (SPEED_SCALE_2D * 1.3)
 
 func get_air_acceleration() -> float:
-	# Aceleración horizontal aérea por segundo
-	return air_acceleration * SPEED_SCALE * 60.0
+	return air_acceleration * 60.0 * 200.0
 
 func get_air_friction() -> float:
-	# Fricción/resistencia aérea por segundo cuando no hay input de stick
-	return air_friction * SPEED_SCALE * 60.0
+	return air_friction * 60.0 * 150.0
 
-## Acelera suavemente la velocidad horizontal en el aire hacia la velocidad objetivo (Air Drift)
-func accelerate_air_velocity(target_speed_x: float, delta: float) -> void:
-	if character == null:
-		return
-	var accel: float = get_air_acceleration()
-	character.velocity.x = move_toward(character.velocity.x, target_speed_x, accel * delta)
+func get_gravity_value() -> float:
+	# En Godot 2D, Y positivo es abajo (+), por lo que la gravedad es POSITIVA (+)
+	return smash_gravity * 60.0 * GRAVITY_SCALE_2D
 
-## Aplica resistencia/fricción aérea desacelerando suavemente hacia 0 cuando no hay input horizontal
+func get_fall_speed() -> float:
+	return smash_fall_speed * 320.0
+
+func get_fast_fall_speed() -> float:
+	return smash_fast_fall_speed * 280.0
+
+func get_terminal_fall_speed(is_fast_falling: bool = false) -> float:
+	return get_fast_fall_speed() if is_fast_falling else get_fall_speed()
+
+
 func apply_air_friction(delta: float) -> void:
 	if character == null:
 		return
 	var friction: float = get_air_friction()
 	character.velocity.x = move_toward(character.velocity.x, 0.0, friction * delta)
 
-# ── Gravedad y Caída ───────────────────────────────────────────────────────
-func get_gravity_value() -> float:
-	# Retorna gravedad negativa (hacia abajo en Godot 3D)
-	return -smash_gravity * GRAVITY_SCALE * SPEED_SCALE
+## Air drift estilo Splash N Dash: acelera fuerte por input opuesto y fricción leve en neutral.
+func apply_snd_air_movement(input_x: float, delta: float) -> void:
+	if character == null:
+		return
 
-func get_fall_speed() -> float:
-	return smash_fall_speed * SPEED_SCALE
+	var max_air_speed: float = get_air_speed()
+	var air_accel: float = get_air_acceleration() * delta
 
-func get_fast_fall_speed() -> float:
-	return smash_fast_fall_speed * SPEED_SCALE
+	if absf(character.velocity.x) >= absf(max_air_speed):
+		if character.velocity.x > 0.0:
+			if input_x < -0.1:
+				character.velocity.x -= air_accel
+		elif character.velocity.x < 0.0:
+			if input_x > 0.1:
+				character.velocity.x += air_accel
+	else:
+		if input_x < -0.1:
+			character.velocity.x -= air_accel
+		elif input_x > 0.1:
+			character.velocity.x += air_accel
 
-func get_terminal_fall_speed(is_fast_falling: bool = false) -> float:
-	return get_fast_fall_speed() if is_fast_falling else get_fall_speed()
+	if absf(input_x) <= 0.1:
+		var neutral_friction: float = air_accel / Constants.AIR_NEUTRAL_FRICTION_DIV
+		if character.velocity.x < 0.0:
+			character.velocity.x += neutral_friction
+			if character.velocity.x > 0.0:
+				character.velocity.x = 0.0
+		elif character.velocity.x > 0.0:
+			character.velocity.x -= neutral_friction
+			if character.velocity.x < 0.0:
+				character.velocity.x = 0.0
 
-# ── Combate y Knockback ───────────────────────────────────────────────────
-func get_knockback_decay_rate() -> float:
-	return KnockbackCalculator.get_knockback_decay_rate(SPEED_SCALE)
-
-# ── Orientación y Utilidades ───────────────────────────────────────────────
 func set_facing_direction(dir: float) -> void:
 	if dir != 0.0:
 		facing_direction = sign(dir)
-		if character:
-			character.rotation_degrees = Vector3.ZERO
-			var humanoid: Node3D = character.get_node_or_null("Humanoid")
-			if humanoid:
-				humanoid.rotation_degrees.y = facing_angle if facing_direction > 0 else (-facing_angle)
+		if character and character.has_method("update_visual_rotation"):
+			character.update_visual_rotation(facing_direction)
 
-func apply_horizontal_movement(input_x: float) -> void:
-	if input_x != 0.0:
-		set_facing_direction(sign(input_x))
-
-func apply_jump(multiplier: float = 1.0) -> void:
-	if character:
-		character.velocity.y = jump_velocity * multiplier

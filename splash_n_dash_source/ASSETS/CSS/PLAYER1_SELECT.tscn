@@ -1,0 +1,30 @@
+[gd_scene load_steps=6 format=2]
+
+[ext_resource path="res://ASSETS/CSS/Character_Preview.tscn" type="PackedScene" id=1]
+[ext_resource path="res://ASSETS/Fox/portrait.png" type="Texture" id=2]
+[ext_resource path="res://ASSETS/CSS/PLAYER1_SELECT.gd" type="Script" id=3]
+[ext_resource path="res://ASSETS/Wolf/portrait.png" type="Texture" id=4]
+[ext_resource path="res://ASSETS/Mario/portrait.png" type="Texture" id=5]
+
+[node name="PLAYER_1" instance=ExtResource( 1 )]
+size_flags_horizontal = 3
+script = ExtResource( 3 )
+id = 1
+FOX = ExtResource( 2 )
+WOLF = ExtResource( 4 )
+MARIO = ExtResource( 5 )
+
+[node name="ColorRect" parent="." index="0"]
+color = Color( 0.7, 0, 0.08, 0.25 )
+
+[node name="HoverTexture" parent="." index="1"]
+stretch_mode = 6
+
+[node name="TextureRect" parent="." index="2"]
+stretch_mode = 6
+
+[node name="TextureRect" parent="Control" index="0"]
+modulate = Color( 1, 0, 0, 1 )
+
+[node name="Label" parent="Control" index="2"]
+text = ""

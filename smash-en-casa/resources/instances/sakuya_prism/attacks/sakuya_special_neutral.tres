@@ -1,0 +1,34 @@
+[gd_resource type="Resource" script_class="AttackData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/attack_data.gd" id="1_atk"]
+
+[resource]
+script = ExtResource("1_atk")
+attack_name = "Silver Stun Knife (Quick Throw)"
+damage = 6.0
+base_knockback = 14.0
+knockback_scaling = 50.0
+angle_degrees = 12.0
+startup_frames = 5
+active_frames = 3
+recovery_frames = 8
+animation_name = "SpecialNeutral"
+hitbox_offset = Vector3(0.8, 0.2, 0.0)
+hitbox_radius = 0.4
+combo_next = null
+combo_window_frames = 0
+self_impulse = Vector3(0.0, 0.0, 0.0)
+self_impulse_frame = 0
+disable_gravity_during_active = false
+sub_hitboxes = []
+spawns_projectile = true
+projectile_speed = 28.0
+projectile_count = 1
+projectile_spread_angles = [0.0]
+aerial_projectile_angle_offset = -28.0
+projectile_spawn_frame = 5
+projectile_offset = Vector3(0.8, 0.2, 0.0)
+projectile_lifetime = 2.5
+is_time_stop = false
+time_stop_duration_sec = 2.0
+time_stop_frame = 6

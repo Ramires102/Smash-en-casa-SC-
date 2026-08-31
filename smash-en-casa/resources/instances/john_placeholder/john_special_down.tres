@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="AttackData" load_steps=2 format=3 uid="uid://john_special_down"]
+
+[ext_resource type="Script" path="res://resources/attack_data.gd" id="1_atk"]
+
+[resource]
+script = ExtResource("1_atk")
+attack_name = "Menacing Drop (Ground Pound)"
+damage = 14.0
+base_knockback = 38.0
+knockback_scaling = 120.0
+angle_degrees = 35.0
+startup_frames = 7
+active_frames = 15
+recovery_frames = 16
+animation_name = "SpecialDown"
+hitbox_offset = Vector3(0.0, -0.6, 0.0)
+hitbox_radius = 0.95
+combo_next = null
+combo_window_frames = 0
+self_impulse = Vector3(0.0, -10.0, 0.0)
+self_impulse_frame = 7
+disable_gravity_during_active = false

@@ -1,0 +1,25 @@
+[gd_scene load_steps=4 format=2]
+
+[ext_resource path="res://Time.gd" type="Script" id=1]
+[ext_resource path="res://ASSETS/UI Features/Stocks.tscn" type="PackedScene" id=2]
+[ext_resource path="res://ASSETS/UI Features/ico_time_60.png" type="Texture" id=3]
+
+[node name="Control" instance=ExtResource( 2 )]
+
+[node name="Control3" parent="." index="0"]
+margin_right = 110.0
+
+[node name="TextureRect" parent="." index="1"]
+margin_left = 114.0
+margin_right = 242.0
+texture = ExtResource( 3 )
+
+[node name="Label" parent="." index="2"]
+margin_left = 246.0
+margin_right = 496.0
+text = "1:00"
+script = ExtResource( 1 )
+
+[node name="Control" parent="." index="3"]
+margin_left = 500.0
+margin_right = 610.0

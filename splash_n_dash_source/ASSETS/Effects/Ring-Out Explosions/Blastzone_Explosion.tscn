@@ -1,0 +1,10 @@
+[gd_scene load_steps=3 format=2]
+
+[ext_resource path="res://ASSETS/Effects/Ring-Out Explosions/Blastzones.tres" type="SpriteFrames" id=1]
+[ext_resource path="res://ASSETS/Effects/Ring-Out Explosions/Blastzone_Explosion.gd" type="Script" id=2]
+
+[node name="Blastzone" type="AnimatedSprite"]
+frames = ExtResource( 1 )
+animation = "Blastzone_P1"
+offset = Vector2( 0, -474 )
+script = ExtResource( 2 )

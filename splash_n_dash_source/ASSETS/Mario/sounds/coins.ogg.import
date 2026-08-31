@@ -1,0 +1,15 @@
+[remap]
+
+importer="ogg_vorbis"
+type="AudioStreamOGGVorbis"
+path="res://.import/coins.ogg-b0b1870d50d515f3a7788b2f3f34fb0d.oggstr"
+
+[deps]
+
+source_file="res://ASSETS/Mario/sounds/coins.ogg"
+dest_files=[ "res://.import/coins.ogg-b0b1870d50d515f3a7788b2f3f34fb0d.oggstr" ]
+
+[params]
+
+loop=true
+loop_offset=0

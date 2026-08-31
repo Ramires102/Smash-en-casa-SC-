@@ -1,0 +1,121 @@
+[gd_scene load_steps=6 format=2]
+
+[ext_resource path="res://ASSETS/Fonts/tf2build.ttf" type="DynamicFontData" id=2]
+
+[sub_resource type="DynamicFont" id=1]
+size = 128
+outline_size = 5
+outline_color = Color( 0.145098, 0.145098, 0.164706, 1 )
+use_filter = true
+extra_spacing_top = 9
+extra_spacing_bottom = -17
+font_data = ExtResource( 2 )
+
+[sub_resource type="GDScript" id=2]
+script/source = "extends Button
+
+export var path = ''
+
+onready var label = get_node(\"Label\")
+
+func _on_Button_pressed():
+	MusicController.fade_out()
+	yield(MusicController.tween,\"tween_completed\")
+	if (path != ''):
+		get_tree().paused = false
+		get_tree().change_scene(path)
+
+
+func _on_Main_Menu_focus_entered():
+	label.add_color_override(\"font_color_shadow\", Color(1,0.33,0.2,1))
+
+
+func _on_Main_Menu_focus_exited():
+	label.add_color_override(\"font_color_shadow\", Color(0.639216, 0, 1))
+
+
+func _on_Exit_area_entered(area):
+	emit_signal(\"focus_entered\")
+
+
+func _on_Exit_area_exited(area):
+	emit_signal(\"focus_exited\")
+
+
+func _on_Main_Menu_mouse_entered():
+	label.add_color_override(\"font_color_shadow\", Color(1,0.33,0.2,1))
+
+
+func _on_Main_Menu_mouse_exited():
+	label.add_color_override(\"font_color_shadow\", Color(0.2,0.88,1,1))
+"
+
+[sub_resource type="RectangleShape2D" id=3]
+extents = Vector2( 367.645, 63.1265 )
+
+[sub_resource type="DynamicFont" id=4]
+size = 130
+outline_size = 4
+outline_color = Color( 0, 0, 0, 1 )
+extra_spacing_top = -15
+extra_spacing_bottom = -24
+font_data = ExtResource( 2 )
+
+[node name="Main Menu" type="Button"]
+pause_mode = 2
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+margin_left = 222.346
+margin_top = -323.802
+margin_right = 957.346
+margin_bottom = -197.802
+custom_fonts/font = SubResource( 1 )
+flat = true
+script = SubResource( 2 )
+__meta__ = {
+"_edit_use_anchors_": false,
+"_editor_description_": ""
+}
+path = "res://TitleScreen.tscn"
+
+[node name="Exit" type="Area2D" parent="."]
+collision_layer = 65536
+collision_mask = 524288
+__meta__ = {
+"_edit_group_": true,
+"_edit_lock_": true
+}
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Exit"]
+position = Vector2( 368.163, 63.4857 )
+shape = SubResource( 3 )
+
+[node name="Label" type="Label" parent="."]
+anchor_left = 0.00123233
+anchor_top = 0.00354827
+anchor_right = 0.00123233
+anchor_bottom = 0.00354827
+margin_left = -1.0
+margin_top = -2.0
+margin_right = 738.0
+margin_bottom = 116.0
+custom_fonts/font = SubResource( 4 )
+custom_colors/font_color_shadow = Color( 0.639216, 0, 1, 1 )
+custom_constants/shadow_offset_x = 5
+custom_constants/shadow_offset_y = 4
+text = "TITLE"
+align = 1
+valign = 2
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[connection signal="focus_entered" from="." to="." method="_on_Main_Menu_focus_entered"]
+[connection signal="focus_exited" from="." to="." method="_on_Main_Menu_focus_exited"]
+[connection signal="mouse_entered" from="." to="." method="_on_Main_Menu_mouse_entered"]
+[connection signal="mouse_exited" from="." to="." method="_on_Main_Menu_mouse_exited"]
+[connection signal="pressed" from="." to="." method="_on_Button_pressed"]
+[connection signal="area_entered" from="Exit" to="." method="_on_Exit_area_entered"]
+[connection signal="area_exited" from="Exit" to="." method="_on_Exit_area_exited"]

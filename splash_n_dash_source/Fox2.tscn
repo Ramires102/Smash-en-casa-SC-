@@ -1,0 +1,363 @@
+[gd_scene load_steps=41 format=2]
+
+[ext_resource path="res://ASSETS/Fox Godot/Idle/5.png" type="Texture" id=1]
+[ext_resource path="res://FINALFOX.gd" type="Script" id=2]
+[ext_resource path="res://ASSETS/Fox Godot/Idle/3.png" type="Texture" id=3]
+[ext_resource path="res://ASSETS/Fox Godot/Fox Jump/0.png" type="Texture" id=4]
+[ext_resource path="res://ASSETS/Fox Godot/Idle/7.png" type="Texture" id=5]
+[ext_resource path="res://ASSETS/Fox Godot/Idle/1.png" type="Texture" id=6]
+[ext_resource path="res://ASSETS/Fox Godot/Idle/9.png" type="Texture" id=7]
+[ext_resource path="res://ASSETS/Fox Godot/Idle/2.png" type="Texture" id=8]
+[ext_resource path="res://ASSETS/Fox Godot/Fox Walk/0.png" type="Texture" id=9]
+[ext_resource path="res://ASSETS/Fox/sprites/dstrong_strip4.png" type="Texture" id=10]
+[ext_resource path="res://ASSETS/Fox/sprites/idle_strip10.png" type="Texture" id=11]
+[ext_resource path="res://ASSETS/Fox Godot/Idle/8.png" type="Texture" id=12]
+[ext_resource path="res://ASSETS/Fox Godot/Idle/4.png" type="Texture" id=13]
+[ext_resource path="res://ASSETS/Fox Godot/Fox Jump/3.png" type="Texture" id=14]
+[ext_resource path="res://ASSETS/Fox Godot/Fox Jump/2.png" type="Texture" id=15]
+[ext_resource path="res://ASSETS/Fox Godot/Fox Jump/1.png" type="Texture" id=16]
+[ext_resource path="res://ASSETS/Fox Godot/Fox Jump/4.png" type="Texture" id=17]
+[ext_resource path="res://ASSETS/Fox Godot/Fox Walk/3.png" type="Texture" id=18]
+[ext_resource path="res://ASSETS/Fox/sprites/dash_strip4.png" type="Texture" id=19]
+[ext_resource path="res://ASSETS/Fox Godot/Fox Walk/1.png" type="Texture" id=20]
+[ext_resource path="res://ASSETS/Fox Godot/Idle/6.png" type="Texture" id=21]
+[ext_resource path="res://ASSETS/Fox Godot/Idle/0.png" type="Texture" id=22]
+[ext_resource path="res://ASSETS/Fox Godot/Fox Walk/2.png" type="Texture" id=23]
+
+[sub_resource type="AtlasTexture" id=1]
+flags = 4
+atlas = ExtResource( 19 )
+region = Rect2( 0, 0, 72, 64 )
+
+[sub_resource type="AtlasTexture" id=2]
+flags = 4
+atlas = ExtResource( 19 )
+region = Rect2( 72, 0, 72, 64 )
+
+[sub_resource type="AtlasTexture" id=3]
+flags = 4
+atlas = ExtResource( 19 )
+region = Rect2( 144, 0, 72, 64 )
+
+[sub_resource type="AtlasTexture" id=4]
+flags = 4
+atlas = ExtResource( 19 )
+region = Rect2( 216, 0, 72, 64 )
+
+[sub_resource type="AtlasTexture" id=5]
+flags = 4
+atlas = ExtResource( 10 )
+region = Rect2( 0, 0, 128, 128 )
+
+[sub_resource type="AtlasTexture" id=6]
+flags = 4
+atlas = ExtResource( 10 )
+region = Rect2( 128, 0, 128, 128 )
+
+[sub_resource type="AtlasTexture" id=7]
+flags = 4
+atlas = ExtResource( 10 )
+region = Rect2( 256, 0, 128, 128 )
+
+[sub_resource type="AtlasTexture" id=8]
+flags = 4
+atlas = ExtResource( 10 )
+region = Rect2( 384, 0, 128, 128 )
+
+[sub_resource type="SpriteFrames" id=9]
+animations = [ {
+"frames": [ ExtResource( 22 ), ExtResource( 6 ), ExtResource( 8 ), ExtResource( 3 ), ExtResource( 13 ), ExtResource( 1 ), ExtResource( 21 ), ExtResource( 5 ), ExtResource( 12 ), ExtResource( 7 ) ],
+"loop": true,
+"name": "idle",
+"speed": 5.0
+}, {
+"frames": [ ExtResource( 9 ), ExtResource( 20 ), ExtResource( 23 ), ExtResource( 18 ) ],
+"loop": true,
+"name": "walk",
+"speed": 10.0
+}, {
+"frames": [ ExtResource( 4 ), ExtResource( 16 ), ExtResource( 15 ), ExtResource( 14 ), ExtResource( 17 ) ],
+"loop": true,
+"name": "jump1",
+"speed": 10.0
+}, {
+"frames": [ SubResource( 1 ), SubResource( 2 ), SubResource( 3 ), SubResource( 4 ) ],
+"loop": true,
+"name": "dash",
+"speed": 5.0
+}, {
+"frames": [ SubResource( 5 ), SubResource( 6 ), SubResource( 7 ), SubResource( 8 ) ],
+"loop": true,
+"name": "DownSmash",
+"speed": 5.0
+} ]
+
+[sub_resource type="Animation" id=10]
+length = 0.4
+tracks/0/type = "value"
+tracks/0/path = NodePath(".:animation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 1,
+"values": [ "DownSmash" ]
+}
+tracks/1/type = "value"
+tracks/1/path = NodePath(".:frame")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray( 0, 0.1, 0.2, 0.3 ),
+"transitions": PoolRealArray( 1, 1, 1, 1 ),
+"update": 1,
+"values": [ 0, 1, 2, 3 ]
+}
+
+[sub_resource type="Animation" id=11]
+resource_name = "dash"
+length = 0.4
+loop = true
+tracks/0/type = "value"
+tracks/0/path = NodePath(".:animation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 1,
+"values": [ "dash" ]
+}
+tracks/1/type = "value"
+tracks/1/path = NodePath(".:frame")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray( 0, 0.1, 0.2, 0.3 ),
+"transitions": PoolRealArray( 1, 1, 1, 1 ),
+"update": 1,
+"values": [ 0, 1, 2, 3 ]
+}
+tracks/2/type = "value"
+tracks/2/path = NodePath("../CollisionShape2D:shape:extents")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/keys = {
+"times": PoolRealArray( 0, 0.1, 0.2, 0.3 ),
+"transitions": PoolRealArray( 1, 1, 1, 1 ),
+"update": 0,
+"values": [ Vector2( 56, 49.7701 ), Vector2( 56, 49.7701 ), Vector2( 56, 49.7701 ), Vector2( 56, 49.7701 ) ]
+}
+tracks/3/type = "value"
+tracks/3/path = NodePath("../CollisionShape2D:position")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/keys = {
+"times": PoolRealArray( 0, 0.1, 0.2, 0.3 ),
+"transitions": PoolRealArray( 1, 1, 1, 1 ),
+"update": 0,
+"values": [ Vector2( 4, 0 ), Vector2( 4, 0 ), Vector2( 4, 0 ), Vector2( 4, 0 ) ]
+}
+
+[sub_resource type="Animation" id=12]
+length = 1.1
+loop = true
+tracks/0/type = "bezier"
+tracks/0/path = NodePath(".:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"points": PoolRealArray( 0, -0.25, 0, 0.25, 0, 1, -0.25, 0, 0.25, 0, 2, -0.25, 0, 0.25, 0, 3, -0.25, 0, 0.25, 0, 4, -0.25, 0, 0.25, 0, 5, -0.25, 0, 0.25, 0, 6, -0.25, 0, 0.25, 0, 7, -0.25, 0, 0.25, 0, 8, -0.25, 0, 0.25, 0, 9, -0.25, 0, 0.25, 0, 9, -0.25, 0, 0.25, 0 ),
+"times": PoolRealArray( 0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1 )
+}
+tracks/1/type = "value"
+tracks/1/path = NodePath("../CollisionShape2D:shape:extents")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray( 0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1 ),
+"transitions": PoolRealArray( 1, 1, 1, 1, 1, 1, 1, 1, 4.62563e-05, 4.62563e-05, 4.62563e-05 ),
+"update": 2,
+"values": [ Vector2( 40, 49.7701 ), Vector2( 40, 49.7701 ), Vector2( 40, 49.7701 ), Vector2( 40, 49.7701 ), Vector2( 40, 49.7701 ), Vector2( 40, 49.7701 ), Vector2( 40, 49.7701 ), Vector2( 40, 49.7701 ), Vector2( 40, 49.7701 ), Vector2( 40, 49.7701 ), Vector2( 40, 49.7701 ) ]
+}
+tracks/2/type = "value"
+tracks/2/path = NodePath("../CollisionShape2D:position")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/keys = {
+"times": PoolRealArray( 0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1 ),
+"transitions": PoolRealArray( 1, 1, 1, 1, 1, 1, 1, 1, 4.62563e-05, 4.62563e-05, 4.62563e-05 ),
+"update": 2,
+"values": [ Vector2( 0, 0 ), Vector2( 0, 0 ), Vector2( 0, 0 ), Vector2( 0, 0 ), Vector2( 0, 0 ), Vector2( 0, 0 ), Vector2( 0, 0 ), Vector2( 0, 0 ), Vector2( 0, 0 ), Vector2( 5, 0 ), Vector2( 5, 0 ) ]
+}
+tracks/3/type = "value"
+tracks/3/path = NodePath(".:animation")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 1,
+"values": [ "idle" ]
+}
+
+[sub_resource type="Animation" id=13]
+length = 0.4
+loop = true
+tracks/0/type = "bezier"
+tracks/0/path = NodePath(".:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"points": PoolRealArray( 0, -0.25, 0, 0.25, 0, 1, -0.25, 0, 0.25, 0, 2, -0.25, 0, 0.25, 0, 3, -0.25, 0, 0.25, 0, 4, -0.25, 0, 0.25, 0 ),
+"times": PoolRealArray( 0, 0.1, 0.2, 0.3, 0.4 )
+}
+tracks/1/type = "value"
+tracks/1/path = NodePath(".:animation")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 1,
+"values": [ "jump1" ]
+}
+
+[sub_resource type="Animation" id=14]
+length = 0.4
+tracks/0/type = "bezier"
+tracks/0/path = NodePath(".:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"points": PoolRealArray( 0, -0.25, 0, 0.25, 0, 1, -0.25, 0, 0.25, 0, 2, -0.25, 0, 0.25, 0, 3, -0.25, 0, 0.25, 0 ),
+"times": PoolRealArray( 0, 0.1, 0.2, 0.3 )
+}
+tracks/1/type = "value"
+tracks/1/path = NodePath(".:animation")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 1,
+"values": [ "walk" ]
+}
+
+[sub_resource type="RectangleShape2D" id=15]
+extents = Vector2( 40, 49.7701 )
+
+[sub_resource type="DynamicFontData" id=16]
+antialiased = false
+font_path = "res://impact.ttf"
+
+[sub_resource type="DynamicFont" id=17]
+size = 10
+extra_spacing_char = 2
+font_data = SubResource( 16 )
+
+[node name="Fox" type="KinematicBody2D"]
+collision_mask = 6
+script = ExtResource( 2 )
+
+[node name="FoxSM" type="Node" parent="."]
+
+[node name="Sprite" type="AnimatedSprite" parent="."]
+position = Vector2( 4, 2 )
+scale = Vector2( 1.57475, 1.57475 )
+frames = SubResource( 9 )
+animation = "idle"
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="Sprite"]
+anims/DownSmash = SubResource( 10 )
+anims/dash = SubResource( 11 )
+anims/idle = SubResource( 12 )
+anims/jump = SubResource( 13 )
+anims/walk = SubResource( 14 )
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource( 15 )
+
+[node name="Raycasts" type="Node2D" parent="."]
+
+[node name="GroundL" type="RayCast2D" parent="Raycasts"]
+position = Vector2( -40, 48 )
+enabled = true
+cast_to = Vector2( 0, 10 )
+collision_mask = 6
+
+[node name="GroundM" type="RayCast2D" parent="Raycasts"]
+position = Vector2( 0, 48 )
+enabled = true
+cast_to = Vector2( 0, 10 )
+collision_mask = 6
+
+[node name="GroundR" type="RayCast2D" parent="Raycasts"]
+position = Vector2( 40, 48 )
+enabled = true
+cast_to = Vector2( 0, 10 )
+collision_mask = 6
+
+[node name="Ledge_Grab_F" type="RayCast2D" parent="Raycasts"]
+position = Vector2( 8, -24 )
+scale = Vector2( 2.95052, 3.61339 )
+cast_to = Vector2( 22, 0 )
+
+[node name="Ledge_Grab_B" type="RayCast2D" parent="Raycasts"]
+position = Vector2( 8, -24 )
+rotation = 3.14159
+scale = Vector2( 2.95052, 3.61339 )
+cast_to = Vector2( 22, 0 )
+
+[node name="AnimationTree" type="AnimationTree" parent="."]
+
+[node name="Idle" type="Sprite" parent="."]
+visible = false
+scale = Vector2( 1.575, 1.575 )
+texture = ExtResource( 11 )
+hframes = 10
+
+[node name="Percentage" type="Label" parent="."]
+modulate = Color( 1, 0, 0, 1 )
+margin_left = -74.5144
+margin_top = -98.3984
+margin_right = -34.5144
+margin_bottom = -84.3984
+rect_scale = Vector2( 3.82211, 3.82211 )
+custom_fonts/font = SubResource( 17 )
+text = "IDLE"
+align = 1
+valign = 1
+uppercase = true
+__meta__ = {
+"_edit_use_anchors_": false
+}

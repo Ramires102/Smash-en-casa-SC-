@@ -4,7 +4,7 @@ extends Node
 const FSM_DEBUG_ENABLED: bool = true
 const FSM_DEBUG_TICK_INTERVAL: float = 0.20
 
-var character: CharacterBody3D
+var character: Character
 var state_machine: Node
 var _dbg_tick_accum: float = 0.0
 

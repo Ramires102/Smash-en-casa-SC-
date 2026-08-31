@@ -1,0 +1,63 @@
+[gd_scene load_steps=9 format=2]
+
+[ext_resource path="res://Upper Boundary.gd" type="Script" id=1]
+[ext_resource path="res://Left Boundary.gd" type="Script" id=2]
+[ext_resource path="res://Left Boundary2.gd" type="Script" id=3]
+[ext_resource path="res://Upper Boundary2.gd" type="Script" id=4]
+
+[sub_resource type="RectangleShape2D" id=2]
+extents = Vector2( 961.563, 60.7572 )
+
+[sub_resource type="RectangleShape2D" id=3]
+extents = Vector2( 540.681, 60.7572 )
+
+[sub_resource type="RectangleShape2D" id=4]
+extents = Vector2( 540.681, 60.7572 )
+
+[sub_resource type="RectangleShape2D" id=5]
+extents = Vector2( 961.563, 60.7572 )
+
+[node name="Boundaries" type="Node2D"]
+
+[node name="Upper Boundary" type="Area2D" parent="."]
+collision_layer = 65536
+collision_mask = 786432
+script = ExtResource( 1 )
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Upper Boundary"]
+position = Vector2( 957.067, -124.759 )
+shape = SubResource( 2 )
+
+[node name="Left Boundary" type="Area2D" parent="."]
+collision_layer = 65536
+collision_mask = 786432
+script = ExtResource( 2 )
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Left Boundary"]
+position = Vector2( -60.0929, 551.219 )
+rotation = -1.5708
+shape = SubResource( 3 )
+
+[node name="Right Boundary" type="Area2D" parent="."]
+collision_layer = 65536
+collision_mask = 786432
+script = ExtResource( 3 )
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Right Boundary"]
+position = Vector2( 1989.91, 543.219 )
+rotation = -1.5708
+shape = SubResource( 4 )
+
+[node name="Lower Boundary" type="Area2D" parent="."]
+collision_layer = 65536
+collision_mask = 786432
+script = ExtResource( 4 )
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Lower Boundary"]
+position = Vector2( 957.067, 1144.81 )
+shape = SubResource( 5 )
+
+[connection signal="area_entered" from="Upper Boundary" to="Upper Boundary" method="_on_Upper_Boundary_area_entered"]
+[connection signal="area_entered" from="Left Boundary" to="Left Boundary" method="_on_Left_Boundary_area_entered"]
+[connection signal="area_entered" from="Right Boundary" to="Right Boundary" method="_on_Right_Boundary_area_entered"]
+[connection signal="area_entered" from="Lower Boundary" to="Lower Boundary" method="_on_Lower_Boundary_area_entered"]

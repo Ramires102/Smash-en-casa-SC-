@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="AttackData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/attack_data.gd" id="1_atk"]
+
+[resource]
+script = ExtResource("1_atk")
+attack_name = "Private Square (Time Stop)"
+damage = 14.0
+base_knockback = 30.0
+knockback_scaling = 100.0
+angle_degrees = 45.0
+startup_frames = 6
+active_frames = 6
+recovery_frames = 20
+animation_name = "SpecialDown"
+hitbox_offset = Vector3(0.0, 0.2, 0.0)
+hitbox_radius = 1.5
+combo_next = null
+combo_window_frames = 0
+self_impulse = Vector3(0.0, 0.0, 0.0)
+self_impulse_frame = 0
+disable_gravity_during_active = false
+sub_hitboxes = []
+spawns_projectile = false
+is_time_stop = true
+time_stop_duration_sec = 2.5
+time_stop_frame = 6

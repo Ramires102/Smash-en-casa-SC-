@@ -1,0 +1,4 @@
+extends "res://Character.gd"
+
+
+
