@@ -16,19 +16,18 @@ var is_time_frozen: bool = false
 var original_velocity: Vector2 = Vector2.ZERO
 var _spawn_clear_timer: float = 0.06
 var _time_alive: float = 0.0
+var _spawn_position: Vector2 = Vector2.ZERO
 
 @onready var collision_shape: CollisionShape2D = get_node_or_null("CollisionShape2D")
-var visual_3d: Node3D = null
+@onready var visual_3d: Node3D = get_node_or_null("Visual3D")
 
 func _ready() -> void:
 	collision_layer = 8 # Hitbox layer
 	collision_mask = 4  # Hurtbox layer
 	monitoring = true
 	area_entered.connect(_on_area_entered)
-	if collision_shape == null:
-		_build_default_collision()
+	_sync_visual()
 
-	_build_default_knife_visual()
 
 	Events.time_stop_started.connect(_on_time_stop_started)
 	Events.time_stop_ended.connect(_on_time_stop_ended)
@@ -49,6 +48,7 @@ func _exit_tree() -> void:
 func setup(data: AttackData, attacker: Node2D, direction: Vector2, custom_speed: float, max_lifetime: float) -> void:
 	attack_data = data
 	owner_character = attacker
+	_spawn_position = global_position
 	speed = (custom_speed * Constants.UNIT_SIZE) if custom_speed > 0.0 else 650.0
 	lifetime = max_lifetime if max_lifetime > 0.0 else 2.5
 	original_velocity = direction.normalized() * speed
@@ -114,6 +114,18 @@ func _on_area_entered(area: Area2D) -> void:
 			_process_projectile_hit(area, target_owner)
 			queue_free()
 
+func _evaluate_projectile_damage() -> float:
+	if attack_data == null:
+		return 3.0
+	if not attack_data.use_distance_damage_falloff:
+		return attack_data.damage
+	var dist_meters: float = _spawn_position.distance_to(global_position) / Constants.UNIT_SIZE
+	if dist_meters <= attack_data.close_range_max_meters:
+		return attack_data.close_range_damage
+	elif dist_meters <= attack_data.mid_range_max_meters:
+		return attack_data.mid_range_damage
+	return attack_data.far_range_damage
+
 func _process_projectile_hit(hurtbox: Hurtbox, target_owner: Node2D) -> void:
 	var impact := ImpactData.new()
 	impact.swing_id = current_swing_id
@@ -125,7 +137,7 @@ func _process_projectile_hit(hurtbox: Hurtbox, target_owner: Node2D) -> void:
 	if target_owner and "player_id" in target_owner:
 		impact.target_id = target_owner.player_id
 		
-	impact.damage = attack_data.damage if attack_data else 6.0
+	impact.damage = _evaluate_projectile_damage()
 	impact.attack_name = attack_data.attack_name if attack_data else "Silver Knife"
 	impact.attack_data = attack_data
 	impact.hit_position = global_position
@@ -186,62 +198,3 @@ func _process_projectile_hit(hurtbox: Hurtbox, target_owner: Node2D) -> void:
 	hit_confirmed.emit(impact)
 	hurtbox.receive_impact(impact)
 
-func _build_default_collision() -> void:
-	collision_shape = CollisionShape2D.new()
-	collision_shape.name = "CollisionShape2D"
-	var circle := CircleShape2D.new()
-	circle.radius = 8.0
-	collision_shape.shape = circle
-	add_child(collision_shape)
-
-func _build_default_knife_visual() -> void:
-	if visual_3d != null:
-		return
-		
-	visual_3d = Node3D.new()
-	visual_3d.name = "Visual3D"
-	
-	# Hoja del cuchillo plateada brillante
-	var blade := MeshInstance3D.new()
-	blade.name = "Blade"
-	var blade_mesh := BoxMesh.new()
-	blade_mesh.size = Vector3(0.65, 0.08, 0.02)
-	blade.mesh = blade_mesh
-	var mat_blade := StandardMaterial3D.new()
-	mat_blade.albedo_color = Color(0.95, 0.98, 1.0)
-	mat_blade.metallic = 0.95
-	mat_blade.roughness = 0.1
-	mat_blade.emission_enabled = true
-	mat_blade.emission = Color(0.7, 0.85, 1.0)
-	mat_blade.emission_energy_multiplier = 0.5
-	blade.material_override = mat_blade
-	blade.position = Vector3(0.2, 0.0, 0.0)
-	visual_3d.add_child(blade)
-	
-	# Mango del cuchillo
-	var handle := MeshInstance3D.new()
-	handle.name = "Handle"
-	var handle_mesh := BoxMesh.new()
-	handle_mesh.size = Vector3(0.24, 0.05, 0.03)
-	handle.mesh = handle_mesh
-	var mat_handle := StandardMaterial3D.new()
-	mat_handle.albedo_color = Color(0.3, 0.18, 0.1)
-	handle.material_override = mat_handle
-	handle.position = Vector3(-0.24, 0.0, 0.0)
-	visual_3d.add_child(handle)
-	
-	# Guardia dorada
-	var guard := MeshInstance3D.new()
-	guard.name = "Guard"
-	var guard_mesh := BoxMesh.new()
-	guard_mesh.size = Vector3(0.04, 0.16, 0.04)
-	guard.mesh = guard_mesh
-	var mat_guard := StandardMaterial3D.new()
-	mat_guard.albedo_color = Color(1.0, 0.82, 0.25)
-	mat_guard.metallic = 0.9
-	guard.material_override = mat_guard
-	guard.position = Vector3(-0.12, 0.0, 0.0)
-	visual_3d.add_child(guard)
-	
-	add_child(visual_3d)
-	_sync_visual()

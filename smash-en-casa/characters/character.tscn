@@ -1,4 +1,4 @@
-[gd_scene load_steps=31 format=3 uid="uid://c_character_base"]
+[gd_scene load_steps=44 format=3 uid="uid://c_character_base"]
 
 [ext_resource type="Script" path="res://characters/character.gd" id="1_char"]
 [ext_resource type="Script" path="res://characters/character_controller.gd" id="2_ctrl"]
@@ -29,12 +29,18 @@
 [ext_resource type="Script" path="res://characters/state_machine/daze_state.gd" id="27_daze"]
 [ext_resource type="Script" path="res://characters/state_machine/roll_state.gd" id="28_roll"]
 [ext_resource type="Script" path="res://characters/state_machine/spotdodge_state.gd" id="29_spot"]
+[ext_resource type="AnimationLibrary" uid="uid://c_sakuya_anim_lib" path="res://resources/instances/sakuya_anim_lib.tres" id="30_animlib"]
+[ext_resource type="Script" path="res://characters/shield_controller.gd" id="31_shieldctrl"]
+[ext_resource type="Script" path="res://characters/visual_controller.gd" id="32_visctrl"]
+[ext_resource type="Script" path="res://characters/state_machine/run_brake_state.gd" id="33_runbrake"]
+[ext_resource type="Script" path="res://characters/state_machine/pivot_state.gd" id="34_pivot"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_main"]
 radius = 14.0
 height = 48.0
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_hit"]
+resource_local_to_scene = true
 radius = 20.0
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_hurt"]
@@ -49,6 +55,7 @@ height = 48.0
 size = Vector2(22, 26)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_body"]
+resource_local_to_scene = true
 albedo_color = Color(0.2, 0.6, 1, 1)
 
 [sub_resource type="SphereMesh" id="SphereMesh_head"]
@@ -63,6 +70,7 @@ radius = 0.065
 height = 0.35
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_shield"]
+resource_local_to_scene = true
 transparency = 1
 albedo_color = Color(0.1, 0.8, 1, 0.45)
 
@@ -70,7 +78,59 @@ albedo_color = Color(0.1, 0.8, 1, 0.45)
 radius = 1.1
 height = 2.2
 
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_debug_hurtbox"]
+radius = 0.52
+height = 1.8
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_debug_hurtbox"]
+resource_local_to_scene = true
+render_priority = 8
+transparency = 1
+cull_mode = 2
+shading_mode = 0
+albedo_color = Color(0.18, 0.95, 0.42, 0.2)
+
+[sub_resource type="SphereMesh" id="SphereMesh_debug_hitbox"]
+resource_local_to_scene = true
+radius = 0.7
+height = 1.4
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_debug_hitbox"]
+resource_local_to_scene = true
+render_priority = 10
+transparency = 1
+cull_mode = 2
+shading_mode = 0
+albedo_color = Color(1, 0.22, 0.28, 0.35)
+
+[sub_resource type="SphereMesh" id="SphereMesh_debug_sweet0"]
+resource_local_to_scene = true
+radius = 0.4
+height = 0.8
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_debug_sweet0"]
+resource_local_to_scene = true
+render_priority = 10
+transparency = 1
+cull_mode = 2
+shading_mode = 0
+albedo_color = Color(1, 0.82, 0.12, 0.45)
+
+[sub_resource type="SphereMesh" id="SphereMesh_debug_sweet1"]
+resource_local_to_scene = true
+radius = 0.4
+height = 0.8
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_debug_sweet1"]
+resource_local_to_scene = true
+render_priority = 10
+transparency = 1
+cull_mode = 2
+shading_mode = 0
+albedo_color = Color(0.85, 0.28, 0.95, 0.32)
+
 [node name="Character" type="CharacterBody2D"]
+
 collision_layer = 2
 collision_mask = 1
 script = ExtResource("1_char")
@@ -85,6 +145,15 @@ script = ExtResource("3_stats")
 [node name="AttackController" type="Node" parent="." node_paths=PackedStringArray("hitbox")]
 script = ExtResource("4_atkctrl")
 hitbox = NodePath("../Hitbox")
+
+[node name="ShieldController" type="Node" parent="." node_paths=PackedStringArray("character")]
+script = ExtResource("31_shieldctrl")
+character = NodePath("..")
+
+[node name="VisualController" type="Node" parent="." node_paths=PackedStringArray("character", "visual_root_3d")]
+script = ExtResource("32_visctrl")
+character = NodePath("..")
+visual_root_3d = NodePath("../Humanoid")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("CapsuleShape2D_main")
@@ -127,6 +196,7 @@ script = ExtResource("7_anim")
 animation_player = NodePath("../AnimationPlayer")
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+libraries/ = ExtResource("30_animlib")
 
 [node name="StateMachine" type="Node" parent="." node_paths=PackedStringArray("initial_state")]
 script = ExtResource("8_fsm")
@@ -192,6 +262,12 @@ script = ExtResource("29_spot")
 [node name="Death" type="Node" parent="StateMachine"]
 script = ExtResource("15_death")
 
+[node name="RunBrake" type="Node" parent="StateMachine"]
+script = ExtResource("33_runbrake")
+
+[node name="Pivot" type="Node" parent="StateMachine"]
+script = ExtResource("34_pivot")
+
 [node name="Humanoid" type="Node3D" parent="."]
 
 [node name="TorsoMesh" type="MeshInstance3D" parent="Humanoid"]
@@ -248,3 +324,23 @@ surface_material_override/0 = SubResource("StandardMaterial3D_body")
 visible = false
 mesh = SubResource("SphereMesh_shield")
 surface_material_override/0 = SubResource("StandardMaterial3D_shield")
+
+[node name="DebugHurtboxMesh" type="MeshInstance3D" parent="Humanoid"]
+material_override = SubResource("StandardMaterial3D_debug_hurtbox")
+mesh = SubResource("CapsuleMesh_debug_hurtbox")
+
+[node name="DebugHitboxMesh" type="MeshInstance3D" parent="Humanoid"]
+visible = false
+material_override = SubResource("StandardMaterial3D_debug_hitbox")
+mesh = SubResource("SphereMesh_debug_hitbox")
+
+[node name="DebugSweetspotMesh_0" type="MeshInstance3D" parent="Humanoid"]
+visible = false
+material_override = SubResource("StandardMaterial3D_debug_sweet0")
+mesh = SubResource("SphereMesh_debug_sweet0")
+
+[node name="DebugSweetspotMesh_1" type="MeshInstance3D" parent="Humanoid"]
+visible = false
+material_override = SubResource("StandardMaterial3D_debug_sweet1")
+mesh = SubResource("SphereMesh_debug_sweet1")
+

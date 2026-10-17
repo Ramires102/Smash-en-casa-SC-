@@ -4,21 +4,22 @@
 
 [resource]
 script = ExtResource("1_atk")
-attack_name = "5AAAA (Knife Slash Finisher)"
-damage = 8.0
-base_knockback = 30.0
-knockback_scaling = 90.0
+attack_name = "5AAAA (Knife Slash Launcher)"
+damage = 8.5
+base_knockback = 90.0
+knockback_scaling = 130.0
 angle_degrees = 38.0
-startup_frames = 17
-active_frames = 3
-recovery_frames = 25
-animation_name = "AttackSideTilt"
-hitbox_offset = Vector3(1.05, 0.15, 0.0)
-hitbox_radius = 0.68
+startup_frames = 5
+active_frames = 5
+recovery_frames = 18
+faf_frame = 22
+animation_name = "5AAAA"
+hitbox_offset = Vector3(1.40, 0.20, 0.0)
+hitbox_radius = 0.88
 combo_next = null
 combo_window_frames = 0
-self_impulse = Vector3(3.0, 0.0, 0.0)
-self_impulse_frame = 17
+self_impulse = Vector3(2.0, 0.0, 0.0)
+self_impulse_frame = 5
 disable_gravity_during_active = false
 sub_hitboxes = []
 spawns_projectile = false

@@ -1,0 +1,76 @@
+[gd_resource type="AnimationLibrary" load_steps=23 format=3 uid="uid://c_sakuya_anim_lib"]
+
+[ext_resource type="Animation" uid="uid://c_sakuya_crouch_skirt_ground" path="res://resources/instances/sakuya_crouch_skirt_ground.tres" id="1_crouch"]
+[ext_resource type="Animation" path="res://resources/instances/sakuya_prism/animations/sakuya_5a.tres" id="2_5a"]
+[ext_resource type="Animation" path="res://resources/instances/sakuya_prism/animations/sakuya_5aa.tres" id="3_5aa"]
+[ext_resource type="Animation" path="res://resources/instances/sakuya_prism/animations/sakuya_5aaa.tres" id="4_5aaa"]
+[ext_resource type="Animation" path="res://resources/instances/sakuya_prism/animations/sakuya_5aaaa.tres" id="5_5aaaa"]
+[ext_resource type="Animation" path="res://resources/instances/sakuya_prism/animations/sakuya_idle.tres" id="6_idle"]
+[ext_resource type="Animation" path="res://resources/instances/sakuya_prism/animations/sakuya_walk.tres" id="7_walk"]
+[ext_resource type="Animation" path="res://resources/instances/sakuya_prism/animations/sakuya_run.tres" id="8_run"]
+[ext_resource type="Animation" path="res://resources/instances/sakuya_prism/animations/sakuya_jump.tres" id="9_jump"]
+[ext_resource type="Animation" path="res://resources/instances/sakuya_prism/animations/sakuya_fall.tres" id="10_fall"]
+[ext_resource type="Animation" path="res://resources/instances/sakuya_prism/animations/sakuya_attack_down.tres" id="11_atk_down"]
+[ext_resource type="Animation" path="res://resources/instances/sakuya_prism/animations/sakuya_attack_up.tres" id="12_atk_up"]
+[ext_resource type="Animation" path="res://resources/instances/sakuya_prism/animations/sakuya_neutral_air.tres" id="13_nair"]
+[ext_resource type="Animation" path="res://resources/instances/sakuya_prism/animations/sakuya_forward_air.tres" id="14_fair"]
+[ext_resource type="Animation" path="res://resources/instances/sakuya_prism/animations/sakuya_back_air.tres" id="15_bair"]
+[ext_resource type="Animation" path="res://resources/instances/sakuya_prism/animations/sakuya_up_air.tres" id="16_uair"]
+[ext_resource type="Animation" path="res://resources/instances/sakuya_prism/animations/sakuya_down_air.tres" id="17_dair"]
+[ext_resource type="Animation" path="res://resources/instances/sakuya_prism/animations/sakuya_special_up.tres" id="18_sp_up"]
+[ext_resource type="Animation" path="res://resources/instances/sakuya_prism/animations/sakuya_special_side.tres" id="19_sp_side"]
+[ext_resource type="Animation" path="res://resources/instances/sakuya_prism/animations/sakuya_special_neutral.tres" id="20_sp_neutral"]
+[ext_resource type="Animation" path="res://resources/instances/sakuya_prism/animations/sakuya_special_down.tres" id="21_sp_down"]
+[ext_resource type="Animation" path="res://resources/instances/sakuya_prism/animations/sakuya_hit.tres" id="22_hit"]
+
+[resource]
+_data = {
+"5A": ExtResource("2_5a"),
+"5AA": ExtResource("3_5aa"),
+"5AAA": ExtResource("4_5aaa"),
+"5AAAA": ExtResource("5_5aaaa"),
+"AirDodge": ExtResource("9_jump"),
+"Attack": ExtResource("2_5a"),
+"AttackBair": ExtResource("15_bair"),
+"AttackDair": ExtResource("17_dair"),
+"AttackDown": ExtResource("11_atk_down"),
+"AttackDownTilt": ExtResource("11_atk_down"),
+"AttackFair": ExtResource("14_fair"),
+"AttackJab1": ExtResource("2_5a"),
+"AttackJab2": ExtResource("3_5aa"),
+"AttackJab3": ExtResource("4_5aaa"),
+"AttackNair": ExtResource("13_nair"),
+"AttackNeutral": ExtResource("2_5a"),
+"AttackSide": ExtResource("5_5aaaa"),
+"AttackSideTilt": ExtResource("5_5aaaa"),
+"AttackUair": ExtResource("16_uair"),
+"AttackUp": ExtResource("12_atk_up"),
+"AttackUpTilt": ExtResource("12_atk_up"),
+"BackAir": ExtResource("15_bair"),
+"Crouch": ExtResource("1_crouch"),
+"Dash": ExtResource("8_run"),
+"Daze": ExtResource("22_hit"),
+"DownAir": ExtResource("17_dair"),
+"Fall": ExtResource("10_fall"),
+"ForwardAir": ExtResource("14_fair"),
+"Hit": ExtResource("22_hit"),
+"Idle": ExtResource("6_idle"),
+"Jump": ExtResource("9_jump"),
+"JumpSquat": ExtResource("1_crouch"),
+"NeutralAir": ExtResource("13_nair"),
+"Pivot": ExtResource("7_walk"),
+"Roll": ExtResource("8_run"),
+"Run": ExtResource("8_run"),
+"RunBrake": ExtResource("7_walk"),
+"Shield": ExtResource("1_crouch"),
+"SpecialDown": ExtResource("21_sp_down"),
+"SpecialNeutral": ExtResource("20_sp_neutral"),
+"SpecialSide": ExtResource("19_sp_side"),
+"SpecialUp": ExtResource("18_sp_up"),
+"Spotdodge": ExtResource("1_crouch"),
+"Squat": ExtResource("1_crouch"),
+"Squat_SakuyaFix": ExtResource("1_crouch"),
+"Tumble": ExtResource("22_hit"),
+"UpAir": ExtResource("16_uair"),
+"Walk": ExtResource("7_walk")
+}

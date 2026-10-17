@@ -5,21 +5,23 @@
 
 [resource]
 script = ExtResource("1_atk")
-attack_name = "5AAA (Roundhouse Kick)"
+attack_name = "5AAA (High Roundhouse Kick)"
 damage = 4.5
-base_knockback = 14.0
-knockback_scaling = 40.0
-angle_degrees = 55.0
-startup_frames = 9
-active_frames = 3
-recovery_frames = 13
-animation_name = "AttackNeutral3"
-hitbox_offset = Vector3(0.85, 0.25, 0.0)
-hitbox_radius = 0.58
+base_knockback = 24.0
+knockback_scaling = 15.0
+angle_degrees = 78.0
+
+startup_frames = 5
+active_frames = 5
+recovery_frames = 12
+faf_frame = 14
+animation_name = "5AAA"
+hitbox_offset = Vector3(1.25, 0.35, 0.0)
+hitbox_radius = 0.80
 combo_next = ExtResource("2_jab4")
-combo_window_frames = 14
-self_impulse = Vector3(1.2, 0.0, 0.0)
-self_impulse_frame = 9
+combo_window_frames = 18
+self_impulse = Vector3(1.0, 0.0, 0.0)
+self_impulse_frame = 5
 disable_gravity_during_active = false
 sub_hitboxes = []
 spawns_projectile = false

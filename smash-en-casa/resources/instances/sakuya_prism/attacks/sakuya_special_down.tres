@@ -21,6 +21,7 @@ self_impulse = Vector3(0.0, 0.0, 0.0)
 self_impulse_frame = 0
 disable_gravity_during_active = false
 sub_hitboxes = []
+is_special_attack = true
 spawns_projectile = false
 is_time_stop = true
 time_stop_duration_sec = 2.5

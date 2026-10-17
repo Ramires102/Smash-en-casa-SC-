@@ -30,7 +30,7 @@ func enter(msg: Dictionary = {}) -> void:
 			character.get_node("AnimationController").play_animation("Ledge")
 
 	dbg("enter", {
-		"ledge": current_ledge.name if current_ledge else "None",
+		"ledge": String(current_ledge.name) if current_ledge else "None",
 		"direction": current_ledge.ledge_direction if current_ledge else 1.0
 	})
 
@@ -72,9 +72,11 @@ func physics_update(delta: float) -> void:
 	if character.is_jump_just_pressed():
 		dbg("ledge_action", {"action": "jump"})
 		character.release_ledge(0.5)
-		character.velocity = Vector2(facing * 80.0, -character.jump_velocity * 0.95)
+		var j_vel: float = character.controller.get_jump_velocity() if character.controller else 450.0
+		character.velocity = Vector2(facing * 80.0, -j_vel * 0.95)
 		state_machine.transition_to("Jump")
 		return
+
 
 	# 3. Subir normalmente (Normal Getup)
 	if input_vec.x * facing > 0.4:

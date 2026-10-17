@@ -1,0 +1,31 @@
+[gd_resource type="Resource" script_class="AttackData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/attack_data.gd" id="1_atk"]
+
+[resource]
+script = ExtResource("1_atk")
+attack_name = "Reverse Pendulum Kick (Back Air)"
+damage = 10.5
+base_knockback = 24.0
+knockback_scaling = 104.0
+angle_degrees = 142.0
+startup_frames = 7
+active_frames = 4
+recovery_frames = 14
+faf_frame = 22
+is_aerial = true
+landing_lag_frames = 9
+autocancel_before = 4
+autocancel_after = 20
+animation_name = "BackAir"
+hitbox_offset = Vector3(-1.15, 0.12, 0.0)
+hitbox_radius = 0.74
+combo_next = null
+combo_window_frames = 0
+self_impulse = Vector3(-1.8, 0.0, 0.0)
+self_impulse_frame = 7
+disable_gravity_during_active = false
+sub_hitboxes = []
+spawns_projectile = false
+is_time_stop = false
+

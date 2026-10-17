@@ -26,29 +26,19 @@ func _ready() -> void:
 	_setup_debug_visualizer()
 
 func _setup_debug_visualizer() -> void:
-	if not debug_draw_hitbox:
-		return
-	if _debug_mesh_instance == null:
-		_debug_mesh_instance = MeshInstance3D.new()
-		_debug_mesh_instance.name = "DebugHitboxMesh"
-		_debug_mesh_instance.material_override = _create_debug_material(Color(1.0, 0.22, 0.28, 0.35))
-		_attach_debug_node(_debug_mesh_instance)
-		_debug_mesh_instance.visible = false
-
-func _attach_debug_node(node: Node3D) -> void:
 	if owner_character and owner_character.has_node("Humanoid"):
-		owner_character.get_node("Humanoid").add_child(node)
-	else:
-		add_child(node)
-
-func _create_debug_material(color: Color) -> StandardMaterial3D:
-	var mat := StandardMaterial3D.new()
-	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	mat.albedo_color = color
-	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
-	mat.render_priority = 10
-	return mat
+		var humanoid: Node = owner_character.get_node("Humanoid")
+		_debug_mesh_instance = humanoid.get_node_or_null("DebugHitboxMesh") as MeshInstance3D
+		if _debug_mesh_instance:
+			_debug_mesh_instance.visible = false
+		_sub_debug_meshes.clear()
+		var idx: int = 0
+		while humanoid.has_node("DebugSweetspotMesh_%d" % idx):
+			var sm: MeshInstance3D = humanoid.get_node("DebugSweetspotMesh_%d" % idx) as MeshInstance3D
+			if sm:
+				sm.visible = false
+				_sub_debug_meshes.append(sm)
+			idx += 1
 
 func activate(data: AttackData, attacker: Node2D) -> void:
 	attack_data = data
@@ -62,8 +52,9 @@ func activate(data: AttackData, attacker: Node2D) -> void:
 	monitoring = true
 	if _debug_mesh_instance and debug_draw_hitbox:
 		_debug_mesh_instance.visible = true
-	for sub_m in _sub_debug_meshes:
-		sub_m.visible = true
+	var sub_count: int = attack_data.sub_hitboxes.size() if attack_data else 0
+	for i in range(_sub_debug_meshes.size()):
+		_sub_debug_meshes[i].visible = debug_draw_hitbox and (i < sub_count)
 		
 	call_deferred("_check_immediate_overlaps")
 
@@ -101,18 +92,22 @@ func _update_hitbox_transform() -> void:
 		elif collision_shape.shape is RectangleShape2D:
 			(collision_shape.shape as RectangleShape2D).size = Vector2(radius_px * 2.0, radius_px * 2.0)
 
-	# Actualizar esfera 3D principal
+	# Actualizar esfera 3D principal (reutilizando malla y material preconstruidos)
 	if _debug_mesh_instance and debug_draw_hitbox:
 		_debug_mesh_instance.position = Vector3(
 			attack_data.hitbox_offset.x * facing,
 			attack_data.hitbox_offset.y,
 			0.0
 		)
-		var sphere := SphereMesh.new()
-		sphere.radius = attack_data.hitbox_radius
-		sphere.height = attack_data.hitbox_radius * 2.0
-		_debug_mesh_instance.mesh = sphere
-		_debug_mesh_instance.material_override = _create_debug_material(_get_hitbox_color(attack_data))
+		var sphere: SphereMesh = _debug_mesh_instance.mesh as SphereMesh
+		if sphere:
+			sphere.radius = attack_data.hitbox_radius
+			sphere.height = attack_data.hitbox_radius * 2.0
+
+		var target_color: Color = _get_hitbox_color(attack_data)
+		var mat: StandardMaterial3D = _debug_mesh_instance.material_override as StandardMaterial3D
+		if mat:
+			mat.albedo_color = target_color
 
 	# Actualizar esferas 3D de sub-hitboxes (Sweetspots / Sourspots)
 	_update_sub_hitbox_visuals(facing)
@@ -122,33 +117,30 @@ func _update_sub_hitbox_visuals(facing: float) -> void:
 		return
 		
 	var sub_count: int = attack_data.sub_hitboxes.size() if attack_data else 0
-	
-	# Asegurar que tenemos suficientes nodos de malla para cada sub-hitbox
-	while _sub_debug_meshes.size() < sub_count:
-		var new_mesh := MeshInstance3D.new()
-		new_mesh.name = "DebugSweetspotMesh_%d" % _sub_debug_meshes.size()
-		_attach_debug_node(new_mesh)
-		_sub_debug_meshes.append(new_mesh)
-		
 	for i in range(_sub_debug_meshes.size()):
 		if i < sub_count:
 			var hb: HitboxData = attack_data.sub_hitboxes[i]
 			var mesh_inst: MeshInstance3D = _sub_debug_meshes[i]
 			mesh_inst.position = Vector3(hb.offset.x * facing, hb.offset.y, hb.offset.z)
 			
-			var sph := SphereMesh.new()
-			sph.radius = hb.radius
-			sph.height = hb.radius * 2.0
-			mesh_inst.mesh = sph
+			var sph: SphereMesh = mesh_inst.mesh as SphereMesh
+			if sph:
+				sph.radius = hb.radius
+				sph.height = hb.radius * 2.0
 			
 			# Color según prioridad y daño (Dorado para Sweetspot / Púrpura para Sourspot)
 			var sub_color: Color = Color(1.0, 0.82, 0.12, 0.45) # Dorado Sweetspot
 			if hb.priority <= 0 or hb.damage < (attack_data.damage if attack_data else 10.0):
 				sub_color = Color(0.85, 0.28, 0.95, 0.32) # Violeta Sourspot
-			mesh_inst.material_override = _create_debug_material(sub_color)
+			
+			var sub_mat: StandardMaterial3D = mesh_inst.material_override as StandardMaterial3D
+			if sub_mat:
+				sub_mat.albedo_color = sub_color
+
 			mesh_inst.visible = monitoring
 		else:
 			_sub_debug_meshes[i].visible = false
+
 
 func _check_immediate_overlaps() -> void:
 	if monitoring:
