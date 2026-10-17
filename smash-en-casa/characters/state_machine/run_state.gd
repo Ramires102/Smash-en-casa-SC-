@@ -29,6 +29,16 @@ func physics_update(delta: float) -> void:
 
 	var input_vec: Vector2 = character.get_input_vector()
 
+	if character.is_jump_just_pressed():
+		dbg("to_jumpsquat", {"reason": "jump_pressed"})
+		state_machine.transition_to("JumpSquat")
+		return
+
+	if character.is_attack_just_pressed():
+		dbg("to_attack", {"reason": "attack_pressed"})
+		state_machine.transition_to("Attack")
+		return
+
 	if input_vec.y < -0.5:
 		dbg("to_squat", {"reason": "down_input_from_run", "input_y": snapped(input_vec.y, 0.001)})
 		state_machine.transition_to("Squat")
@@ -68,13 +78,3 @@ func physics_update(delta: float) -> void:
 		"target_vx": snapped(target_speed_x, 0.001),
 		"real_vx": snapped(character.velocity.x, 0.001)
 	})
-
-	if character.is_jump_just_pressed():
-		dbg("to_jumpsquat", {"reason": "jump_pressed"})
-		state_machine.transition_to("JumpSquat")
-		return
-
-	if character.is_attack_just_pressed():
-		dbg("to_attack", {"reason": "attack_pressed"})
-		state_machine.transition_to("Attack")
-		return

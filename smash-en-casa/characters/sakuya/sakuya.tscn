@@ -1,0 +1,5 @@
+[gd_scene load_steps=2 format=3 uid="uid://dux7d7n8g18m5"]
+
+[ext_resource type="PackedScene" uid="uid://dgkay6c33q184" path="res://characters/sakuya/sakuya.glb" id="1_sakuya_glb"]
+
+[node name="sakuya" instance=ExtResource("1_sakuya_glb")]

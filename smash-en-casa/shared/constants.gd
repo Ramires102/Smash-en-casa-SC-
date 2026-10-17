@@ -53,9 +53,9 @@ const HIT_SHAKE_MAX: float = 11.5               ## máximo de shake en hit conec
 const SHIELD_HIT_SHAKE_MULT: float = 0.62       ## bloqueo sacude menos que hit limpio
 
 # ── Bounce y Tumble (CharacterSM.gd:848-879) ──
-const BOUNCE_KB_THRESHOLD: float = 18.0     ## KB >= 18 → Wall/Floor Bounce activo
+const BOUNCE_KB_THRESHOLD: float = 12.0     ## KB >= 12 → Wall/Floor Bounce activo
 const BOUNCE_ELASTICITY: float = 0.6        ## velocity.bounce(normal) * 0.6
-const TUMBLE_KB_THRESHOLD: float = 24.0     ## KB >= 24 → Tumble al salir de Hitstun
+const TUMBLE_KB_THRESHOLD: float = 14.0     ## KB >= 14 → Tumble al salir de Hitstun
 
 # ── Teching / Ukemi (CharacterSM.gd:896-908) ──
 const TECH_WINDOW_FRAMES: int = 20          ## Ventana de tech frames (tech_frames < 20)

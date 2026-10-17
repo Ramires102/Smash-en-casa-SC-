@@ -85,6 +85,13 @@ func physics_update(delta: float) -> void:
 		state_machine.transition_to("AirDodge")
 		return
 
+	# ── Ataque Aéreo para salir de Tumble (Smash Bros. standard) ──
+	if character.is_attack_just_pressed():
+		dbg("to_attack_from_tumble", {"reason": "attack_in_tumble"})
+		state_machine.transition_to("Attack")
+		return
+
+
 	# ── Aterrizar: Tech o Missed Tech (CharacterSM.gd:904-908) ──
 	if character.is_on_floor():
 		character.is_fast_falling = false

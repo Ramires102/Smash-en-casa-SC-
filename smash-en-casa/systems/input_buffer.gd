@@ -1,7 +1,7 @@
 class_name InputBuffer
-extends Node
+extends RefCounted
 
-@export var buffer_window_seconds: float = 0.15
+var buffer_window_seconds: float = 0.15
 
 var action_timestamps: Dictionary = {}
 

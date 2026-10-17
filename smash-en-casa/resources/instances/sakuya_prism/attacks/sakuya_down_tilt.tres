@@ -4,19 +4,24 @@
 
 [resource]
 script = ExtResource("1_atk")
-attack_name = "Ground Needle Sweep"
-damage = 5.0
-base_knockback = 11.0
-knockback_scaling = 60.0
-angle_degrees = 70.0
-startup_frames = 5
+attack_name = "Ground Needle Sweep (Crouch Attack)"
+damage = 6.5
+base_knockback = 14.0
+knockback_scaling = 75.0
+angle_degrees = 72.0
+startup_frames = 4
 active_frames = 4
 recovery_frames = 11
+faf_frame = 16
+is_aerial = false
 animation_name = "AttackDown"
-hitbox_offset = Vector3(0.82, -0.42, 0.0)
-hitbox_radius = 0.56
+hitbox_offset = Vector3(0.95, -0.45, 0.0)
+hitbox_radius = 0.66
 combo_next = null
 combo_window_frames = 0
-self_impulse = Vector3(0.0, 0.0, 0.0)
-self_impulse_frame = 0
+self_impulse = Vector3(2.8, 0.0, 0.0)
+self_impulse_frame = 4
 disable_gravity_during_active = false
+sub_hitboxes = []
+spawns_projectile = false
+is_time_stop = false

@@ -26,6 +26,17 @@ func physics_update(delta: float) -> void:
 		return
 
 	var input_vec: Vector2 = character.get_input_vector()
+
+	if character.is_jump_just_pressed():
+		dbg("to_jumpsquat", {"reason": "jump_pressed"})
+		state_machine.transition_to("JumpSquat")
+		return
+
+	if character.is_attack_just_pressed():
+		dbg("to_attack", {"reason": "attack_pressed"})
+		state_machine.transition_to("Attack")
+		return
+
 	if abs(input_vec.x) < 0.1:
 		var trac: float = character.controller.get_traction() if character and character.controller else 30.0
 		character.velocity.x = move_toward(character.velocity.x, 0.0, trac * delta)
@@ -53,13 +64,3 @@ func physics_update(delta: float) -> void:
 		"target_vx": snapped(target_speed_x, 0.001),
 		"real_vx": snapped(character.velocity.x, 0.001)
 	})
-
-	if character.is_jump_just_pressed():
-		dbg("to_jumpsquat", {"reason": "jump_pressed"})
-		state_machine.transition_to("JumpSquat")
-		return
-
-	if character.is_attack_just_pressed():
-		dbg("to_attack", {"reason": "attack_pressed"})
-		state_machine.transition_to("Attack")
-		return

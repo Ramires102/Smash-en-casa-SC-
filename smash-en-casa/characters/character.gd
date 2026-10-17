@@ -5,14 +5,14 @@ signal percentage_changed(new_percentage: float)
 @warning_ignore("unused_signal")
 signal character_ko(player_id: int)
 
-# Constantes de Escudo y Mareo (Shield & Daze)
-const MAX_SHIELD_HP: float = 50.0
-const SHIELD_BREAK_RESPAWN_HP: float = 30.0
-const SHIELD_DRAIN_RATE: float = 8.0
+# Constantes de compatibilidad
+const MAX_SHIELD_HP: float = ShieldController.MAX_SHIELD_HP
+const SHIELD_BREAK_RESPAWN_HP: float = ShieldController.SHIELD_BREAK_RESPAWN_HP
+const SHIELD_DRAIN_RATE: float = ShieldController.SHIELD_DRAIN_RATE
 const INPUT_BUFFER_WINDOW_SEC: float = 0.12
 const COYOTE_TIME_SEC: float = 0.08
 
-# Contrato minimo de nodos para Character.tscn
+# Contrato de nodos para Character.tscn
 const REQUIRED_NODE_PATHS: Array[NodePath] = [
 	NodePath("Controller"),
 	NodePath("Stats"),
@@ -20,13 +20,15 @@ const REQUIRED_NODE_PATHS: Array[NodePath] = [
 	NodePath("AnimationController"),
 	NodePath("StateMachine"),
 	NodePath("Hitbox"),
-	NodePath("Hurtbox")
+	NodePath("Hurtbox"),
+	NodePath("ShieldController"),
+	NodePath("VisualController")
 ]
 
 @export var player_id: int = 1
 @export var character_data: CharacterData
-@export var visual_root_3d: Node3D = null  ## Contenedor 3D visual para renderizado
 
+# Componentes de arquitectura
 @onready var controller: CharacterController = $Controller
 @onready var stats: CharacterStats = $Stats
 @onready var attack_controller: AttackController = $AttackController
@@ -34,9 +36,36 @@ const REQUIRED_NODE_PATHS: Array[NodePath] = [
 @onready var state_machine: StateMachine = $StateMachine
 @onready var hitbox: Hitbox = $Hitbox
 @onready var hurtbox: Hurtbox = $Hurtbox
+@onready var shield_controller: ShieldController = get_node_or_null("ShieldController")
+@onready var visual_controller: VisualController = get_node_or_null("VisualController")
 
-var shield_health: float = 50.0
-var shield_release_timer: float = 0.0
+# Propiedades delegadas al ShieldController
+var shield_health: float:
+	get: return shield_controller.shield_health if shield_controller else 50.0
+	set(val):
+		if shield_controller: shield_controller.shield_health = val
+
+var shield_release_timer: float:
+	get: return shield_controller.shield_release_timer if shield_controller else 0.0
+	set(val):
+		if shield_controller: shield_controller.shield_release_timer = val
+
+# Propiedades delegadas al VisualController
+var visual_root_3d: Node3D:
+	get:
+		if visual_controller and visual_controller.visual_root_3d:
+			return visual_controller.visual_root_3d
+		return get_node_or_null("Humanoid") as Node3D
+	set(val):
+		if visual_controller:
+			visual_controller.visual_root_3d = val
+
+var timestop_shiver_timer: float:
+	get: return visual_controller.timestop_shiver_timer if visual_controller else 0.0
+	set(val):
+		if visual_controller: visual_controller.timestop_shiver_timer = val
+
+# Variables de Input & Buffer
 var current_input: PlayerInput = PlayerInput.new()
 var _intent_buffer: InputBuffer = InputBuffer.new()
 var _coyote_timer: float = 0.0
@@ -50,21 +79,24 @@ var snapped_ledge: LedgePoint = null
 var ledge_regrab_timer: float = 0.0
 var can_grab_ledge: bool = true
 
-# Movilidad Aérea (Doble Salto & Air Dodge)
+# Movilidad Aérea & Barra de Especial
 var max_air_jumps: int = 1
 var air_jumps_left: int = 1
 var can_air_dodge: bool = true
+var can_up_special: bool = true
+const SPECIAL_DOWN_MAX_CHARGE: float = 100.0
+var special_down_charge: float = 0.0
 
+# Stats de daño y peso
 var damage_percentage: float:
 	get: return stats.damage_percentage if stats else 0.0
 
 var weight: float:
 	get: return stats.weight if stats else 100.0
 
-# Variables de Time Stop (Acumulación Cinética 2D)
+# Variables de Time Stop
 var accumulated_timestop_knockback: Vector2 = Vector2.ZERO
 var accumulated_timestop_hitstun: int = 0
-var timestop_shiver_timer: float = 0.0
 
 var can_act: bool = true
 var is_fast_falling: bool = false
@@ -89,9 +121,6 @@ func _ready() -> void:
 	if character_data:
 		configure(character_data)
 
-	if visual_root_3d == null and has_node("Humanoid"):
-		visual_root_3d = $Humanoid
-
 func _exit_tree() -> void:
 	if Events.time_stop_started.is_connected(_on_time_stop_started):
 		Events.time_stop_started.disconnect(_on_time_stop_started)
@@ -106,7 +135,7 @@ func _validate_required_nodes() -> bool:
 			is_valid = false
 	return is_valid
 
-## Configura el personaje con sus datos y modelo 3D
+## Configura el personaje con sus datos y componentes modulares
 func configure(data: CharacterData) -> void:
 	character_data = data
 	if not data:
@@ -115,108 +144,66 @@ func configure(data: CharacterData) -> void:
 	if controller: controller.setup(data)
 	if stats: stats.setup(data)
 	if attack_controller: attack_controller.setup(data)
-	_setup_visuals(data)
+	if shield_controller: shield_controller.setup(self)
+	if visual_controller: visual_controller.setup(self, data)
 	if anim_controller and anim_controller.has_method("setup"):
 		anim_controller.setup(data)
 	elif has_node("AnimationController"):
 		get_node("AnimationController").setup(data)
 
-
-func _setup_visuals(data: CharacterData) -> void:
-	if visual_root_3d == null:
-		visual_root_3d = get_node_or_null("Humanoid")
-	if visual_root_3d == null:
-		return
-		
-	if data.model_scene:
-		for child in visual_root_3d.get_children():
-			if child.name.begins_with("Debug") or child.name in ["ShieldMesh", "DazeStars", "MenacingAura", "ModelRoot"]:
-				continue
-			if child is CanvasItem or child is Node3D:
-				child.visible = false
-					
-		var old_model: Node = visual_root_3d.get_node_or_null("ModelRoot")
-		if old_model:
-			old_model.queue_free()
-			
-		var model_instance: Node3D = data.model_scene.instantiate()
-		model_instance.name = "ModelRoot"
-		model_instance.position = data.model_offset
-		var s: float = data.model_scale
-		model_instance.scale = Vector3(s, s, s)
-		visual_root_3d.add_child(model_instance)
-	else:
-		var mat := StandardMaterial3D.new()
-		mat.albedo_color = data.character_color
-		_apply_material_recursive(visual_root_3d, mat)
-
-func _apply_material_recursive(node: Node, mat: Material) -> void:
-	for child in node.get_children():
-		if child.name.begins_with("Debug") or child.name in ["ShieldMesh", "DazeStars", "MenacingAura"]:
-			continue
-		if child is MeshInstance3D:
-			child.material_override = mat
-			child.visible = true
-		_apply_material_recursive(child, mat)
-
 func _process(delta: float) -> void:
-	_sync_3d_visuals(delta)
-
-## Sincroniza la posición y rotación del modelo 3D con el cuerpo 2D
-func _sync_3d_visuals(delta: float) -> void:
-	if visual_root_3d == null:
-		return
-		
-	# Mapeo 2D a 3D: X es X / UNIT_SIZE, Y es -Y / UNIT_SIZE
-	var target_3d_pos := Vector3(
-		global_position.x / Constants.UNIT_SIZE,
-		-global_position.y / Constants.UNIT_SIZE,
-		0.0
-	)
-	
-	if timestop_shiver_timer > 0.0:
-		timestop_shiver_timer -= delta
-		target_3d_pos.x += randf_range(-0.06, 0.06)
-		
-	visual_root_3d.global_position = target_3d_pos
+	if visual_controller:
+		visual_controller.sync_3d_visuals(delta)
 
 func update_visual_rotation(dir: float) -> void:
-	if visual_root_3d:
-		visual_root_3d.rotation_degrees.y = 90.0 if dir > 0 else -90.0
+	if visual_controller:
+		visual_controller.update_rotation(dir)
 
 func _physics_process(delta: float) -> void:
-	# ── Congelación Física Total durante Time Stop ──
+	# Congelación Física Total durante Time Stop
 	if Events.is_time_stopped and self != Events.time_stop_instigator:
 		velocity = Vector2.ZERO
 		return
-
-	if _self_hitlag_remaining > 0:
-		_self_hitlag_remaining -= 1
-		velocity = Vector2.ZERO
-		move_and_slide()
-		return
-
-	if ledge_regrab_timer > 0.0:
-		ledge_regrab_timer -= delta
 
 	current_input = InputManager.get_player_input(player_id)
 	_update_directional_input_edges()
 	_update_button_input_edges()
 	_register_input_intents()
+
+	if _self_hitlag_remaining > 0:
+		_self_hitlag_remaining -= 1
+		if anim_controller and anim_controller.has_method("set_paused"):
+			anim_controller.set_paused(_self_hitlag_remaining > 0)
+		return
+
+	if ledge_regrab_timer > 0.0:
+		ledge_regrab_timer -= delta
+
 	_update_coyote_timer(delta)
 
-	if not is_on_floor():
-		velocity.y += get_gravity_value() * delta
-		var max_fall: float = get_terminal_fall_speed()
-		if velocity.y > max_fall:
-			velocity.y = max_fall
-	else:
-		is_fast_falling = false
-		air_jumps_left = max_air_jumps
-		can_air_dodge = true
-		ledge_regrab_timer = 0.0
+	var in_hitstate: bool = _is_current_state("Hit")
+	var in_defender_hitlag: bool = false
+	if in_hitstate and state_machine and state_machine.current_state:
+		if "_hitlag_remaining" in state_machine.current_state:
+			in_defender_hitlag = state_machine.current_state._hitlag_remaining > 0
 
-	move_and_slide()
+	if not in_defender_hitlag:
+		if not is_on_floor():
+			var grav_mult: float = 0.55 if in_hitstate else 1.0
+			velocity.y += get_gravity_value() * grav_mult * delta
+			var max_fall: float = get_terminal_fall_speed()
+			if not in_hitstate and velocity.y > max_fall:
+				velocity.y = max_fall
+		else:
+			if not in_hitstate:
+				is_fast_falling = false
+				air_jumps_left = max_air_jumps
+				can_air_dodge = true
+				can_up_special = true
+				ledge_regrab_timer = 0.0
+
+		move_and_slide()
+
 
 func get_gravity_value() -> float:
 	return controller.get_gravity_value() if controller else 1320.0
@@ -224,6 +211,7 @@ func get_gravity_value() -> float:
 func get_terminal_fall_speed() -> float:
 	return controller.get_terminal_fall_speed(is_fast_falling) if controller else 500.0
 
+# ── Buffer de Intenciones & Coyote ─────────────────────────────────────────
 func _register_input_intents() -> void:
 	if current_input.jump_pressed:
 		_intent_buffer.register_action("jump")
@@ -253,7 +241,6 @@ func has_coyote_jump() -> bool:
 func consume_coyote_jump() -> void:
 	_coyote_timer = 0.0
 
-# ── Consultas de Intenciones (PlayerInput) ──────────────────────────────────
 func get_input_vector() -> Vector2:
 	if not can_act:
 		return Vector2.ZERO
@@ -274,22 +261,49 @@ func is_jump_held() -> bool:
 		return false
 	return current_input.jump_held
 
+var _last_consumed_was_special: bool = false
+
+func _can_execute_requested_special() -> bool:
+	if not current_input:
+		return true
+	if current_input.movement.y > 0.3 and not can_up_special:
+		return false
+	if current_input.movement.y < -0.3 and not can_use_special_down():
+		return false
+	return true
+
 func is_attack_just_pressed() -> bool:
 	if not can_act:
 		return false
-	var normal_intent: bool = _consume_buffered_action("attack", current_input.attack_pressed)
 	var special_intent: bool = _consume_buffered_action("special", current_input.special_pressed)
-	return normal_intent or special_intent
+	if special_intent:
+		if not _can_execute_requested_special():
+			return false
+		_last_consumed_was_special = true
+		return true
+	var normal_intent: bool = _consume_buffered_action("attack", current_input.attack_pressed)
+	if normal_intent:
+		_last_consumed_was_special = false
+		return true
+	return false
 
 func is_normal_attack_pressed() -> bool:
 	if not can_act:
 		return false
-	return _consume_buffered_action("attack", current_input.attack_pressed)
+	var res: bool = _consume_buffered_action("attack", current_input.attack_pressed)
+	if res:
+		_last_consumed_was_special = false
+	return res
 
 func is_special_attack_pressed() -> bool:
 	if not can_act:
 		return false
-	return _consume_buffered_action("special", current_input.special_pressed)
+	var res: bool = _consume_buffered_action("special", current_input.special_pressed)
+	if res:
+		if not _can_execute_requested_special():
+			return false
+		_last_consumed_was_special = true
+	return res
 
 func is_shield_pressed() -> bool:
 	if not can_act:
@@ -314,6 +328,29 @@ func _update_button_input_edges() -> void:
 	_shield_just_pressed = (not _previous_shield_pressed) and current_shield
 	_previous_shield_pressed = current_shield
 
+# ── Dirección, Barra de Especial y Ataques ────────────────────────────────
+func is_special_move(atk: AttackData) -> bool:
+	if atk == null:
+		return false
+	return atk.is_special_attack or atk.animation_name.begins_with("Special") or atk.is_time_stop
+
+func on_non_special_hit_connected(atk: AttackData) -> void:
+	if is_special_move(atk) or Events.is_time_stopped:
+		return
+	var gain: float = clampf(atk.damage * 2.5, 16.0, 28.0) if atk else 20.0
+	add_special_down_charge(gain)
+
+func add_special_down_charge(amount: float) -> void:
+	special_down_charge = clampf(special_down_charge + amount, 0.0, SPECIAL_DOWN_MAX_CHARGE)
+	Events.special_meter_changed.emit(player_id, special_down_charge, SPECIAL_DOWN_MAX_CHARGE)
+
+func can_use_special_down() -> bool:
+	return special_down_charge >= SPECIAL_DOWN_MAX_CHARGE
+
+func consume_special_down_charge() -> void:
+	special_down_charge = 0.0
+	Events.special_meter_changed.emit(player_id, special_down_charge, SPECIAL_DOWN_MAX_CHARGE)
+
 func update_facing_direction(input_x: float) -> void:
 	if controller and can_act:
 		controller.set_facing_direction(input_x)
@@ -326,7 +363,11 @@ func get_facing_direction() -> float:
 	return controller.facing_direction if controller else 1.0
 
 func get_current_attack() -> AttackData:
-	return attack_controller.get_attack_data_for_input(current_input, is_on_floor(), get_facing_direction()) if attack_controller else null
+	if not attack_controller:
+		return null
+	if current_input and _last_consumed_was_special:
+		current_input.special_pressed = true
+	return attack_controller.get_attack_data_for_input(current_input, is_on_floor(), get_facing_direction())
 
 func execute_attack(attack_data: AttackData) -> void:
 	if attack_controller:
@@ -340,127 +381,60 @@ func deactivate_hitbox() -> void:
 	if attack_controller:
 		attack_controller.disable_hitbox()
 
+# ── Métodos Puente para Shield & VFX (100% retrocompatibilidad) ───────────
 func break_shield() -> void:
-	shield_health = 0.0
-	state_machine.transition_to("Daze")
+	if shield_controller:
+		shield_controller.break_shield()
+	elif state_machine:
+		state_machine.transition_to("Daze")
 
 func update_shield_scale() -> void:
-	if visual_root_3d and visual_root_3d.has_node("ShieldMesh"):
-		var shield_mesh: Node3D = visual_root_3d.get_node("ShieldMesh")
-		var scale_ratio: float = clamp(shield_health / MAX_SHIELD_HP, 0.2, 1.0)
-		shield_mesh.scale = Vector3.ONE * scale_ratio
+	if shield_controller:
+		shield_controller.update_shield_scale()
 
 func set_menacing_aura_enabled(enabled: bool) -> void:
-	if visual_root_3d:
-		var aura_node: Node3D = visual_root_3d.get_node_or_null("MenacingAura")
-		if aura_node:
-			aura_node.visible = enabled
+	if visual_controller:
+		visual_controller.set_menacing_aura_enabled(enabled)
 
 func update_menacing_aura(delta: float) -> void:
-	if visual_root_3d:
-		var aura_node: Node3D = visual_root_3d.get_node_or_null("MenacingAura")
-		if aura_node and aura_node.visible:
-			aura_node.rotate_y(delta * 1.2)
+	if visual_controller:
+		visual_controller.update_menacing_aura(delta)
 
 func set_daze_effects_enabled(enabled: bool) -> void:
-	if visual_root_3d:
-		var stars: Node3D = visual_root_3d.get_node_or_null("DazeStars")
-		if stars:
-			stars.visible = enabled
+	if visual_controller:
+		visual_controller.set_daze_effects_enabled(enabled)
 
-func update_daze_effects(delta: float, _timer: float) -> void:
-	if visual_root_3d:
-		var stars: Node3D = visual_root_3d.get_node_or_null("DazeStars")
-		if stars and stars.visible:
-			stars.rotate_y(delta * 4.0)
+func update_daze_effects(delta: float, timer: float = 0.0) -> void:
+	if visual_controller:
+		visual_controller.update_daze_effects(delta, timer)
 
 func _is_current_state(state_name: String) -> bool:
 	if state_machine == null or state_machine.current_state == null:
 		return false
 	return state_machine.current_state.name.to_lower() == state_name.to_lower()
 
-func _compute_impact_shake_intensity(impact: ImpactData, is_blocked: bool = false) -> float:
-	if impact == null or is_blocked:
-		return 0.0
-	# En Smash, los golpes estándar (jabs, tilts, proyectiles) no sacuden la cámara.
-	# Solo activamos un impacto sutil en remates con alto knockback (KB >= 35.0 o Daño >= 16.0).
-	if impact.knockback_magnitude < 35.0 and impact.damage < 16.0:
-		return 0.0
-	var value: float = 8.0 + (impact.damage * 0.12) + (impact.knockback_magnitude * 0.08)
-	return clampf(value, 8.0, 12.0)
-
-func _apply_shield_pushback(impact: ImpactData) -> void:
-	if impact == null:
-		return
-
-	var away_dir: float = -impact.attacker_facing
-	if impact.attacker and "global_position" in impact.attacker:
-		away_dir = signf(global_position.x - impact.attacker.global_position.x)
-	if absf(away_dir) < 0.01:
-		away_dir = 1.0
-
-	var push_speed: float = Constants.SHIELD_PUSHBACK_BASE + (impact.knockback_magnitude * Constants.SHIELD_PUSHBACK_KB_MULT)
-	push_speed = clampf(push_speed, Constants.SHIELD_PUSHBACK_BASE, Constants.SHIELD_PUSHBACK_MAX)
-	velocity.x = away_dir * push_speed
-
-	if impact.attacker is Character:
-		var attacker_character: Character = impact.attacker as Character
-		if attacker_character:
-			attacker_character.velocity.x = -away_dir * push_speed * Constants.SHIELD_ATTACKER_PUSHBACK_MULT
-
-func _handle_shield_impact(impact: ImpactData) -> bool:
-	if impact == null:
-		return false
-	if not _is_current_state("shield"):
-		return false
-
-	var bonus_shield_damage: float = 0.0
-	if impact and impact.attack_data:
-		bonus_shield_damage = impact.attack_data.bonus_shield_damage
-	var shield_damage: float = maxf(0.0, impact.damage + bonus_shield_damage)
-
-	shield_health = maxf(0.0, shield_health - shield_damage)
-	update_shield_scale()
-
-	Events.attack_blocked.emit(player_id, impact.attacker_id)
-	if impact.attack_data and impact.attack_data.hit_sfx:
-		AudioManager.play_sfx(impact.attack_data.hit_sfx, 0.85)
-
-	if shield_health <= 0.0:
-		Events.shield_broken.emit(player_id)
-		Events.camera_shake_requested.emit(8.5)
-		break_shield()
-		return true
-
-	var shieldstun_frames: int = maxi(2, int(floor((shield_damage * Constants.SHIELD_STUN_DAMAGE_MULT) + Constants.SHIELD_STUN_BASE_FRAMES)))
-	if state_machine and state_machine.current_state and state_machine.current_state.has_method("apply_shieldstun"):
-		state_machine.current_state.call("apply_shieldstun", float(shieldstun_frames) / 60.0)
-
-	_apply_shield_pushback(impact)
-	return true
-
+# ── Combate & Recepción de Impacto ────────────────────────────────────────
 func on_impact_received(impact: ImpactData) -> void:
 	if impact == null:
 		return
 	if Events.is_time_stopped and self == Events.time_stop_instigator:
 		return
 
-	if _handle_shield_impact(impact):
+	if shield_controller and shield_controller.handle_shield_impact(impact):
 		return
+
+	if impact.attacker and impact.attacker != self and impact.attacker.has_method("on_non_special_hit_connected"):
+		impact.attacker.on_non_special_hit_connected(impact.attack_data)
 
 	var new_percent: float = stats.add_damage(impact.damage)
 	impact.target_percent_after = new_percent
 	percentage_changed.emit(new_percent)
 	Events.player_damaged.emit(player_id, new_percent, impact)
 	
-	var shake_val: float = _compute_impact_shake_intensity(impact, false)
-	if shake_val > 0.0:
-		Events.camera_shake_requested.emit(shake_val)
-	
 	if impact.attack_data and impact.attack_data.hit_sfx:
 		AudioManager.play_sfx(impact.attack_data.hit_sfx)
 
-	# ── Acumulación Cinética durante Time Stop ──
+	# Acumulación Cinética durante Time Stop
 	if Events.is_time_stopped and self != Events.time_stop_instigator:
 		accumulated_timestop_knockback += impact.knockback_vector * 0.95
 		accumulated_timestop_hitstun = maxi(accumulated_timestop_hitstun, impact.hitstun_frames)
@@ -468,6 +442,7 @@ func on_impact_received(impact: ImpactData) -> void:
 		Events.camera_shake_requested.emit(5.0)
 		return
 	
+	can_up_special = true
 	state_machine.transition_to("Hit", {
 		"knockback": impact.knockback_vector,
 		"hitstun_frames": impact.hitstun_frames,
@@ -492,6 +467,7 @@ func _on_time_stop_ended() -> void:
 		accumulated_timestop_hitstun = 0
 		
 		Events.camera_shake_requested.emit(14.0)
+		can_up_special = true
 		state_machine.transition_to("Hit", {
 			"knockback": final_kb,
 			"hitstun_frames": final_stun,
@@ -502,6 +478,7 @@ func _on_time_stop_ended() -> void:
 			"impact": null
 		})
 
+# ── Ledge Grab (2D) ───────────────────────────────────────────────────────
 func snap_to_ledge(ledge: LedgePoint) -> void:
 	if not can_grab_ledge or ledge_regrab_timer > 0.0 or is_on_floor():
 		return
@@ -516,6 +493,7 @@ func snap_to_ledge(ledge: LedgePoint) -> void:
 	snapped_ledge = ledge
 	air_jumps_left = max_air_jumps
 	can_air_dodge = true
+	can_up_special = true
 	state_machine.transition_to("Ledge", {"ledge": ledge})
 
 func release_ledge(cooldown_sec: float = 0.6) -> void:
@@ -540,6 +518,7 @@ func reset_player(spawn_position: Vector2) -> void:
 	release_ledge(0.0)
 	air_jumps_left = max_air_jumps
 	can_air_dodge = true
+	can_up_special = true
 	_intent_buffer = InputBuffer.new()
 	_intent_buffer.buffer_window_seconds = INPUT_BUFFER_WINDOW_SEC
 	_coyote_timer = COYOTE_TIME_SEC
@@ -548,16 +527,19 @@ func reset_player(spawn_position: Vector2) -> void:
 	_previous_shield_pressed = false
 	_shield_just_pressed = false
 	if stats: stats.reset()
+	if shield_controller: shield_controller.reset()
 	if hurtbox:
 		hurtbox.clear_received_swings()
 		hurtbox.set_state(Hurtbox.HurtboxState.NORMAL)
-	shield_health = MAX_SHIELD_HP
 	percentage_changed.emit(0.0)
 	visible = true
 	state_machine.transition_to("Idle")
 
 func apply_self_hitlag(frames: int) -> void:
 	_self_hitlag_remaining = maxi(_self_hitlag_remaining, maxi(frames, 0))
+	if _self_hitlag_remaining > 0 and anim_controller and anim_controller.has_method("set_paused"):
+		anim_controller.set_paused(true)
 
 func is_self_hitlag_active() -> bool:
 	return _self_hitlag_remaining > 0
+

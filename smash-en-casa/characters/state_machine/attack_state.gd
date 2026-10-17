@@ -29,6 +29,19 @@ func enter(msg: Dictionary = {}) -> void:
 	if current_attack_data and current_attack_data.animation_name != "":
 		anim_name = current_attack_data.animation_name
 
+	if character and current_attack_data:
+		if anim_name == "SpecialUp":
+			character.can_up_special = false
+		elif anim_name == "SpecialDown" or current_attack_data.is_time_stop:
+			if character.has_method("consume_special_down_charge"):
+				character.consume_special_down_charge()
+
+	# En ataques terrestres o ataques especiales (ej. SpecialSide / SpecialUp), orientar hacia la dirección presionada
+	if character and current_attack_data:
+		var enter_input: Vector2 = character.get_input_vector()
+		if absf(enter_input.x) > 0.2 and (not current_attack_data.is_aerial or anim_name.begins_with("Special")):
+			character.update_facing_direction(enter_input.x)
+
 	if character and character.has_node("AnimationController"):
 		var anim_ctrl: Node = character.get_node("AnimationController")
 		if anim_ctrl.has_method("play_attack_animation"):
@@ -59,8 +72,14 @@ func enter(msg: Dictionary = {}) -> void:
 	_update_hitbox_window()
 
 func physics_update(delta: float) -> void:
+	# Permitir buffer de combo incluso durante hitlag del atacante
+	if character and current_attack_data and current_attack_data.combo_next != null:
+		if character.is_normal_attack_pressed():
+			_combo_buffered = true
+
 	if character and character.has_method("is_self_hitlag_active") and character.is_self_hitlag_active():
 		return
+
 
 	frame_cursor += 1
 	_update_hitbox_window()
@@ -73,19 +92,29 @@ func physics_update(delta: float) -> void:
 		character.velocity.x = move_toward(character.velocity.x, 0.0, trac * delta)
 	elif character and character.controller:
 		character.controller.apply_snd_air_movement(input_vec.x, delta)
-		if absf(input_vec.x) > 0.1:
-			character.update_facing_direction(input_vec.x)
 
-	# Ataques aéreos: al aterrizar entran en landing lag dedicado.
+	# Ataques aéreos: al aterrizar entran en landing lag dedicado o auto-cancel.
 	if character and _started_in_air and current_attack_data and current_attack_data.is_aerial and character.is_on_floor():
-		var remaining_recovery: int = maxi(0, total_end_frame - frame_cursor)
-		var dynamic_landing_lag: int = maxi(Constants.NORMAL_LANDING_LAG_FRAMES, mini(18, remaining_recovery))
-		var configured_landing_lag: int = maxi(0, current_attack_data.landing_lag_frames)
-		var landing_lag: int = configured_landing_lag if configured_landing_lag > 0 else dynamic_landing_lag
+		var is_autocancel: bool = false
+		if current_attack_data.autocancel_before > 0 and frame_cursor <= current_attack_data.autocancel_before:
+			is_autocancel = true
+		elif current_attack_data.autocancel_after > 0 and frame_cursor >= current_attack_data.autocancel_after:
+			is_autocancel = true
+
+		var landing_lag: int
+		if is_autocancel:
+			landing_lag = Constants.NORMAL_LANDING_LAG_FRAMES
+		else:
+			var remaining_recovery: int = maxi(0, total_end_frame - frame_cursor)
+			var dynamic_landing_lag: int = maxi(Constants.NORMAL_LANDING_LAG_FRAMES, mini(18, remaining_recovery))
+			var configured_landing_lag: int = maxi(0, current_attack_data.landing_lag_frames)
+			landing_lag = configured_landing_lag if configured_landing_lag > 0 else dynamic_landing_lag
+
 		dbg("aerial_landing_lag", {
 			"landing_lag": landing_lag,
-			"configured": configured_landing_lag,
-			"remaining_recovery": remaining_recovery
+			"is_autocancel": is_autocancel,
+			"configured": current_attack_data.landing_lag_frames,
+			"remaining_recovery": maxi(0, total_end_frame - frame_cursor)
 		})
 		_cancel_attack_into_landing_lag(landing_lag)
 		return
@@ -138,7 +167,7 @@ func physics_update(delta: float) -> void:
 		if character.is_normal_attack_pressed():
 			_combo_buffered = true
 
-	# Transición al siguiente ataque del combo
+	# Transición al siguiente ataque del combo apenas termina la ventana activa
 	if _combo_buffered and current_attack_data and current_attack_data.combo_next != null:
 		if frame_cursor >= active_end_frame:
 			dbg("to_combo_attack", {
@@ -146,6 +175,27 @@ func physics_update(delta: float) -> void:
 			})
 			state_machine.transition_to("Attack", {"attack_data": current_attack_data.combo_next})
 			return
+
+	# FAF (First Actionable Frame / IASA): cancelación anticipada del recovery
+	var faf_target: int = current_attack_data.faf_frame if (current_attack_data and current_attack_data.faf_frame > 0) else total_end_frame
+	if current_attack_data and current_attack_data.combo_next != null and current_attack_data.combo_window_frames > 0:
+		faf_target = maxi(faf_target, active_end_frame + mini(current_attack_data.combo_window_frames, current_attack_data.recovery_frames))
+	if frame_cursor >= faf_target and frame_cursor < total_end_frame and character:
+
+		if character.is_jump_just_pressed():
+			dbg("faf_cancel_jump", {"frame": frame_cursor})
+			state_machine.transition_to("JumpSquat")
+			return
+		if character.is_on_floor() and character.is_shield_pressed():
+			dbg("faf_cancel_shield", {"frame": frame_cursor})
+			state_machine.transition_to("Shield")
+			return
+		if character.is_on_floor():
+			var faf_move: Vector2 = character.get_input_vector()
+			if absf(faf_move.x) > 0.15:
+				dbg("faf_cancel_move", {"frame": frame_cursor, "dir": faf_move.x})
+				state_machine.transition_to("Run" if absf(faf_move.x) > 0.6 else "Walk")
+				return
 
 	# Fin del ataque
 	if frame_cursor >= total_end_frame:

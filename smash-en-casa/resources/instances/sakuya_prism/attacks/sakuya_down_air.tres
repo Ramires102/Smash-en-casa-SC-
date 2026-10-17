@@ -4,21 +4,26 @@
 
 [resource]
 script = ExtResource("1_atk")
-attack_name = "Knife Rain Plunge"
+attack_name = "Knife Rain Plunge (Down Air)"
 damage = 10.0
-base_knockback = 28.0
-knockback_scaling = 115.0
+base_knockback = 24.0
+knockback_scaling = 105.0
 angle_degrees = 275.0
-startup_frames = 9
+startup_frames = 8
 active_frames = 6
-recovery_frames = 18
+recovery_frames = 16
+faf_frame = 26
+is_aerial = true
+landing_lag_frames = 11
+autocancel_before = 4
+autocancel_after = 24
 animation_name = "DownAir"
-hitbox_offset = Vector3(0.3, -0.7, 0.0)
-hitbox_radius = 0.65
+hitbox_offset = Vector3(0.28, -0.72, 0.0)
+hitbox_radius = 0.68
 combo_next = null
 combo_window_frames = 0
-self_impulse = Vector3(0.0, -8.0, 0.0)
-self_impulse_frame = 9
+self_impulse = Vector3(1.5, -7.5, 0.0)
+self_impulse_frame = 8
 disable_gravity_during_active = false
 sub_hitboxes = []
 spawns_projectile = false
