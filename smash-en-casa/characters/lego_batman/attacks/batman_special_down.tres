@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="AttackData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/attack_data.gd" id="1_atk"]
+
+[resource]
+script = ExtResource("1_atk")
+attack_name = "Bat Cape Guard"
+damage = 13.0
+base_knockback = 16.0
+knockback_scaling = 80.0
+angle_degrees = 55.0
+startup_frames = 4
+active_frames = 14
+recovery_frames = 12
+animation_name = "SpecialDown"
+is_aerial = false
+hitbox_offset = Vector3(0.0, 0.0, 0.0)
+hitbox_radius = 0.9

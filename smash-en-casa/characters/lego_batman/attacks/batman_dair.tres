@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="AttackData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/attack_data.gd" id="1_atk"]
+
+[resource]
+script = ExtResource("1_atk")
+attack_name = "Bat Dive Stomp"
+damage = 12.0
+base_knockback = 15.0
+knockback_scaling = 75.0
+angle_degrees = 280.0
+startup_frames = 6
+active_frames = 8
+recovery_frames = 13
+animation_name = "AttackAirDown"
+is_aerial = true
+hitbox_offset = Vector3(0.0, -0.7, 0.0)
+hitbox_radius = 0.7

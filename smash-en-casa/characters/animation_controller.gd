@@ -183,6 +183,8 @@ func _setup_glb_animations() -> void:
 	# Mapeo exacto por sufijo para evitar falsos positivos
 	var exact_suffix_map: Dictionary = {
 		"Idle": "idle",
+		"Walk": "walk",
+		"Run": "run",
 		"Fall": "caida",
 		"FastFall": "caida",
 		"Attack": "ataque",
@@ -196,6 +198,7 @@ func _setup_glb_animations() -> void:
 		"Grab": "grab",
 		"Jump": "salto",
 		"Squat": "agachado",
+		"Hit": "hit",
 		"Death": "salida del personaje",
 	}
 
@@ -218,10 +221,22 @@ func _setup_glb_animations() -> void:
 	# Alias de ataques para compatibilidad de estados
 	if "Attack" in _anim_map:
 		_anim_map["AttackNeutral"] = _anim_map["Attack"]
+		_anim_map["AttackSide"] = _anim_map["Attack"]
 	if "AttackAir" in _anim_map:
 		_anim_map["NeutralAir"] = _anim_map["AttackAir"]
+	if "AttackAirUp" in _anim_map:
+		_anim_map["UpAir"] = _anim_map["AttackAirUp"]
+		if not "AttackUp" in _anim_map:
+			_anim_map["AttackUp"] = _anim_map["AttackAirUp"]
+	if "AttackAirDown" in _anim_map:
+		_anim_map["DownAir"] = _anim_map["AttackAirDown"]
+	if "AttackDown" in _anim_map:
+		_anim_map["DownTilt"] = _anim_map["AttackDown"]
+		_anim_map["AttackDownTilt"] = _anim_map["AttackDown"]
 	if "Special" in _anim_map:
 		_anim_map["SpecialNeutral"] = _anim_map["Special"]
+		if not "SpecialSide" in _anim_map:
+			_anim_map["SpecialSide"] = _anim_map["Special"]
 
 	# Añadir procedurales para estados sin animación GLB (Run, Walk, Fall, Hit, Shield, etc.)
 	_add_procedural_fallbacks()

@@ -103,6 +103,12 @@ layout_mode = 2
 size_flags_horizontal = 4
 text = "Nekomiya Mana (Rosa)"
 
+[node name="BtnBatmanP1" type="Button" parent="VBoxContainer/HBoxContainer/P1Selection"]
+custom_minimum_size = Vector2(200, 38)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "Lego Batman (Negro)"
+
 [node name="VSeparator" type="VSeparator" parent="VBoxContainer/HBoxContainer"]
 layout_mode = 2
 
@@ -155,6 +161,12 @@ layout_mode = 2
 size_flags_horizontal = 4
 text = "Nekomiya Mana (Rosa)"
 
+[node name="BtnBatmanP2" type="Button" parent="VBoxContainer/HBoxContainer/P2Selection"]
+custom_minimum_size = Vector2(200, 38)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "Lego Batman (Negro)"
+
 [node name="CenterContainer" type="CenterContainer" parent="VBoxContainer"]
 layout_mode = 2
 
@@ -184,11 +196,13 @@ layout_mode = 2
 [connection signal="pressed" from="VBoxContainer/HBoxContainer/P1Selection/BtnSakuyaP1" to="." method="_on_p1_sakuya_pressed"]
 [connection signal="pressed" from="VBoxContainer/HBoxContainer/P1Selection/BtnJohnP1" to="." method="_on_p1_john_pressed"]
 [connection signal="pressed" from="VBoxContainer/HBoxContainer/P1Selection/BtnNekomiyaP1" to="." method="_on_p1_nekomiya_pressed"]
+[connection signal="pressed" from="VBoxContainer/HBoxContainer/P1Selection/BtnBatmanP1" to="." method="_on_p1_lego_batman_pressed"]
 
 [connection signal="pressed" from="VBoxContainer/HBoxContainer/P2Selection/BtnMiyabiP2" to="." method="_on_p2_miyabi_pressed"]
 [connection signal="pressed" from="VBoxContainer/HBoxContainer/P2Selection/BtnGogetaP2" to="." method="_on_p2_gogeta_pressed"]
 [connection signal="pressed" from="VBoxContainer/HBoxContainer/P2Selection/BtnSakuyaP2" to="." method="_on_p2_sakuya_pressed"]
 [connection signal="pressed" from="VBoxContainer/HBoxContainer/P2Selection/BtnJohnP2" to="." method="_on_p2_john_pressed"]
 [connection signal="pressed" from="VBoxContainer/HBoxContainer/P2Selection/BtnNekomiyaP2" to="." method="_on_p2_nekomiya_pressed"]
+[connection signal="pressed" from="VBoxContainer/HBoxContainer/P2Selection/BtnBatmanP2" to="." method="_on_p2_lego_batman_pressed"]
 [connection signal="pressed" from="VBoxContainer/CenterContainer/StartBattleButton" to="." method="_on_start_battle_button_pressed"]
 [connection signal="pressed" from="VBoxContainer/BottomContainer/BackButton" to="." method="_on_back_button_pressed"]

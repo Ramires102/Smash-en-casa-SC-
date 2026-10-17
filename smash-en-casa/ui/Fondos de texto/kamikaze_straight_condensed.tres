@@ -1,0 +1,7 @@
+[gd_resource type="FontVariation" format=3]
+
+[ext_resource type="FontFile" path="res://ui/Fondos de texto/Kamikaze.ttf" id="1_23u6x"]
+
+[resource]
+base_font = ExtResource("1_23u6x")
+variation_transform = Transform2D(0.75, 0, 0, 1, 0, 0)

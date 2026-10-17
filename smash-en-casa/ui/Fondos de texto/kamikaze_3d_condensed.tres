@@ -1,0 +1,7 @@
+[gd_resource type="FontVariation" format=3]
+
+[ext_resource type="FontFile" path="res://ui/Fondos de texto/Kamikaze3DGradient-Italic.ttf" id="1_skdjq"]
+
+[resource]
+base_font = ExtResource("1_skdjq")
+variation_transform = Transform2D(0.78, 0, 0, 1, 0, 0)

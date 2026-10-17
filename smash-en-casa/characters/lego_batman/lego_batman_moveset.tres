@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="MoveSet" load_steps=12 format=3]
+
+[ext_resource type="Script" path="res://resources/moveset.gd" id="1_mset"]
+[ext_resource type="Resource" path="res://characters/lego_batman/attacks/batman_jab.tres" id="2_jab"]
+[ext_resource type="Resource" path="res://characters/lego_batman/attacks/batman_stilt.tres" id="3_stilt"]
+[ext_resource type="Resource" path="res://characters/lego_batman/attacks/batman_utilt.tres" id="4_utilt"]
+[ext_resource type="Resource" path="res://characters/lego_batman/attacks/batman_dtilt.tres" id="5_dtilt"]
+[ext_resource type="Resource" path="res://characters/lego_batman/attacks/batman_nair.tres" id="6_nair"]
+[ext_resource type="Resource" path="res://characters/lego_batman/attacks/batman_uair.tres" id="7_uair"]
+[ext_resource type="Resource" path="res://characters/lego_batman/attacks/batman_dair.tres" id="8_dair"]
+[ext_resource type="Resource" path="res://characters/lego_batman/attacks/batman_special_neutral.tres" id="9_spn"]
+[ext_resource type="Resource" path="res://characters/lego_batman/attacks/batman_special_up.tres" id="10_spu"]
+[ext_resource type="Resource" path="res://characters/lego_batman/attacks/batman_special_down.tres" id="11_spd"]
+
+[resource]
+script = ExtResource("1_mset")
+neutral_attack = ExtResource("2_jab")
+side_tilt = ExtResource("3_stilt")
+up_tilt = ExtResource("4_utilt")
+down_tilt = ExtResource("5_dtilt")
+neutral_air = ExtResource("6_nair")
+forward_air = ExtResource("6_nair")
+back_air = ExtResource("6_nair")
+up_air = ExtResource("7_uair")
+down_air = ExtResource("8_dair")
+special_neutral = ExtResource("9_spn")
+special_side = ExtResource("9_spn")
+special_up = ExtResource("10_spu")
+special_down = ExtResource("11_spd")
