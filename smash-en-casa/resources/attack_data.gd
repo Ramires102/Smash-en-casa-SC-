@@ -14,6 +14,12 @@ extends Resource
 @export var bonus_shield_damage: float = 0.0
 @export var is_aerial: bool = false
 @export var landing_lag_frames: int = 0 ## 0 = usar fallback dinámico basado en recovery restante
+## FAF (First Actionable Frame): frame en que el ataque permite ser cancelado por movimiento/salto/escudo (0 = usar total_frames)
+@export var faf_frame: int = 0
+## Ventana de auto-cancel antes de golpear (frames de startup que cancelan a landing lag normal)
+@export var autocancel_before: int = 0
+## Ventana de auto-cancel al final del recovery (frames finales que cancelan a landing lag normal)
+@export var autocancel_after: int = 0
 
 # ── Propiedades de Splash N Dash (Hitboxes.gd) ──
 ## Angle Flipper: controla la dirección de lanzamiento (0-7). Ver Hitboxes.gd:217-284
@@ -41,6 +47,7 @@ extends Resource
 
 # Proyectiles y Habilidades Especiales (Knives, Cards, Time Stop)
 @export_group("Projectile / Special")
+@export var is_special_attack: bool = false
 @export var spawns_projectile: bool = false
 @export var projectile_scene: PackedScene = null
 @export var projectile_speed: float = 18.0
@@ -50,6 +57,12 @@ extends Resource
 @export var projectile_spawn_frame: int = 4
 @export var projectile_offset: Vector3 = Vector3(0.8, 0.2, 0.0)
 @export var projectile_lifetime: float = 2.5
+@export var use_distance_damage_falloff: bool = false
+@export var close_range_damage: float = 3.0
+@export var mid_range_damage: float = 2.0
+@export var far_range_damage: float = 1.3
+@export var close_range_max_meters: float = 3.2
+@export var mid_range_max_meters: float = 7.5
 @export var is_time_stop: bool = false
 @export var time_stop_duration_sec: float = 2.0
 @export var time_stop_frame: int = 6

@@ -38,6 +38,14 @@ func physics_update(delta: float) -> void:
 	if character and character.is_jump_held():
 		is_short_hop = false
 
+	# Cancelación Jumpsquat Cancel hacia Up-Special (los ataques normales quedan en buffer para salir como aéreo al despegar)
+	if character:
+		var in_vec: Vector2 = character.get_input_vector()
+		if in_vec.y > 0.3 and character.is_special_attack_pressed():
+			dbg("to_attack_up_special_oos", {"reason": "jumpsquat_cancel_up_special"})
+			state_machine.transition_to("Attack")
+			return
+
 	if squat_timer <= 0.0:
 		var jump_mult: float = 0.75 if is_short_hop else 1.0
 		var input_vec: Vector2 = character.get_input_vector() if character else Vector2.ZERO

@@ -1,0 +1,31 @@
+[gd_resource type="Resource" script_class="AttackData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/attack_data.gd" id="1_atk"]
+
+[resource]
+script = ExtResource("1_atk")
+attack_name = "Chrono Cross Slash (Forward Air)"
+damage = 8.5
+base_knockback = 18.0
+knockback_scaling = 92.0
+angle_degrees = 42.0
+startup_frames = 6
+active_frames = 4
+recovery_frames = 13
+faf_frame = 20
+is_aerial = true
+landing_lag_frames = 8
+autocancel_before = 4
+autocancel_after = 19
+animation_name = "ForwardAir"
+hitbox_offset = Vector3(1.15, 0.15, 0.0)
+hitbox_radius = 0.72
+combo_next = null
+combo_window_frames = 0
+self_impulse = Vector3(2.2, 0.0, 0.0)
+self_impulse_frame = 6
+disable_gravity_during_active = false
+sub_hitboxes = []
+spawns_projectile = false
+is_time_stop = false
+

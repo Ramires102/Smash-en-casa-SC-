@@ -23,6 +23,8 @@ signal attack_blocked(player_id: int, attacker_id: int)
 
 @warning_ignore("unused_signal")
 signal shield_broken(player_id: int)
+@warning_ignore("unused_signal")
+signal special_meter_changed(player_id: int, current_charge: float, max_charge: float)
 
 
 @warning_ignore("unused_signal")

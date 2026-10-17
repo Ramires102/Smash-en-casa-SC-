@@ -22,4 +22,6 @@ extends Resource
 @export var model_scene: PackedScene
 @export var model_offset: Vector3 = Vector3(0.0, -0.9, 0.0)
 @export var model_scale: float = 1.0
+@export var animation_library: AnimationLibrary
 @export var moveset: MoveSet
+

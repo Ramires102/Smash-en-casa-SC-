@@ -53,10 +53,15 @@ func physics_update(delta: float) -> void:
 		return
 
 	# Ataques desde agachado (Down Tilt / Down Smash / Down Special)
+	var prev_y: float = character.current_input.movement.y if character.current_input else 0.0
+	if character.current_input:
+		character.current_input.movement.y = minf(prev_y, -0.6)
 	if character.is_attack_just_pressed():
 		dbg("to_attack", {"reason": "crouch_attack_pressed"})
 		state_machine.transition_to("Attack")
 		return
+	if character.current_input:
+		character.current_input.movement.y = prev_y
 
 	# Salto desde agachado
 	if character.is_jump_just_pressed():

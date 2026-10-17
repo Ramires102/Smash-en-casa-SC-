@@ -15,8 +15,15 @@ size = Vector2(118, 8)
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_ledge"]
 size = Vector2(24, 30)
 
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_blast_v"]
+size = Vector2(300, 2000)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_blast_h"]
+size = Vector2(2360, 300)
+
 [sub_resource type="BoxShape3D" id="BoxShape3D_ledge"]
 size = Vector3(1.2, 1.8, 3.8)
+
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_sunset"]
 sky_top_color = Color(0.14, 0.18, 0.38, 1)
@@ -345,6 +352,7 @@ position = Vector2(-6, 6)
 shape = SubResource("RectangleShape2D_ledge")
 
 [node name="LedgeRight" type="Area2D" parent="StageColliders2D"]
+
 position = Vector2(280, 0)
 collision_layer = 32
 collision_mask = 32
@@ -354,4 +362,25 @@ ledge_direction = -1.0
 [node name="CollisionShape2D" type="CollisionShape2D" parent="StageColliders2D/LedgeRight"]
 position = Vector2(6, 6)
 shape = SubResource("RectangleShape2D_ledge")
+
+[node name="BlastZone2D" type="Area2D" parent="StageColliders2D"]
+collision_layer = 0
+collision_mask = 2
+
+[node name="BlastLeft" type="CollisionShape2D" parent="StageColliders2D/BlastZone2D"]
+position = Vector2(-930, -50)
+shape = SubResource("RectangleShape2D_blast_v")
+
+[node name="BlastRight" type="CollisionShape2D" parent="StageColliders2D/BlastZone2D"]
+position = Vector2(930, -50)
+shape = SubResource("RectangleShape2D_blast_v")
+
+[node name="BlastTop" type="CollisionShape2D" parent="StageColliders2D/BlastZone2D"]
+position = Vector2(0, -800)
+shape = SubResource("RectangleShape2D_blast_h")
+
+[node name="BlastBottom" type="CollisionShape2D" parent="StageColliders2D/BlastZone2D"]
+position = Vector2(0, 700)
+shape = SubResource("RectangleShape2D_blast_h")
+
 

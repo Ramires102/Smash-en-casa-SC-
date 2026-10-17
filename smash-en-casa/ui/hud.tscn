@@ -47,6 +47,19 @@ text = "0%"
 layout_mode = 2
 text = "Vidas: 3"
 
+[node name="SpecialBar" type="ProgressBar" parent="MarginContainer/VBoxContainer/TopRow/P1Box"]
+custom_minimum_size = Vector2(180, 14)
+layout_mode = 2
+size_flags_horizontal = 0
+max_value = 100.0
+value = 0.0
+show_percentage = false
+
+[node name="SpecialLabel" type="Label" parent="MarginContainer/VBoxContainer/TopRow/P1Box"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+text = "Especial ↓: 0%"
+
 [node name="TimerBox" type="VBoxContainer" parent="MarginContainer/VBoxContainer/TopRow"]
 layout_mode = 2
 size_flags_horizontal = 3
@@ -77,6 +90,20 @@ horizontal_alignment = 2
 [node name="LivesLabel" type="Label" parent="MarginContainer/VBoxContainer/TopRow/P2Box"]
 layout_mode = 2
 text = "Vidas: 3"
+horizontal_alignment = 2
+
+[node name="SpecialBar" type="ProgressBar" parent="MarginContainer/VBoxContainer/TopRow/P2Box"]
+custom_minimum_size = Vector2(180, 14)
+layout_mode = 2
+size_flags_horizontal = 8
+max_value = 100.0
+value = 0.0
+show_percentage = false
+
+[node name="SpecialLabel" type="Label" parent="MarginContainer/VBoxContainer/TopRow/P2Box"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+text = "Especial ↓: 0%"
 horizontal_alignment = 2
 
 [node name="CountdownContainer" type="CenterContainer" parent="."]

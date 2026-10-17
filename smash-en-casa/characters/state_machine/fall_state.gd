@@ -21,11 +21,9 @@ func exit() -> void:
 func physics_update(delta: float) -> void:
 	var input_vec: Vector2 = character.get_input_vector() if character else Vector2.ZERO
 	
-	# Control de Air Drift auténtico (aceleración y fricción aérea 2D)
+	# Control de Air Drift auténtico (aceleración y fricción aérea 2D, mantiene facing para permitir BackAir)
 	if character and character.controller:
 		character.controller.apply_snd_air_movement(input_vec.x, delta)
-		if absf(input_vec.x) > 0.1:
-			character.update_facing_direction(input_vec.x)
 			
 		# Detección de Fast Fall auténtico 2D (solo down just-pressed y en descenso)
 		if character.is_down_just_pressed() and character.velocity.y > 0.0 and not character.is_fast_falling:

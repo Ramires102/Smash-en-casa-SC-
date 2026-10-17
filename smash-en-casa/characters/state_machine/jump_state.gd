@@ -30,11 +30,9 @@ func exit() -> void:
 func physics_update(delta: float) -> void:
 	var input_vec: Vector2 = character.get_input_vector() if character else Vector2.ZERO
 	
-	# Control de Air Drift auténtico con aceleración y fricción aérea 2D
+	# Control de Air Drift auténtico con aceleración y fricción aérea 2D (mantiene facing para permitir BackAir)
 	if character and character.controller:
 		character.controller.apply_snd_air_movement(input_vec.x, delta)
-		if absf(input_vec.x) > 0.1:
-			character.update_facing_direction(input_vec.x)
 	
 	dbg_tick(delta, {
 		"vx": snapped(character.velocity.x if character else 0.0, 0.001),
@@ -53,6 +51,12 @@ func physics_update(delta: float) -> void:
 	if character and character.is_shield_pressed() and character.can_air_dodge:
 		dbg("to_airdodge_from_jump")
 		state_machine.transition_to("AirDodge")
+		return
+
+	# Aterrizaje en plataforma o suelo si ya comenzó el descenso
+	if character and character.is_on_floor() and character.velocity.y >= 0.0:
+		dbg("to_idle_from_jump", {"reason": "landed_on_floor_or_platform"})
+		state_machine.transition_to("Idle", {"landing_lag": Constants.NORMAL_LANDING_LAG_FRAMES})
 		return
 
 	# Al alcanzar el ápice del salto en 2D (vy >= 0) transiciona a caída

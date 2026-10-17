@@ -7,7 +7,7 @@ func enter(msg: Dictionary = {}) -> void:
 	_landing_lag_remaining = maxi(0, int(msg.get("landing_lag", 0)))
 	dbg("enter", {"landing_lag": _landing_lag_remaining})
 	if character:
-		if _landing_lag_remaining <= 0:
+		if _landing_lag_remaining <= 0 and absf(character.velocity.x) < 40.0:
 			character.velocity.x = 0.0
 		character.set_menacing_aura_enabled(true)
 	if character and character.has_node("AnimationController"):
@@ -28,11 +28,13 @@ func physics_update(delta: float) -> void:
 			"landing_lag": _landing_lag_remaining
 		})
 
+	# Fricción y tracción terrestre continua en reposo (evita deslizamiento infinito tras aterrizar o waveland)
+	if character and character.velocity.x != 0.0:
+		var trac: float = character.controller.get_traction() if character.controller else 1000.0
+		character.velocity.x = move_toward(character.velocity.x, 0.0, trac * delta)
+
 	if _landing_lag_remaining > 0:
 		_landing_lag_remaining -= 1
-		if character and character.controller:
-			var trac: float = character.controller.get_traction()
-			character.velocity.x = move_toward(character.velocity.x, 0.0, trac * 0.5 * delta)
 		return
 
 	if not character.is_on_floor():
@@ -46,6 +48,16 @@ func physics_update(delta: float) -> void:
 		return
 
 	var input_vec: Vector2 = character.get_input_vector()
+
+	if character.is_jump_just_pressed():
+		dbg("to_jumpsquat", {"reason": "jump_pressed"})
+		state_machine.transition_to("JumpSquat")
+		return
+
+	if character.is_attack_just_pressed():
+		dbg("to_attack", {"reason": "attack_pressed"})
+		state_machine.transition_to("Attack")
+		return
 
 	if input_vec.y < -0.5:
 		if character and character.global_position.y < -10.0 and character.is_down_just_pressed():
@@ -65,14 +77,4 @@ func physics_update(delta: float) -> void:
 		else:
 			dbg("to_walk", {"reason": "horizontal_input", "input_x": snapped(input_vec.x, 0.001)})
 			state_machine.transition_to("Walk")
-		return
-
-	if character.is_jump_just_pressed():
-		dbg("to_jumpsquat", {"reason": "jump_pressed"})
-		state_machine.transition_to("JumpSquat")
-		return
-
-	if character.is_attack_just_pressed():
-		dbg("to_attack", {"reason": "attack_pressed"})
-		state_machine.transition_to("Attack")
 		return
