@@ -1,6 +1,7 @@
-[gd_resource type="Resource" script_class="AttackData" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="AttackData" format=3 uid="uid://cr3jtohjiigjw"]
 
-[ext_resource type="Script" path="res://resources/attack_data.gd" id="1_atk"]
+[ext_resource type="Script" uid="uid://dbegbdutf63rr" path="res://resources/attack_data.gd" id="1_atk"]
+[ext_resource type="Script" uid="uid://ldv5jefy6yfj" path="res://combat/hitbox_data.gd" id="2_fjmx4"]
 
 [resource]
 script = ExtResource("1_atk")
@@ -12,23 +13,19 @@ angle_degrees = 82.0
 startup_frames = 5
 active_frames = 8
 recovery_frames = 18
-faf_frame = 27
 animation_name = "SpecialUp"
-hitbox_offset = Vector3(0.32, 0.68, 0.0)
+faf_frame = 27
+hitbox_offset = Vector3(0.32, 0.68, 0)
 hitbox_radius = 0.78
-combo_next = null
 combo_window_frames = 0
-self_impulse = Vector3(3.6, 20.5, 0.0)
+self_impulse = Vector3(3.6, 20.5, 0)
 self_impulse_frame = 5
 disable_gravity_during_active = true
-sub_hitboxes = []
 is_special_attack = true
 spawns_projectile = true
 projectile_speed = 23.0
 projectile_count = 3
-projectile_spread_angles = [42.0, 68.0, 94.0]
-aerial_projectile_angle_offset = 0.0
+projectile_spread_angles = Array[float]([42.0, 68.0, 94.0])
 projectile_spawn_frame = 10
-projectile_offset = Vector3(0.25, -0.25, 0.0)
+projectile_offset = Vector3(0.25, -0.25, 0)
 projectile_lifetime = 1.6
-is_time_stop = false

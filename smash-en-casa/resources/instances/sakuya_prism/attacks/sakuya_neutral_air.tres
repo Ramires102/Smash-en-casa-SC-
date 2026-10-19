@@ -1,30 +1,22 @@
-[gd_resource type="Resource" script_class="AttackData" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="AttackData" format=3 uid="uid://b2j5wkftug1xl"]
 
-[ext_resource type="Script" path="res://resources/attack_data.gd" id="1_atk"]
+[ext_resource type="Script" uid="uid://dbegbdutf63rr" path="res://resources/attack_data.gd" id="1_atk"]
+[ext_resource type="Script" uid="uid://ldv5jefy6yfj" path="res://combat/hitbox_data.gd" id="2_kvvge"]
 
 [resource]
 script = ExtResource("1_atk")
 attack_name = "Midnight Waltz (Neutral Air)"
 damage = 7.0
-base_knockback = 15.0
 knockback_scaling = 80.0
 angle_degrees = 48.0
 startup_frames = 5
-active_frames = 6
 recovery_frames = 13
-faf_frame = 21
+animation_name = "NeutralAir"
 is_aerial = true
 landing_lag_frames = 7
+faf_frame = 21
 autocancel_before = 3
 autocancel_after = 18
-animation_name = "NeutralAir"
-hitbox_offset = Vector3(0.0, 0.15, 0.0)
+hitbox_offset = Vector3(0, 0.15, 0)
 hitbox_radius = 0.92
-combo_next = null
 combo_window_frames = 0
-self_impulse = Vector3(0.0, 0.0, 0.0)
-self_impulse_frame = 0
-disable_gravity_during_active = false
-sub_hitboxes = []
-spawns_projectile = false
-is_time_stop = false

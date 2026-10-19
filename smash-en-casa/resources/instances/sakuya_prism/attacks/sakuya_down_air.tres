@@ -1,6 +1,7 @@
-[gd_resource type="Resource" script_class="AttackData" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="AttackData" format=3 uid="uid://x40yurkw6qpr"]
 
-[ext_resource type="Script" path="res://resources/attack_data.gd" id="1_atk"]
+[ext_resource type="Script" uid="uid://dbegbdutf63rr" path="res://resources/attack_data.gd" id="1_atk"]
+[ext_resource type="Script" uid="uid://ldv5jefy6yfj" path="res://combat/hitbox_data.gd" id="2_4gn8p"]
 
 [resource]
 script = ExtResource("1_atk")
@@ -10,21 +11,15 @@ base_knockback = 24.0
 knockback_scaling = 105.0
 angle_degrees = 275.0
 startup_frames = 8
-active_frames = 6
 recovery_frames = 16
-faf_frame = 26
+animation_name = "DownAir"
 is_aerial = true
 landing_lag_frames = 11
+faf_frame = 26
 autocancel_before = 4
 autocancel_after = 24
-animation_name = "DownAir"
-hitbox_offset = Vector3(0.28, -0.72, 0.0)
+hitbox_offset = Vector3(0.28, -0.72, 0)
 hitbox_radius = 0.68
-combo_next = null
 combo_window_frames = 0
-self_impulse = Vector3(1.5, -7.5, 0.0)
+self_impulse = Vector3(1.5, -7.5, 0)
 self_impulse_frame = 8
-disable_gravity_during_active = false
-sub_hitboxes = []
-spawns_projectile = false
-is_time_stop = false

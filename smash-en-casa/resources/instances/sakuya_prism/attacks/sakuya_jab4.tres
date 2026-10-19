@@ -1,6 +1,7 @@
-[gd_resource type="Resource" script_class="AttackData" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="AttackData" format=3 uid="uid://cgth35n8juw57"]
 
-[ext_resource type="Script" path="res://resources/attack_data.gd" id="1_atk"]
+[ext_resource type="Script" uid="uid://dbegbdutf63rr" path="res://resources/attack_data.gd" id="1_atk"]
+[ext_resource type="Script" uid="uid://ldv5jefy6yfj" path="res://combat/hitbox_data.gd" id="2_h6scw"]
 
 [resource]
 script = ExtResource("1_atk")
@@ -12,15 +13,10 @@ angle_degrees = 38.0
 startup_frames = 5
 active_frames = 5
 recovery_frames = 18
-faf_frame = 22
 animation_name = "5AAAA"
-hitbox_offset = Vector3(1.40, 0.20, 0.0)
+faf_frame = 22
+hitbox_offset = Vector3(1.4, 0.2, 0)
 hitbox_radius = 0.88
-combo_next = null
 combo_window_frames = 0
-self_impulse = Vector3(2.0, 0.0, 0.0)
+self_impulse = Vector3(2, 0, 0)
 self_impulse_frame = 5
-disable_gravity_during_active = false
-sub_hitboxes = []
-spawns_projectile = false
-is_time_stop = false

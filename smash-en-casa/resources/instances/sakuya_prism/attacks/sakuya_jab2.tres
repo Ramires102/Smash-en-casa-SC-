@@ -1,7 +1,8 @@
-[gd_resource type="Resource" script_class="AttackData" load_steps=3 format=3]
+[gd_resource type="Resource" script_class="AttackData" format=3 uid="uid://dkb3ksfh2ajwh"]
 
-[ext_resource type="Script" path="res://resources/attack_data.gd" id="1_atk"]
-[ext_resource type="Resource" path="res://resources/instances/sakuya_prism/attacks/sakuya_jab3.tres" id="2_jab3"]
+[ext_resource type="Script" uid="uid://dbegbdutf63rr" path="res://resources/attack_data.gd" id="1_atk"]
+[ext_resource type="Resource" uid="uid://ug70xlkft1mt" path="res://resources/instances/sakuya_prism/attacks/sakuya_jab3.tres" id="2_jab3"]
+[ext_resource type="Script" uid="uid://ldv5jefy6yfj" path="res://combat/hitbox_data.gd" id="3_banu8"]
 
 [resource]
 script = ExtResource("1_atk")
@@ -10,19 +11,12 @@ damage = 3.0
 base_knockback = 20.0
 knockback_scaling = 12.0
 angle_degrees = 75.0
-
-startup_frames = 4
 active_frames = 3
 recovery_frames = 8
-faf_frame = 8
 animation_name = "5AA"
-hitbox_offset = Vector3(1.15, 0.15, 0.0)
+faf_frame = 8
+hitbox_offset = Vector3(1.15, 0.15, 0)
 hitbox_radius = 0.74
 combo_next = ExtResource("2_jab3")
-combo_window_frames = 14
-self_impulse = Vector3(0.6, 0.0, 0.0)
+self_impulse = Vector3(0.6, 0, 0)
 self_impulse_frame = 4
-disable_gravity_during_active = false
-sub_hitboxes = []
-spawns_projectile = false
-is_time_stop = false
