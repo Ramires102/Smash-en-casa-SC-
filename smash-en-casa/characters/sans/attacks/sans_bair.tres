@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="AttackData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/attack_data.gd" id="1_atk"]
+
+[resource]
+script = ExtResource("1_atk")
+attack_name = "Trombone Reverse Blast"
+damage = 12.0
+base_knockback = 34.0
+knockback_scaling = 95.0
+angle_degrees = 145.0
+startup_frames = 6
+active_frames = 4
+recovery_frames = 16
+animation_name = "BackAir"
+hitbox_offset = Vector3(-1.0, 0.1, 0.0)
+hitbox_radius = 0.8
+is_aerial = true
+landing_lag_frames = 9

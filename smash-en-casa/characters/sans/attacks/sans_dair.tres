@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="AttackData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/attack_data.gd" id="1_atk"]
+
+[resource]
+script = ExtResource("1_atk")
+attack_name = "Karma Spike Downward"
+damage = 11.5
+base_knockback = 30.0
+knockback_scaling = 92.0
+angle_degrees = 270.0
+startup_frames = 8
+active_frames = 5
+recovery_frames = 18
+animation_name = "DownAir"
+hitbox_offset = Vector3(0.2, -1.2, 0.0)
+hitbox_radius = 0.8
+is_aerial = true
+landing_lag_frames = 11
