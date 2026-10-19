@@ -183,12 +183,12 @@ func _init_roster() -> void:
 func _build_3d_card_arc() -> void:
 	var font_res = preload("res://ui/Fondos de texto/kamikaze_condensed.tres")
 	
-	# Layout tuning (matching DBFZ tilted curved plane)
-	var col_spacing: float = 1.48
-	var row_spacing_y: float = 0.54
-	var row_spacing_z: float = 0.68
-	var arc_depth_factor: float = 0.08
-	var arc_yaw_factor: float = 0.07
+	# Layout tuning (matching DBFZ tilted curved plane - compact scale)
+	var col_spacing: float = 0.74
+	var row_spacing_y: float = 0.28
+	var row_spacing_z: float = 0.35
+	var arc_depth_factor: float = 0.04
+	var arc_yaw_factor: float = 0.06
 	
 	for i in range(roster_slots.size()):
 		var slot: Dictionary = roster_slots[i]
@@ -206,8 +206,8 @@ func _build_3d_card_arc() -> void:
 		
 		# Top random card elevation
 		if row == 0:
-			py += 0.18
-			pz -= 0.12
+			py += 0.09
+			pz -= 0.06
 			
 		card_root.position = Vector3(px, py, pz)
 		card_root.rotation.y = -dx * arc_yaw_factor
@@ -215,7 +215,7 @@ func _build_3d_card_arc() -> void:
 		# Card Mesh
 		var mesh_inst := MeshInstance3D.new()
 		var quad := QuadMesh.new()
-		quad.size = Vector2(1.36, 0.92)
+		quad.size = Vector2(0.68, 0.46)
 		mesh_inst.mesh = quad
 		
 		# Material
@@ -243,11 +243,11 @@ func _build_3d_card_arc() -> void:
 		var label := Label3D.new()
 		label.text = slot["name"]
 		label.font = font_res
-		label.font_size = 26
-		label.outline_size = 8
+		label.font_size = 18
+		label.outline_size = 5
 		label.outline_modulate = Color(0.0, 0.0, 0.0, 1.0)
 		label.modulate = Color(1.0, 0.92, 0.5)
-		label.position = Vector3(0.0, -0.31, 0.015)
+		label.position = Vector3(0.0, -0.155, 0.012)
 		label.billboard = BaseMaterial3D.BILLBOARD_DISABLED
 		card_root.add_child(label)
 		
@@ -255,7 +255,7 @@ func _build_3d_card_arc() -> void:
 		var area := Area3D.new()
 		var col_shape := CollisionShape3D.new()
 		var box := BoxShape3D.new()
-		box.size = Vector3(1.36, 0.92, 0.2)
+		box.size = Vector3(0.68, 0.46, 0.1)
 		col_shape.shape = box
 		area.add_child(col_shape)
 		area.input_event.connect(_on_card_input_event.bind(i))
@@ -427,15 +427,15 @@ func _update_token_position(player_id: int, animate: bool = true) -> void:
 	
 	# Offset badge right above the card's top edge
 	var up_vec = card_node.global_transform.basis.y
-	var target_pos = target_global_pos + up_vec * 0.58 + Vector3(0, 0.05, 0.05)
+	var target_pos = target_global_pos + up_vec * 0.30 + Vector3(0, 0.03, 0.03)
 	
 	# If both on the same card, offset horizontally
 	if p1_slot_index == p2_slot_index:
 		var right_vec = card_node.global_transform.basis.x
 		if player_id == 1:
-			target_pos -= right_vec * 0.28
+			target_pos -= right_vec * 0.14
 		else:
-			target_pos += right_vec * 0.28
+			target_pos += right_vec * 0.14
 			
 	if animate:
 		var tw = create_tween().set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
