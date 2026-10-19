@@ -1,208 +1,388 @@
-[gd_scene load_steps=6 format=3 uid="uid://c_char_select"]
+[gd_scene load_steps=21 format=3 uid="uid://c_char_select"]
 
 [ext_resource type="Script" path="res://ui/character_select.gd" id="1_cselect"]
+[ext_resource type="Resource" uid="uid://c_miyabi_data" path="res://resources/instances/miyabi_data.tres" id="2_miyabi"]
+[ext_resource type="Resource" uid="uid://c_lego_batman_data" path="res://resources/instances/lego_batman_data.tres" id="3_batman"]
+[ext_resource type="Resource" uid="uid://c_sakuya_data" path="res://resources/instances/sakuya_data.tres" id="4_sakuya"]
+[ext_resource type="Resource" uid="uid://c_nekomiya_data" path="res://resources/instances/nekomiya_data.tres" id="5_nekomiya"]
+[ext_resource type="Resource" uid="uid://c_gogeta_data" path="res://resources/instances/gogeta_data.tres" id="6_gogeta"]
+[ext_resource type="Resource" uid="uid://c_john_placeholder_data" path="res://resources/instances/john_placeholder_data.tres" id="7_john"]
+[ext_resource type="FontVariation" path="res://ui/Fondos de texto/kamikaze_condensed.tres" id="8_font"]
 
-[ext_resource type="Resource" uid="uid://c_miyabi_data" path="res://resources/instances/miyabi_data.tres" id="3_miyabi"]
-[ext_resource type="Resource" uid="uid://c_gogeta_data" path="res://resources/instances/gogeta_data.tres" id="4_gogeta"]
-[ext_resource type="Resource" uid="uid://c_sakuya_data" path="res://resources/instances/sakuya_data.tres" id="5_sakuya"]
-[ext_resource type="Resource" uid="uid://c_nekomiya_data" path="res://resources/instances/nekomiya_data.tres" id="6_nekomiya"]
+[sub_resource type="Environment" id="Environment_dbfz"]
+background_mode = 1
+background_color = Color(0.04, 0.05, 0.08, 1)
+ambient_light_source = 2
+ambient_light_color = Color(0.4, 0.42, 0.5, 1)
+tonemap_mode = 2
+glow_enabled = true
+glow_intensity = 0.8
+glow_bloom = 0.25
 
-[node name="CharacterSelect" type="Control"]
+[sub_resource type="StandardMaterial3D" id="Mat_Floor"]
+albedo_color = Color(0.07, 0.08, 0.11, 1)
+metallic = 0.65
+roughness = 0.2
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_floor"]
+material = SubResource("Mat_Floor")
+size = Vector2(30, 30)
+
+[sub_resource type="StandardMaterial3D" id="Mat_PedestalP1"]
+albedo_color = Color(0.08, 0.12, 0.18, 1)
+metallic = 0.7
+roughness = 0.3
+emission_enabled = true
+emission = Color(0.2, 0.55, 1, 1)
+emission_energy_multiplier = 1.2
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_p1"]
+material = SubResource("Mat_PedestalP1")
+top_radius = 1.15
+bottom_radius = 1.25
+height = 0.12
+
+[sub_resource type="StandardMaterial3D" id="Mat_PedestalP2"]
+albedo_color = Color(0.18, 0.08, 0.08, 1)
+metallic = 0.7
+roughness = 0.3
+emission_enabled = true
+emission = Color(1, 0.25, 0.2, 1)
+emission_energy_multiplier = 1.2
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_p2"]
+material = SubResource("Mat_PedestalP2")
+top_radius = 1.15
+bottom_radius = 1.25
+height = 0.12
+
+[sub_resource type="StandardMaterial3D" id="Mat_TokenP1"]
+albedo_color = Color(0.15, 0.55, 1, 1)
+metallic = 0.8
+roughness = 0.2
+emission_enabled = true
+emission = Color(0.15, 0.55, 1, 1)
+emission_energy_multiplier = 0.5
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_token"]
+top_radius = 0.22
+bottom_radius = 0.22
+height = 0.04
+
+[sub_resource type="PrismMesh" id="PrismMesh_arrow"]
+size = Vector3(0.18, 0.22, 0.04)
+
+[sub_resource type="StandardMaterial3D" id="Mat_TokenP2"]
+albedo_color = Color(1, 0.2, 0.2, 1)
+metallic = 0.8
+roughness = 0.2
+emission_enabled = true
+emission = Color(1, 0.2, 0.2, 1)
+emission_energy_multiplier = 0.5
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bottom"]
+bg_color = Color(0.04, 0.05, 0.08, 0.9)
+border_width_top = 2
+border_color = Color(0.85, 0.68, 0.22, 1)
+
+[node name="CharacterSelect" type="Node3D"]
+script = ExtResource("1_cselect")
+miyabi_data = ExtResource("2_miyabi")
+lego_batman_data = ExtResource("3_batman")
+sakuya_data = ExtResource("4_sakuya")
+nekomiya_data = ExtResource("5_nekomiya")
+gogeta_data = ExtResource("6_gogeta")
+john_data = ExtResource("7_john")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_dbfz")
+
+[node name="Camera3D" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.961262, 0.275637, 0, -0.275637, 0.961262, 0, 1.85, 3.4)
+fov = 48.0
+
+[node name="Lights" type="Node3D" parent="."]
+
+[node name="KeyLight" type="DirectionalLight3D" parent="Lights"]
+transform = Transform3D(0.939693, -0.116978, 0.321394, 0, 0.939693, 0.34202, -0.34202, -0.321394, 0.883022, 1.5, 4, 3)
+light_color = Color(1, 0.96, 0.9, 1)
+light_energy = 1.2
+shadow_enabled = true
+
+[node name="FillLight" type="DirectionalLight3D" parent="Lights"]
+transform = Transform3D(0.866025, 0.25, -0.433013, 0, 0.866025, 0.5, 0.5, -0.433013, 0.75, -2, 2, 2)
+light_color = Color(0.5, 0.6, 0.85, 1)
+light_energy = 0.6
+
+[node name="StageLightP1" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(0.965926, 0.148453, -0.212012, 0, 0.819152, 0.573576, 0.258819, -0.554032, 0.79124, -2.4, 3.2, 0.5)
+light_color = Color(0.3, 0.7, 1, 1)
+light_energy = 2.5
+spot_range = 6.0
+spot_angle = 35.0
+
+[node name="StageLightP2" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(0.965926, -0.148453, 0.212012, 0, 0.819152, 0.573576, -0.258819, -0.554032, 0.79124, 2.4, 3.2, 0.5)
+light_color = Color(1, 0.35, 0.3, 1)
+light_energy = 2.5
+spot_range = 6.0
+spot_angle = 35.0
+
+[node name="Floor" type="MeshInstance3D" parent="."]
+mesh = SubResource("PlaneMesh_floor")
+
+[node name="StageP1" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.4, 0, -0.9)
+
+[node name="PedestalP1" type="MeshInstance3D" parent="StageP1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.06, 0)
+mesh = SubResource("CylinderMesh_p1")
+
+[node name="ModelContainer" type="Node3D" parent="StageP1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.12, 0)
+
+[node name="StageP2" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.4, 0, -0.9)
+
+[node name="PedestalP2" type="MeshInstance3D" parent="StageP2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.06, 0)
+mesh = SubResource("CylinderMesh_p2")
+
+[node name="ModelContainer" type="Node3D" parent="StageP2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.12, 0)
+
+[node name="CardArc" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.615661, 0.788011, 0, -0.788011, 0.615661, 0, 0.45, 1.45)
+
+[node name="Tokens" type="Node3D" parent="."]
+
+[node name="P1Token" type="Node3D" parent="Tokens"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+
+[node name="Disc" type="MeshInstance3D" parent="Tokens/P1Token"]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 0, 0, 0)
+material_override = SubResource("Mat_TokenP1")
+mesh = SubResource("CylinderMesh_token")
+
+[node name="Arrow" type="MeshInstance3D" parent="Tokens/P1Token"]
+transform = Transform3D(1, 0, 0, 0, -1, 8.74228e-08, 0, -8.74228e-08, -1, 0, -0.22, 0)
+material_override = SubResource("Mat_TokenP1")
+mesh = SubResource("PrismMesh_arrow")
+
+[node name="Label3D" type="Label3D" parent="Tokens/P1Token"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.03)
+text = "1"
+font = ExtResource("8_font")
+font_size = 40
+outline_size = 10
+outline_modulate = Color(0, 0, 0, 1)
+
+[node name="P2Token" type="Node3D" parent="Tokens"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+
+[node name="Disc" type="MeshInstance3D" parent="Tokens/P2Token"]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 0, 0, 0)
+material_override = SubResource("Mat_TokenP2")
+mesh = SubResource("CylinderMesh_token")
+
+[node name="Arrow" type="MeshInstance3D" parent="Tokens/P2Token"]
+transform = Transform3D(1, 0, 0, 0, -1, 8.74228e-08, 0, -8.74228e-08, -1, 0, -0.22, 0)
+material_override = SubResource("Mat_TokenP2")
+mesh = SubResource("PrismMesh_arrow")
+
+[node name="Label3D" type="Label3D" parent="Tokens/P2Token"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.03)
+text = "2"
+font = ExtResource("8_font")
+font_size = 40
+outline_size = 10
+outline_modulate = Color(0, 0, 0, 1)
+
+[node name="SFXPlayer" type="AudioStreamPlayer" parent="."]
+bus = &"Master"
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+
+[node name="UI" type="Control" parent="CanvasLayer"]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-script = ExtResource("1_cselect")
+mouse_filter = 2
 
-miyabi_data = ExtResource("3_miyabi")
-gogeta_data = ExtResource("4_gogeta")
-sakuya_data = ExtResource("5_sakuya")
-nekomiya_data = ExtResource("6_nekomiya")
-
-[node name="ColorRect" type="ColorRect" parent="."]
+[node name="TopBanner" type="VBoxContainer" parent="CanvasLayer/UI"]
 layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -280.0
+offset_top = 10.0
+offset_right = 280.0
+offset_bottom = 75.0
 grow_horizontal = 2
-grow_vertical = 2
-color = Color(0.12, 0.15, 0.2, 1)
+alignment = 1
 
-[node name="VBoxContainer" type="VBoxContainer" parent="."]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_constants/separation = 15
-
-[node name="TopMargin" type="Control" parent="VBoxContainer"]
-custom_minimum_size = Vector2(0, 10)
+[node name="Title" type="Label" parent="CanvasLayer/UI/TopBanner"]
 layout_mode = 2
-
-[node name="Title" type="Label" parent="VBoxContainer"]
-layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.95, 0.8, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.8)
+theme_override_constants/shadow_offset_x = 2
+theme_override_constants/shadow_offset_y = 2
+theme_override_fonts/font = ExtResource("8_font")
 theme_override_font_sizes/font_size = 36
 text = "SELECCIÓN DE PERSONAJES"
 horizontal_alignment = 1
 
-[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer"]
+[node name="Subtitle" type="Label" parent="CanvasLayer/UI/TopBanner"]
 layout_mode = 2
-size_flags_vertical = 3
+theme_override_colors/font_color = Color(0.85, 0.68, 0.22, 1)
+theme_override_fonts/font = ExtResource("8_font")
+theme_override_font_sizes/font_size = 16
+text = "★ ELIGE A TU LUCHADOR ★"
+horizontal_alignment = 1
+
+[node name="P1Info" type="VBoxContainer" parent="CanvasLayer/UI"]
+layout_mode = 1
+offset_left = 25.0
+offset_top = 20.0
+offset_right = 260.0
+offset_bottom = 120.0
+
+[node name="Badge" type="Label" parent="CanvasLayer/UI/P1Info"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.3, 0.75, 1, 1)
+theme_override_fonts/font = ExtResource("8_font")
+theme_override_font_sizes/font_size = 20
+text = "◄ JUGADOR 1"
+
+[node name="NameLabel" type="Label" parent="CanvasLayer/UI/P1Info"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.92, 0.5, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.9)
+theme_override_constants/shadow_offset_x = 2
+theme_override_constants/shadow_offset_y = 2
+theme_override_fonts/font = ExtResource("8_font")
+theme_override_font_sizes/font_size = 32
+text = "MIYABI"
+
+[node name="StatusLabel" type="Label" parent="CanvasLayer/UI/P1Info"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.3, 0.7, 1, 1)
+theme_override_fonts/font = ExtResource("8_font")
+theme_override_font_sizes/font_size = 18
+text = "ELIGE LUCHADOR"
+
+[node name="P2Info" type="VBoxContainer" parent="CanvasLayer/UI"]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -260.0
+offset_top = 20.0
+offset_right = -25.0
+offset_bottom = 120.0
+grow_horizontal = 0
+alignment = 2
+
+[node name="Badge" type="Label" parent="CanvasLayer/UI/P2Info"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.35, 0.3, 1)
+theme_override_fonts/font = ExtResource("8_font")
+theme_override_font_sizes/font_size = 20
+text = "JUGADOR 2 ►"
+horizontal_alignment = 2
+
+[node name="NameLabel" type="Label" parent="CanvasLayer/UI/P2Info"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.92, 0.5, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.9)
+theme_override_constants/shadow_offset_x = 2
+theme_override_constants/shadow_offset_y = 2
+theme_override_fonts/font = ExtResource("8_font")
+theme_override_font_sizes/font_size = 32
+text = "LEGO BATMAN"
+horizontal_alignment = 2
+
+[node name="StatusLabel" type="Label" parent="CanvasLayer/UI/P2Info"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.35, 0.3, 1)
+theme_override_fonts/font = ExtResource("8_font")
+theme_override_font_sizes/font_size = 18
+text = "ELIGE LUCHADOR"
+horizontal_alignment = 2
+
+[node name="CenterVS" type="VBoxContainer" parent="CanvasLayer/UI"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -150.0
+offset_top = -60.0
+offset_right = 150.0
+offset_bottom = 50.0
+grow_horizontal = 2
+grow_vertical = 2
 alignment = 1
 
-[node name="P1Selection" type="VBoxContainer" parent="VBoxContainer/HBoxContainer"]
+[node name="CountdownLabel" type="Label" parent="CanvasLayer/UI/CenterVS"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.85, 0.25, 1)
+theme_override_fonts/font = ExtResource("8_font")
+theme_override_font_sizes/font_size = 26
+text = "BATALLA EN 2..."
+horizontal_alignment = 1
+
+[node name="StartBattleButton" type="Button" parent="CanvasLayer/UI/CenterVS"]
+custom_minimum_size = Vector2(240, 48)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.95, 0.7, 1)
+theme_override_fonts/font = ExtResource("8_font")
+theme_override_font_sizes/font_size = 24
+text = "¡INICIAR BATALLA!"
+
+[node name="BottomBar" type="PanelContainer" parent="CanvasLayer/UI"]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -60.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_styles/panel = SubResource("StyleBoxFlat_bottom")
+
+[node name="HBox" type="HBoxContainer" parent="CanvasLayer/UI/BottomBar"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="MarginLeft" type="Control" parent="CanvasLayer/UI/BottomBar/HBox"]
+custom_minimum_size = Vector2(10, 0)
+layout_mode = 2
+
+[node name="BackButton" type="Button" parent="CanvasLayer/UI/BottomBar/HBox"]
+custom_minimum_size = Vector2(160, 36)
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_fonts/font = ExtResource("8_font")
+theme_override_font_sizes/font_size = 18
+text = "← Menú Principal"
+
+[node name="PromptLabel" type="Label" parent="CanvasLayer/UI/BottomBar/HBox"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/separation = 10
-alignment = 1
-
-[node name="LabelP1" type="Label" parent="VBoxContainer/HBoxContainer/P1Selection"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 24
-text = "JUGADOR 1:"
+theme_override_colors/font_color = Color(0.85, 0.88, 0.95, 1)
+theme_override_fonts/font = ExtResource("8_font")
+theme_override_font_sizes/font_size = 16
+text = "P1: [W/A/S/D] Mover • [J / Espacio] Confirmar | P2: [Flechas] Mover • [N] Confirmar | [Esc] Cancelar"
 horizontal_alignment = 1
+vertical_alignment = 1
 
-[node name="P1Status" type="Label" parent="VBoxContainer/HBoxContainer/P1Selection"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 18
-text = "P1: Sin seleccionar"
-horizontal_alignment = 1
-
-
-[node name="BtnMiyabiP1" type="Button" parent="VBoxContainer/HBoxContainer/P1Selection"]
-custom_minimum_size = Vector2(200, 38)
-layout_mode = 2
-size_flags_horizontal = 4
-text = "Miyabi (Rojo)"
-
-[node name="BtnGogetaP1" type="Button" parent="VBoxContainer/HBoxContainer/P1Selection"]
-custom_minimum_size = Vector2(200, 38)
-layout_mode = 2
-size_flags_horizontal = 4
-text = "Gogeta (Azul)"
-
-[node name="BtnSakuyaP1" type="Button" parent="VBoxContainer/HBoxContainer/P1Selection"]
-custom_minimum_size = Vector2(200, 38)
-layout_mode = 2
-size_flags_horizontal = 4
-text = "Sakuya (Blanco)"
-
-[node name="BtnJohnP1" type="Button" parent="VBoxContainer/HBoxContainer/P1Selection"]
-custom_minimum_size = Vector2(200, 38)
-layout_mode = 2
-size_flags_horizontal = 4
-text = "John Placeholder"
-
-[node name="BtnNekomiyaP1" type="Button" parent="VBoxContainer/HBoxContainer/P1Selection"]
-custom_minimum_size = Vector2(200, 38)
-layout_mode = 2
-size_flags_horizontal = 4
-text = "Nekomiya Mana (Rosa)"
-
-[node name="BtnBatmanP1" type="Button" parent="VBoxContainer/HBoxContainer/P1Selection"]
-custom_minimum_size = Vector2(200, 38)
-layout_mode = 2
-size_flags_horizontal = 4
-text = "Lego Batman (Negro)"
-
-[node name="VSeparator" type="VSeparator" parent="VBoxContainer/HBoxContainer"]
+[node name="MarginRight" type="Control" parent="CanvasLayer/UI/BottomBar/HBox"]
+custom_minimum_size = Vector2(10, 0)
 layout_mode = 2
 
-[node name="P2Selection" type="VBoxContainer" parent="VBoxContainer/HBoxContainer"]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_constants/separation = 10
-alignment = 1
-
-[node name="LabelP2" type="Label" parent="VBoxContainer/HBoxContainer/P2Selection"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 24
-text = "JUGADOR 2:"
-horizontal_alignment = 1
-
-[node name="P2Status" type="Label" parent="VBoxContainer/HBoxContainer/P2Selection"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 18
-text = "P2: Sin seleccionar"
-horizontal_alignment = 1
-
-
-[node name="BtnMiyabiP2" type="Button" parent="VBoxContainer/HBoxContainer/P2Selection"]
-custom_minimum_size = Vector2(200, 38)
-layout_mode = 2
-size_flags_horizontal = 4
-text = "Miyabi (Rojo)"
-
-[node name="BtnGogetaP2" type="Button" parent="VBoxContainer/HBoxContainer/P2Selection"]
-custom_minimum_size = Vector2(200, 38)
-layout_mode = 2
-size_flags_horizontal = 4
-text = "Gogeta (Azul)"
-
-[node name="BtnSakuyaP2" type="Button" parent="VBoxContainer/HBoxContainer/P2Selection"]
-custom_minimum_size = Vector2(200, 38)
-layout_mode = 2
-size_flags_horizontal = 4
-text = "Sakuya (Blanco)"
-
-[node name="BtnJohnP2" type="Button" parent="VBoxContainer/HBoxContainer/P2Selection"]
-custom_minimum_size = Vector2(200, 38)
-layout_mode = 2
-size_flags_horizontal = 4
-text = "John Placeholder"
-
-[node name="BtnNekomiyaP2" type="Button" parent="VBoxContainer/HBoxContainer/P2Selection"]
-custom_minimum_size = Vector2(200, 38)
-layout_mode = 2
-size_flags_horizontal = 4
-text = "Nekomiya Mana (Rosa)"
-
-[node name="BtnBatmanP2" type="Button" parent="VBoxContainer/HBoxContainer/P2Selection"]
-custom_minimum_size = Vector2(200, 38)
-layout_mode = 2
-size_flags_horizontal = 4
-text = "Lego Batman (Negro)"
-
-[node name="CenterContainer" type="CenterContainer" parent="VBoxContainer"]
-layout_mode = 2
-
-[node name="StartBattleButton" type="Button" parent="VBoxContainer/CenterContainer"]
-custom_minimum_size = Vector2(280, 50)
-layout_mode = 2
-theme_override_font_sizes/font_size = 22
-disabled = true
-text = "Seleccionen Personajes para Iniciar"
-
-[node name="BottomContainer" type="CenterContainer" parent="VBoxContainer"]
-layout_mode = 2
-
-[node name="BackButton" type="Button" parent="VBoxContainer/BottomContainer"]
-custom_minimum_size = Vector2(220, 40)
-layout_mode = 2
-theme_override_font_sizes/font_size = 18
-text = "← Volver al Menú Principal"
-
-[node name="BottomMargin" type="Control" parent="VBoxContainer"]
-custom_minimum_size = Vector2(0, 15)
-layout_mode = 2
-
-
-[connection signal="pressed" from="VBoxContainer/HBoxContainer/P1Selection/BtnMiyabiP1" to="." method="_on_p1_miyabi_pressed"]
-[connection signal="pressed" from="VBoxContainer/HBoxContainer/P1Selection/BtnGogetaP1" to="." method="_on_p1_gogeta_pressed"]
-[connection signal="pressed" from="VBoxContainer/HBoxContainer/P1Selection/BtnSakuyaP1" to="." method="_on_p1_sakuya_pressed"]
-[connection signal="pressed" from="VBoxContainer/HBoxContainer/P1Selection/BtnJohnP1" to="." method="_on_p1_john_pressed"]
-[connection signal="pressed" from="VBoxContainer/HBoxContainer/P1Selection/BtnNekomiyaP1" to="." method="_on_p1_nekomiya_pressed"]
-[connection signal="pressed" from="VBoxContainer/HBoxContainer/P1Selection/BtnBatmanP1" to="." method="_on_p1_lego_batman_pressed"]
-
-[connection signal="pressed" from="VBoxContainer/HBoxContainer/P2Selection/BtnMiyabiP2" to="." method="_on_p2_miyabi_pressed"]
-[connection signal="pressed" from="VBoxContainer/HBoxContainer/P2Selection/BtnGogetaP2" to="." method="_on_p2_gogeta_pressed"]
-[connection signal="pressed" from="VBoxContainer/HBoxContainer/P2Selection/BtnSakuyaP2" to="." method="_on_p2_sakuya_pressed"]
-[connection signal="pressed" from="VBoxContainer/HBoxContainer/P2Selection/BtnJohnP2" to="." method="_on_p2_john_pressed"]
-[connection signal="pressed" from="VBoxContainer/HBoxContainer/P2Selection/BtnNekomiyaP2" to="." method="_on_p2_nekomiya_pressed"]
-[connection signal="pressed" from="VBoxContainer/HBoxContainer/P2Selection/BtnBatmanP2" to="." method="_on_p2_lego_batman_pressed"]
-[connection signal="pressed" from="VBoxContainer/CenterContainer/StartBattleButton" to="." method="_on_start_battle_button_pressed"]
-[connection signal="pressed" from="VBoxContainer/BottomContainer/BackButton" to="." method="_on_back_button_pressed"]
+[connection signal="pressed" from="CanvasLayer/UI/BottomBar/HBox/BackButton" to="." method="_on_back_pressed"]
