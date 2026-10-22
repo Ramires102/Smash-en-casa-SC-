@@ -1,0 +1,32 @@
+[gd_resource type="Resource" script_class="MoveSet" load_steps=14 format=3 uid="uid://sans_moveset"]
+
+[ext_resource type="Script" path="res://resources/moveset.gd" id="1_mset"]
+[ext_resource type="Resource" path="res://characters/sans/attacks/sans_jab1.tres" id="2_jab"]
+[ext_resource type="Resource" path="res://characters/sans/attacks/sans_stilt.tres" id="3_stilt"]
+[ext_resource type="Resource" path="res://characters/sans/attacks/sans_utilt.tres" id="4_utilt"]
+[ext_resource type="Resource" path="res://characters/sans/attacks/sans_dtilt.tres" id="5_dtilt"]
+[ext_resource type="Resource" path="res://characters/sans/attacks/sans_nair.tres" id="6_nair"]
+[ext_resource type="Resource" path="res://characters/sans/attacks/sans_fair.tres" id="7_fair"]
+[ext_resource type="Resource" path="res://characters/sans/attacks/sans_bair.tres" id="8_bair"]
+[ext_resource type="Resource" path="res://characters/sans/attacks/sans_uair.tres" id="9_uair"]
+[ext_resource type="Resource" path="res://characters/sans/attacks/sans_dair.tres" id="10_dair"]
+[ext_resource type="Resource" path="res://characters/sans/attacks/sans_special_neutral.tres" id="11_spn"]
+[ext_resource type="Resource" path="res://characters/sans/attacks/sans_special_side.tres" id="12_sps"]
+[ext_resource type="Resource" path="res://characters/sans/attacks/sans_special_up.tres" id="13_spu"]
+[ext_resource type="Resource" path="res://characters/sans/attacks/sans_special_down.tres" id="14_spd"]
+
+[resource]
+script = ExtResource("1_mset")
+neutral_attack = ExtResource("2_jab")
+side_tilt = ExtResource("3_stilt")
+up_tilt = ExtResource("4_utilt")
+down_tilt = ExtResource("5_dtilt")
+neutral_air = ExtResource("6_nair")
+forward_air = ExtResource("7_fair")
+back_air = ExtResource("8_bair")
+up_air = ExtResource("9_uair")
+down_air = ExtResource("10_dair")
+special_neutral = ExtResource("11_spn")
+special_side = ExtResource("12_sps")
+special_up = ExtResource("13_spu")
+special_down = ExtResource("14_spd")

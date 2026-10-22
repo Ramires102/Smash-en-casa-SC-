@@ -43,11 +43,15 @@ func setup(data: CharacterData = null) -> void:
 	_character = get_parent()
 	if not animation_player and _character and _character.has_node("AnimationPlayer"):
 		animation_player = _character.get_node("AnimationPlayer")
-	if data and data.animation_library and animation_player:
-		if animation_player.has_animation_library(""):
-			animation_player.remove_animation_library("")
-		animation_player.add_animation_library("", data.animation_library)
 	_refresh_active_player()
+	if data and data.animation_library:
+		if animation_player:
+			if animation_player.has_animation_library(""):
+				animation_player.remove_animation_library("")
+			animation_player.add_animation_library("", data.animation_library)
+		if _active_player and _active_player != animation_player:
+			if not _active_player.has_animation_library("char"):
+				_active_player.add_animation_library("char", data.animation_library)
 	
 	# Si la máquina de estados ya tiene un estado inicial, reproducirlo
 	if _character and _character.has_node("StateMachine"):

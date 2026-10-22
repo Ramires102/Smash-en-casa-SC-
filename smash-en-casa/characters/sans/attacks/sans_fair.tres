@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="AttackData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/attack_data.gd" id="1_atk"]
+
+[resource]
+script = ExtResource("1_atk")
+attack_name = "Aerial Bone Cleave"
+damage = 10.0
+base_knockback = 26.0
+knockback_scaling = 85.0
+angle_degrees = 40.0
+startup_frames = 7
+active_frames = 5
+recovery_frames = 15
+animation_name = "ForwardAir"
+hitbox_offset = Vector3(1.0, 0.1, 0.0)
+hitbox_radius = 0.75
+is_aerial = true
+landing_lag_frames = 8

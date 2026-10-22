@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="AttackData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/attack_data.gd" id="1_atk"]
+
+[resource]
+script = ExtResource("1_atk")
+attack_name = "Orbiting Bone Barrier"
+damage = 8.0
+base_knockback = 20.0
+knockback_scaling = 65.0
+angle_degrees = 45.0
+startup_frames = 4
+active_frames = 10
+recovery_frames = 12
+animation_name = "NeutralAir"
+hitbox_offset = Vector3(0.0, 0.1, 0.0)
+hitbox_radius = 1.1
+is_aerial = true
+landing_lag_frames = 6

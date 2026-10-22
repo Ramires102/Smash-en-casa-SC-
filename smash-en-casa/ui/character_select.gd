@@ -15,6 +15,11 @@ extends Node3D
 @export var sakuya_data: CharacterData = preload("res://resources/instances/sakuya_data.tres")
 @export var gogeta_data: CharacterData = preload("res://resources/instances/gogeta_data.tres")
 @export var john_data: CharacterData = preload("res://resources/instances/john_placeholder_data.tres")
+<<<<<<< HEAD
+=======
+@export var nekomiya_data: CharacterData = preload("res://resources/instances/nekomiya_data.tres")
+@export var sans_data: CharacterData = preload("res://resources/instances/sans_data.tres")
+>>>>>>> 2c9b02c86124e4a6e6792e563c1f11ad358e3728
 
 # Roster definition
 var roster_slots: Array[Dictionary] = []
@@ -455,6 +460,7 @@ func _update_p2_selection(slot_idx: int, animate_token: bool = true) -> void:
 	_update_token_position(2, animate_token)
 	_update_stage_preview(2, slot)
 
+<<<<<<< HEAD
 func _refresh_card_highlights() -> void:
 	for i in card_nodes.keys():
 		var node: Node3D = card_nodes[i]
@@ -486,6 +492,14 @@ func _refresh_card_highlights() -> void:
 				node.position = base_pos
 				if glow_mesh:
 					glow_mesh.visible = false
+=======
+func _on_p1_sans_pressed() -> void:
+	p1_selected = sans_data
+	p1_status.text = "P1 Seleccionó: Sans (Undertale)"
+	_check_ready()
+
+# --- Selección de P2 ---
+>>>>>>> 2c9b02c86124e4a6e6792e563c1f11ad358e3728
 
 func _update_token_position(player_id: int, animate: bool = true) -> void:
 	var slot_idx = p1_slot_index if player_id == 1 else p2_slot_index
@@ -691,6 +705,7 @@ func _find_idle_anim(ap: AnimationPlayer) -> String:
 			return a
 	return ""
 
+<<<<<<< HEAD
 # ==============================================================================
 # Lock & Ready Flow
 # ==============================================================================
@@ -770,6 +785,16 @@ func _resolve_slot_selection(slot_idx: int) -> CharacterData:
 func _check_both_ready() -> void:
 	if p1_locked and p2_locked:
 		_play_sfx(sfx_ready, 1.0)
+=======
+func _on_p2_sans_pressed() -> void:
+	p2_selected = sans_data
+	p2_status.text = "P2 Seleccionó: Sans (Undertale)"
+	_check_ready()
+
+# --- Verificación ---
+func _check_ready() -> void:
+	if p1_selected and p2_selected:
+>>>>>>> 2c9b02c86124e4a6e6792e563c1f11ad358e3728
 		if start_battle_button:
 			start_battle_button.visible = true
 			if is_inside_tree():

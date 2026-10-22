@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="AttackData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/attack_data.gd" id="1_atk"]
+
+[resource]
+script = ExtResource("1_atk")
+attack_name = "Skyward Bone Arc"
+damage = 9.0
+base_knockback = 28.0
+knockback_scaling = 90.0
+angle_degrees = 90.0
+startup_frames = 5
+active_frames = 6
+recovery_frames = 14
+animation_name = "UpAir"
+hitbox_offset = Vector3(0.0, 1.2, 0.0)
+hitbox_radius = 0.85
+is_aerial = true
+landing_lag_frames = 7

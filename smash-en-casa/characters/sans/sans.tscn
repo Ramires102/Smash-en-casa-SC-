@@ -1,0 +1,5 @@
+[gd_scene load_steps=2 format=3 uid="uid://c_sans_model_scene"]
+
+[ext_resource type="PackedScene" path="res://characters/sans/sans.glb" id="1_sans_glb"]
+
+[node name="SansModel" instance=ExtResource("1_sans_glb")]

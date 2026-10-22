@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="AttackData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://resources/attack_data.gd" id="1_atk"]
+[ext_resource type="PackedScene" uid="uid://c_sans_bone_proj" path="res://characters/sans/bone_projectile.tscn" id="2_bone_proj"]
+
+[resource]
+script = ExtResource("1_atk")
+attack_name = "Bone Barrage Wave"
+damage = 4.5
+base_knockback = 14.0
+knockback_scaling = 45.0
+angle_degrees = 22.0
+startup_frames = 7
+active_frames = 2
+recovery_frames = 16
+animation_name = "SpecialSide"
+hitbox_offset = Vector3(0.8, 0.1, 0.0)
+hitbox_radius = 0.5
+is_special_attack = true
+spawns_projectile = true
+projectile_scene = ExtResource("2_bone_proj")
+projectile_speed = 22.0
+projectile_count = 3
+projectile_spread_angles = [-14.0, 0.0, 14.0]
+projectile_spawn_frame = 7
+projectile_offset = Vector3(0.8, 0.1, 0.0)
+projectile_lifetime = 2.2

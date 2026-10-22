@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="AttackData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://resources/attack_data.gd" id="1_atk"]
+[ext_resource type="Resource" path="res://characters/sans/attacks/sans_jab3.tres" id="2_next"]
+
+[resource]
+script = ExtResource("1_atk")
+attack_name = "Double Bone Strike"
+damage = 2.5
+base_knockback = 10.0
+knockback_scaling = 15.0
+angle_degrees = 30.0
+startup_frames = 3
+active_frames = 3
+recovery_frames = 8
+animation_name = "AttackJab2"
+hitbox_offset = Vector3(0.9, 0.0, 0.0)
+hitbox_radius = 0.65
+combo_next = ExtResource("2_next")
+combo_window_frames = 12
+self_impulse = Vector3(0.8, 0.0, 0.0)
+self_impulse_frame = 3

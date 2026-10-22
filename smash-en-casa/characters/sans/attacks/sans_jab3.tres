@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="AttackData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/attack_data.gd" id="1_atk"]
+
+[resource]
+script = ExtResource("1_atk")
+attack_name = "Bone Barrage Finisher"
+damage = 5.0
+base_knockback = 30.0
+knockback_scaling = 65.0
+angle_degrees = 38.0
+startup_frames = 3
+active_frames = 4
+recovery_frames = 12
+animation_name = "AttackJab3"
+hitbox_offset = Vector3(1.1, 0.0, 0.0)
+hitbox_radius = 0.75
+combo_next = null
+combo_window_frames = 0
+self_impulse = Vector3(1.8, 0.0, 0.0)
+self_impulse_frame = 3

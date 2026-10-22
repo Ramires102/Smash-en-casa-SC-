@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 [gd_scene load_steps=19 format=3 uid="uid://c_char_select"]
+=======
+[gd_scene load_steps=7 format=3 uid="uid://c_char_select"]
+>>>>>>> 2c9b02c86124e4a6e6792e563c1f11ad358e3728
 
 [ext_resource type="Script" path="res://ui/character_select.gd" id="1_cselect"]
 [ext_resource type="Resource" uid="uid://c_lego_batman_data" path="res://resources/instances/lego_batman_data.tres" id="3_batman"]
@@ -7,6 +11,7 @@
 [ext_resource type="Resource" uid="uid://c_john_placeholder_data" path="res://resources/instances/john_placeholder_data.tres" id="7_john"]
 [ext_resource type="FontVariation" path="res://ui/Fondos de texto/kamikaze_condensed.tres" id="8_font"]
 
+<<<<<<< HEAD
 [sub_resource type="Environment" id="Environment_dbfz"]
 background_mode = 1
 background_color = Color(0.04, 0.05, 0.08, 1)
@@ -16,6 +21,13 @@ tonemap_mode = 2
 glow_enabled = true
 glow_intensity = 0.5
 glow_bloom = 0.08
+=======
+[ext_resource type="Resource" uid="uid://c_miyabi_data" path="res://resources/instances/miyabi_data.tres" id="3_miyabi"]
+[ext_resource type="Resource" uid="uid://c_gogeta_data" path="res://resources/instances/gogeta_data.tres" id="4_gogeta"]
+[ext_resource type="Resource" uid="uid://c_sakuya_data" path="res://resources/instances/sakuya_data.tres" id="5_sakuya"]
+[ext_resource type="Resource" uid="uid://c_nekomiya_data" path="res://resources/instances/nekomiya_data.tres" id="6_nekomiya"]
+[ext_resource type="Resource" uid="uid://c_sans_data" path="res://resources/instances/sans_data.tres" id="7_sans"]
+>>>>>>> 2c9b02c86124e4a6e6792e563c1f11ad358e3728
 
 [sub_resource type="StandardMaterial3D" id="Mat_Floor"]
 albedo_color = Color(0.07, 0.08, 0.11, 1)
@@ -208,7 +220,17 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 
+<<<<<<< HEAD
 [node name="TopBanner" type="VBoxContainer" parent="CanvasLayer/UI"]
+=======
+miyabi_data = ExtResource("3_miyabi")
+gogeta_data = ExtResource("4_gogeta")
+sakuya_data = ExtResource("5_sakuya")
+nekomiya_data = ExtResource("6_nekomiya")
+sans_data = ExtResource("7_sans")
+
+[node name="ColorRect" type="ColorRect" parent="."]
+>>>>>>> 2c9b02c86124e4a6e6792e563c1f11ad358e3728
 layout_mode = 1
 anchors_preset = 5
 anchor_left = 0.5
@@ -253,7 +275,110 @@ theme_override_fonts/font = ExtResource("8_font")
 theme_override_font_sizes/font_size = 14
 text = "◄ JUGADOR 1"
 
+<<<<<<< HEAD
 [node name="NameLabel" type="Label" parent="CanvasLayer/UI/P1Info"]
+=======
+
+[node name="BtnMiyabiP1" type="Button" parent="VBoxContainer/HBoxContainer/P1Selection"]
+custom_minimum_size = Vector2(200, 38)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "Miyabi (Rojo)"
+
+[node name="BtnGogetaP1" type="Button" parent="VBoxContainer/HBoxContainer/P1Selection"]
+custom_minimum_size = Vector2(200, 38)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "Gogeta (Azul)"
+
+[node name="BtnSakuyaP1" type="Button" parent="VBoxContainer/HBoxContainer/P1Selection"]
+custom_minimum_size = Vector2(200, 38)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "Sakuya (Blanco)"
+
+[node name="BtnJohnP1" type="Button" parent="VBoxContainer/HBoxContainer/P1Selection"]
+custom_minimum_size = Vector2(200, 38)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "John Placeholder"
+
+[node name="BtnNekomiyaP1" type="Button" parent="VBoxContainer/HBoxContainer/P1Selection"]
+custom_minimum_size = Vector2(200, 38)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "Nekomiya Mana (Rosa)"
+
+[node name="BtnSansP1" type="Button" parent="VBoxContainer/HBoxContainer/P1Selection"]
+custom_minimum_size = Vector2(200, 38)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "Sans (Undertale)"
+
+[node name="VSeparator" type="VSeparator" parent="VBoxContainer/HBoxContainer"]
+layout_mode = 2
+
+[node name="P2Selection" type="VBoxContainer" parent="VBoxContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+alignment = 1
+
+[node name="LabelP2" type="Label" parent="VBoxContainer/HBoxContainer/P2Selection"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "JUGADOR 2:"
+horizontal_alignment = 1
+
+[node name="P2Status" type="Label" parent="VBoxContainer/HBoxContainer/P2Selection"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "P2: Sin seleccionar"
+horizontal_alignment = 1
+
+
+[node name="BtnMiyabiP2" type="Button" parent="VBoxContainer/HBoxContainer/P2Selection"]
+custom_minimum_size = Vector2(200, 38)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "Miyabi (Rojo)"
+
+[node name="BtnGogetaP2" type="Button" parent="VBoxContainer/HBoxContainer/P2Selection"]
+custom_minimum_size = Vector2(200, 38)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "Gogeta (Azul)"
+
+[node name="BtnSakuyaP2" type="Button" parent="VBoxContainer/HBoxContainer/P2Selection"]
+custom_minimum_size = Vector2(200, 38)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "Sakuya (Blanco)"
+
+[node name="BtnJohnP2" type="Button" parent="VBoxContainer/HBoxContainer/P2Selection"]
+custom_minimum_size = Vector2(200, 38)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "John Placeholder"
+
+[node name="BtnNekomiyaP2" type="Button" parent="VBoxContainer/HBoxContainer/P2Selection"]
+custom_minimum_size = Vector2(200, 38)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "Nekomiya Mana (Rosa)"
+
+[node name="BtnSansP2" type="Button" parent="VBoxContainer/HBoxContainer/P2Selection"]
+custom_minimum_size = Vector2(200, 38)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "Sans (Undertale)"
+
+[node name="CenterContainer" type="CenterContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="StartBattleButton" type="Button" parent="VBoxContainer/CenterContainer"]
+custom_minimum_size = Vector2(280, 50)
+>>>>>>> 2c9b02c86124e4a6e6792e563c1f11ad358e3728
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.92, 0.5, 1)
 theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.9)
@@ -367,6 +492,7 @@ theme_override_fonts/font = ExtResource("8_font")
 theme_override_font_sizes/font_size = 13
 text = "← Menú Principal"
 
+<<<<<<< HEAD
 [node name="PromptLabel" type="Label" parent="CanvasLayer/UI/BottomBar/HBox"]
 layout_mode = 2
 size_flags_horizontal = 3
@@ -382,3 +508,20 @@ custom_minimum_size = Vector2(10, 0)
 layout_mode = 2
 
 [connection signal="pressed" from="CanvasLayer/UI/BottomBar/HBox/BackButton" to="." method="_on_back_pressed"]
+=======
+[connection signal="pressed" from="VBoxContainer/HBoxContainer/P1Selection/BtnMiyabiP1" to="." method="_on_p1_miyabi_pressed"]
+[connection signal="pressed" from="VBoxContainer/HBoxContainer/P1Selection/BtnGogetaP1" to="." method="_on_p1_gogeta_pressed"]
+[connection signal="pressed" from="VBoxContainer/HBoxContainer/P1Selection/BtnSakuyaP1" to="." method="_on_p1_sakuya_pressed"]
+[connection signal="pressed" from="VBoxContainer/HBoxContainer/P1Selection/BtnJohnP1" to="." method="_on_p1_john_pressed"]
+[connection signal="pressed" from="VBoxContainer/HBoxContainer/P1Selection/BtnNekomiyaP1" to="." method="_on_p1_nekomiya_pressed"]
+[connection signal="pressed" from="VBoxContainer/HBoxContainer/P1Selection/BtnSansP1" to="." method="_on_p1_sans_pressed"]
+
+[connection signal="pressed" from="VBoxContainer/HBoxContainer/P2Selection/BtnMiyabiP2" to="." method="_on_p2_miyabi_pressed"]
+[connection signal="pressed" from="VBoxContainer/HBoxContainer/P2Selection/BtnGogetaP2" to="." method="_on_p2_gogeta_pressed"]
+[connection signal="pressed" from="VBoxContainer/HBoxContainer/P2Selection/BtnSakuyaP2" to="." method="_on_p2_sakuya_pressed"]
+[connection signal="pressed" from="VBoxContainer/HBoxContainer/P2Selection/BtnJohnP2" to="." method="_on_p2_john_pressed"]
+[connection signal="pressed" from="VBoxContainer/HBoxContainer/P2Selection/BtnNekomiyaP2" to="." method="_on_p2_nekomiya_pressed"]
+[connection signal="pressed" from="VBoxContainer/HBoxContainer/P2Selection/BtnSansP2" to="." method="_on_p2_sans_pressed"]
+[connection signal="pressed" from="VBoxContainer/CenterContainer/StartBattleButton" to="." method="_on_start_battle_button_pressed"]
+[connection signal="pressed" from="VBoxContainer/BottomContainer/BackButton" to="." method="_on_back_button_pressed"]
+>>>>>>> 2c9b02c86124e4a6e6792e563c1f11ad358e3728
