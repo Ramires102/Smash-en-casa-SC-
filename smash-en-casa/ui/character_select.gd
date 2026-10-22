@@ -11,10 +11,8 @@ extends Node3D
 # - Controller, Keyboard, and Mouse support
 # ==============================================================================
 
-@export var miyabi_data: CharacterData = preload("res://resources/instances/miyabi_data.tres")
 @export var lego_batman_data: CharacterData = preload("res://resources/instances/lego_batman_data.tres")
 @export var sakuya_data: CharacterData = preload("res://resources/instances/sakuya_data.tres")
-@export var nekomiya_data: CharacterData = preload("res://resources/instances/nekomiya_data.tres")
 @export var gogeta_data: CharacterData = preload("res://resources/instances/gogeta_data.tres")
 @export var john_data: CharacterData = preload("res://resources/instances/john_placeholder_data.tres")
 
@@ -22,8 +20,8 @@ extends Node3D
 var roster_slots: Array[Dictionary] = []
 
 # Player states
-var p1_slot_index: int = 2 # Default: Miyabi
-var p2_slot_index: int = 1 # Default: Lego Batman
+var p1_slot_index: int = 1 # Default: Lego Batman
+var p2_slot_index: int = 2 # Default: Sakuya
 var p1_locked: bool = false
 var p2_locked: bool = false
 var p1_selected: CharacterData = null
@@ -74,6 +72,77 @@ func _ready() -> void:
 		start_battle_button.visible = false
 	if countdown_label:
 		countdown_label.visible = false
+	_build_stage_preview()
+	_sync_initial_tokens()
+
+func _sync_initial_tokens() -> void:
+	await get_tree().process_frame
+	await get_tree().process_frame
+	_update_token_position(1, false)
+	_update_token_position(2, false)
+
+func _build_stage_preview() -> void:
+	var preview_path := "res://ui/character_select/stage_preview.png"
+	var tex: Texture2D = null
+	if ResourceLoader.exists(preview_path):
+		tex = load(preview_path)
+	elif FileAccess.file_exists(preview_path):
+		var img := Image.load_from_file(ProjectSettings.globalize_path(preview_path))
+		if img:
+			tex = ImageTexture.create_from_image(img)
+	if tex == null:
+		return
+	
+	var ui_root: Control = get_node_or_null("CanvasLayer/UI")
+	if not ui_root:
+		return
+	
+	# Compact frame under title banner
+	var panel := PanelContainer.new()
+	panel.name = "StagePreviewPanel"
+	panel.set_anchors_preset(Control.PRESET_CENTER_TOP)
+	panel.offset_left = -75
+	panel.offset_right = 75
+	panel.offset_top = 54
+	panel.offset_bottom = 138
+	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.05, 0.06, 0.1, 0.85)
+	style.border_width_left = 2
+	style.border_width_top = 2
+	style.border_width_right = 2
+	style.border_width_bottom = 2
+	style.border_color = Color(0.85, 0.68, 0.22, 0.9)
+	style.corner_radius_top_left = 4
+	style.corner_radius_top_right = 4
+	style.corner_radius_bottom_left = 4
+	style.corner_radius_bottom_right = 4
+	panel.add_theme_stylebox_override("panel", style)
+	
+	var vbox := VBoxContainer.new()
+	vbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	
+	var tex_rect := TextureRect.new()
+	tex_rect.texture = tex
+	tex_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	tex_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	tex_rect.custom_minimum_size = Vector2(146, 62)
+	tex_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	vbox.add_child(tex_rect)
+	
+	var stage_name := Label.new()
+	stage_name.text = "MAPA: SANTUARIO ASTRAL"
+	var font_res = preload("res://ui/Fondos de texto/kamikaze_condensed.tres")
+	stage_name.add_theme_font_override("font", font_res)
+	stage_name.add_theme_font_size_override("font_size", 10)
+	stage_name.add_theme_color_override("font_color", Color(1.0, 0.9, 0.4, 1.0))
+	stage_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	stage_name.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	vbox.add_child(stage_name)
+	
+	panel.add_child(vbox)
+	ui_root.add_child(panel)
 
 func _process(delta: float) -> void:
 	var now = Time.get_ticks_msec() / 1000.0
@@ -84,13 +153,13 @@ func _process(delta: float) -> void:
 	if p2_token:
 		p2_token.position.y += cos(now * 5.0) * (0.015 * delta)
 		
-	# Subtle floating idle on preview models
+	# Continuous 360-degree rotation of preview models as requested
 	if p1_stage_model and p1_stage_model.get_child_count() > 0:
 		var c1 = p1_stage_model.get_child(0)
-		c1.rotation.y = deg_to_rad(22.0) + sin(now * 1.5) * 0.03
+		c1.rotation.y += delta * 0.85
 	if p2_stage_model and p2_stage_model.get_child_count() > 0:
 		var c2 = p2_stage_model.get_child(0)
-		c2.rotation.y = deg_to_rad(-22.0) - sin(now * 1.5) * 0.03
+		c2.rotation.y += delta * 0.85
 		
 	# Auto-start countdown when both locked
 	if start_countdown_timer > 0.0:
@@ -102,21 +171,21 @@ func _process(delta: float) -> void:
 
 func _init_roster() -> void:
 	roster_slots = [
-		# Row 0: Top Center (Elevated Random Box)
+		# Slot 0: Top Center (Elevated Random Box)
 		{
 			"id": "random",
 			"name": "ALEATORIO",
-			"sub": "¿QUIÉN SERÁ?",
+			"sub": "Â¿QUIÃ‰N SERÃ?",
 			"data": null,
 			"row": 0,
-			"col": 1,
+			"col": 0,
 			"tex_path": "res://ui/character_select/portraits/random.png",
 			"color": Color(1.0, 0.85, 0.25)
 		},
-		# Row 1: Upper Arc
+		# Slot 1: Row 1 Left - Lego Batman
 		{
 			"id": "lego_batman",
-			"name": "LEGO BATMAN",
+			"name": "LEGO\nBATMAN",
 			"sub": "EL CABALLERO OSCURO",
 			"data": lego_batman_data,
 			"row": 1,
@@ -124,101 +193,100 @@ func _init_roster() -> void:
 			"tex_path": "res://ui/character_select/portraits/lego_batman.png",
 			"color": Color(0.95, 0.82, 0.15)
 		},
-		{
-			"id": "miyabi",
-			"name": "MIYABI",
-			"sub": "ESPADA DE SOMBRA",
-			"data": miyabi_data,
-			"row": 1,
-			"col": 1,
-			"tex_path": "res://ui/character_select/portraits/miyabi.png",
-			"color": Color(0.95, 0.22, 0.35)
-		},
+		# Slot 2: Row 1 Right - Sakuya
 		{
 			"id": "sakuya",
-			"name": "SAKUYA IZAYOI",
+			"name": "SAKUYA\nIZAYOI",
 			"sub": "SIRVIENTA DEL TIEMPO",
 			"data": sakuya_data,
 			"row": 1,
-			"col": 2,
+			"col": 1,
 			"tex_path": "res://ui/character_select/portraits/sakuya.png",
 			"color": Color(0.45, 0.75, 1.0)
 		},
-		# Row 2: Lower Arc
+		# Slot 3: Row 2 Left - Gogeta
 		{
 			"id": "gogeta",
 			"name": "GOGETA",
-			"sub": "GUERRERO DE FUSIÓN",
+			"sub": "GUERRERO DE FUSIÃ“N",
 			"data": gogeta_data,
 			"row": 2,
 			"col": 0,
 			"tex_path": "res://ui/character_select/portraits/gogeta.png",
 			"color": Color(0.25, 0.65, 1.0)
 		},
-		{
-			"id": "nekomiya",
-			"name": "NEKOMIYA MANA",
-			"sub": "GATA RÁPIDA",
-			"data": nekomiya_data,
-			"row": 2,
-			"col": 1,
-			"tex_path": "res://ui/character_select/portraits/nekomiya.png",
-			"color": Color(1.0, 0.55, 0.85)
-		},
+		# Slot 4: Row 2 Right - John Placeholder
 		{
 			"id": "john",
-			"name": "JOHN PLACEHOLDER",
-			"sub": "MANIQUÍ DE ENTRENAMIENTO",
+			"name": "JOHN\nPLACEHOLDER",
+			"sub": "MANIQUÃ DE ENTRENAMIENTO",
 			"data": john_data,
 			"row": 2,
-			"col": 2,
+			"col": 1,
 			"tex_path": "res://ui/character_select/portraits/john.png",
 			"color": Color(0.4, 0.85, 0.95)
 		}
 	]
 
-# ==============================================================================
-# 3D Card Arc Construction
-# ==============================================================================
 func _build_3d_card_arc() -> void:
 	var font_res = preload("res://ui/Fondos de texto/kamikaze_condensed.tres")
 	
-	# Layout tuning (matching DBFZ tilted curved plane - compact scale)
-	var col_spacing: float = 0.74
-	var row_spacing_y: float = 0.28
-	var row_spacing_z: float = 0.35
-	var arc_depth_factor: float = 0.04
-	var arc_yaw_factor: float = 0.06
+	# Layout tuning (matching DBFZ compact tilted curved plane)
+	var col_spacing: float = 0.36
+	var row_spacing_y: float = 0.25
+	var row_spacing_z: float = 0.04
 	
 	for i in range(roster_slots.size()):
 		var slot: Dictionary = roster_slots[i]
 		var row: int = slot["row"]
 		var col: int = slot["col"]
-		var dx: float = float(col - 1) # -1, 0, +1
 		
 		var card_root := Node3D.new()
 		card_root.name = "Card_" + slot["id"]
 		
-		# Compute 3D position
-		var px: float = dx * col_spacing
+		var px: float = 0.0
 		var py: float = (2 - row) * row_spacing_y
-		var pz: float = (row - 1) * row_spacing_z - (abs(dx) * arc_depth_factor)
+		var pz: float = (row - 1) * row_spacing_z
+		var yaw: float = 0.0
 		
-		# Top random card elevation
 		if row == 0:
-			py += 0.09
-			pz -= 0.06
+			# Random card at top center
+			px = 0.0
+			py += 0.06
+			pz -= 0.02
+			yaw = 0.0
+		else:
+			# 2 columns: col 0 is left (-1), col 1 is right (+1)
+			var side: float = -1.0 if col == 0 else 1.0
+			px = side * (col_spacing * 0.5)
+			yaw = -side * 0.035
+			pz -= 0.008
 			
 		card_root.position = Vector3(px, py, pz)
-		card_root.rotation.y = -dx * arc_yaw_factor
+		card_root.rotation.y = yaw
 		
+		# Glow Mesh (Behind Card for DBFZ outline effect)
+		var glow_mesh := MeshInstance3D.new()
+		glow_mesh.name = "Glow"
+		var glow_quad := QuadMesh.new()
+		glow_quad.size = Vector2(0.324, 0.224)
+		glow_mesh.mesh = glow_quad
+		var glow_mat := StandardMaterial3D.new()
+		glow_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		glow_mat.albedo_color = Color(1.0, 0.85, 0.2)
+		glow_mesh.material_override = glow_mat
+		glow_mesh.position = Vector3(0.0, 0.0, -0.003)
+		glow_mesh.visible = false
+		card_root.add_child(glow_mesh)
+
 		# Card Mesh
 		var mesh_inst := MeshInstance3D.new()
+		mesh_inst.name = "CardMesh"
 		var quad := QuadMesh.new()
-		quad.size = Vector2(0.68, 0.46)
+		quad.size = Vector2(0.30, 0.20)
 		mesh_inst.mesh = quad
 		
-		# Material
+		# Material (Unshaded to keep 2D anime art crisp and vivid)
 		var mat := StandardMaterial3D.new()
 		var tex: Texture2D = null
 		if ResourceLoader.exists(slot["tex_path"]):
@@ -229,13 +297,10 @@ func _build_3d_card_arc() -> void:
 				tex = ImageTexture.create_from_image(img)
 		if tex:
 			mat.albedo_texture = tex
+		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
 		mat.alpha_scissor_threshold = 0.5
-		mat.metallic = 0.55
-		mat.roughness = 0.28
-		mat.emission_enabled = false
-		mat.emission = slot["color"]
-		mat.emission_energy_multiplier = 0.9
+		mat.albedo_color = Color(0.85, 0.85, 0.88)
 		mesh_inst.material_override = mat
 		card_root.add_child(mesh_inst)
 		
@@ -243,19 +308,24 @@ func _build_3d_card_arc() -> void:
 		var label := Label3D.new()
 		label.text = slot["name"]
 		label.font = font_res
-		label.font_size = 18
-		label.outline_size = 5
+		label.font_size = 8
+		label.outline_size = 3
 		label.outline_modulate = Color(0.0, 0.0, 0.0, 1.0)
-		label.modulate = Color(1.0, 0.92, 0.5)
-		label.position = Vector3(0.0, -0.155, 0.012)
+		label.modulate = Color(1.0, 1.0, 1.0, 1.0)
+		label.line_spacing = 0.0
+		label.position = Vector3(0.0, -0.072, 0.010)
 		label.billboard = BaseMaterial3D.BILLBOARD_DISABLED
+		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		card_root.add_child(label)
+		
+		card_root.set_meta("base_pos", card_root.position)
 		
 		# Clickable Area3D for Mouse clicks
 		var area := Area3D.new()
 		var col_shape := CollisionShape3D.new()
 		var box := BoxShape3D.new()
-		box.size = Vector3(0.68, 0.46, 0.1)
+		box.size = Vector3(0.30, 0.20, 0.05)
 		col_shape.shape = box
 		area.add_child(col_shape)
 		area.input_event.connect(_on_card_input_event.bind(i))
@@ -264,9 +334,6 @@ func _build_3d_card_arc() -> void:
 		card_arc_root.add_child(card_root)
 		card_nodes[i] = card_root
 
-# ==============================================================================
-# Input & Navigation
-# ==============================================================================
 func _unhandled_input(event: InputEvent) -> void:
 	# Global Back / Cancel
 	if event.is_action_pressed("ui_cancel") or (event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE):
@@ -316,40 +383,34 @@ func _navigate_player(player_id: int, dir: Vector2i) -> void:
 			_update_p2_selection(next_idx)
 
 func _calc_grid_step(curr_idx: int, dir: Vector2i) -> int:
-	var cur_slot = roster_slots[curr_idx]
-	var r = cur_slot["row"]
-	var c = cur_slot["col"]
-	
-	# Moving horizontally
-	if dir.x != 0:
-		if r == 0:
-			# Only Random in Row 0
-			return curr_idx
-		else:
-			var target_c = clamp(c + dir.x, 0, 2)
-			for i in range(roster_slots.size()):
-				if roster_slots[i]["row"] == r and roster_slots[i]["col"] == target_c:
-					return i
-					
-	# Moving vertically
-	elif dir.y != 0:
-		if dir.y < 0: # UP
-			if r == 2:
-				for i in range(roster_slots.size()):
-					if roster_slots[i]["row"] == 1 and roster_slots[i]["col"] == c:
-						return i
-			elif r == 1:
-				# Go to Random (Row 0)
-				return 0
-		elif dir.y > 0: # DOWN
-			if r == 0:
-				# From Random down to center (Miyabi, row 1 col 1)
-				return 2
-			elif r == 1:
-				for i in range(roster_slots.size()):
-					if roster_slots[i]["row"] == 2 and roster_slots[i]["col"] == c:
-						return i
-						
+	match curr_idx:
+		0: # Random (row 0, center)
+			if dir.y > 0:
+				return 1 # Down to Lego Batman
+		1: # Lego Batman (row 1, left)
+			if dir.x > 0:
+				return 2 # Right to Sakuya
+			elif dir.y < 0:
+				return 0 # Up to Random
+			elif dir.y > 0:
+				return 3 # Down to Gogeta
+		2: # Sakuya (row 1, right)
+			if dir.x < 0:
+				return 1 # Left to Lego Batman
+			elif dir.y < 0:
+				return 0 # Up to Random
+			elif dir.y > 0:
+				return 4 # Down to John
+		3: # Gogeta (row 2, left)
+			if dir.x > 0:
+				return 4 # Right to John
+			elif dir.y < 0:
+				return 1 # Up to Lego Batman
+		4: # John (row 2, right)
+			if dir.x < 0:
+				return 3 # Left to Gogeta
+			elif dir.y < 0:
+				return 2 # Up to Sakuya
 	return curr_idx
 
 func _on_card_input_event(_camera: Node, event: InputEvent, _position: Vector3, _normal: Vector3, _shape_idx: int, slot_idx: int) -> void:
@@ -397,24 +458,34 @@ func _update_p2_selection(slot_idx: int, animate_token: bool = true) -> void:
 func _refresh_card_highlights() -> void:
 	for i in card_nodes.keys():
 		var node: Node3D = card_nodes[i]
-		var mesh_inst: MeshInstance3D = node.get_child(0) as MeshInstance3D
+		var glow_mesh: MeshInstance3D = node.get_node_or_null("Glow") as MeshInstance3D
+		var mesh_inst: MeshInstance3D = node.get_node_or_null("CardMesh") as MeshInstance3D
+		var base_pos: Vector3 = node.get_meta("base_pos") if node.has_meta("base_pos") else node.position
+		
+		var is_p1 = (i == p1_slot_index)
+		var is_p2 = (i == p2_slot_index)
+		
 		if mesh_inst and mesh_inst.material_override is StandardMaterial3D:
 			var mat: StandardMaterial3D = mesh_inst.material_override
-			var is_p1 = (i == p1_slot_index)
-			var is_p2 = (i == p2_slot_index)
-			
 			if is_p1 or is_p2:
-				mat.emission_enabled = true
-				if is_p1 and is_p2:
-					mat.emission = Color(1.0, 0.9, 0.4) # Shared gold
-				elif is_p1:
-					mat.emission = Color(0.2, 0.6, 1.0) # Blue
-				else:
-					mat.emission = Color(1.0, 0.25, 0.2) # Red
-				node.scale = Vector3(1.08, 1.08, 1.08)
+				mat.albedo_color = Color(1.08, 1.08, 1.08)
+				node.scale = Vector3(1.10, 1.10, 1.10)
+				node.position = base_pos + Vector3(0.0, 0.0, 0.02)
+				if glow_mesh and glow_mesh.material_override is StandardMaterial3D:
+					glow_mesh.visible = true
+					var g_mat: StandardMaterial3D = glow_mesh.material_override
+					if is_p1 and is_p2:
+						g_mat.albedo_color = Color(1.0, 0.90, 0.25) # Shared gold
+					elif is_p1:
+						g_mat.albedo_color = Color(0.25, 0.70, 1.0) # Blue
+					else:
+						g_mat.albedo_color = Color(1.0, 0.28, 0.20) # Red
 			else:
-				mat.emission_enabled = false
+				mat.albedo_color = Color(0.80, 0.80, 0.83)
 				node.scale = Vector3(1.0, 1.0, 1.0)
+				node.position = base_pos
+				if glow_mesh:
+					glow_mesh.visible = false
 
 func _update_token_position(player_id: int, animate: bool = true) -> void:
 	var slot_idx = p1_slot_index if player_id == 1 else p2_slot_index
@@ -427,15 +498,15 @@ func _update_token_position(player_id: int, animate: bool = true) -> void:
 	
 	# Offset badge right above the card's top edge
 	var up_vec = card_node.global_transform.basis.y
-	var target_pos = target_global_pos + up_vec * 0.30 + Vector3(0, 0.03, 0.03)
+	var target_pos = target_global_pos + up_vec * 0.11 + Vector3(0, 0.01, 0.01)
 	
 	# If both on the same card, offset horizontally
 	if p1_slot_index == p2_slot_index:
 		var right_vec = card_node.global_transform.basis.x
 		if player_id == 1:
-			target_pos -= right_vec * 0.14
+			target_pos -= right_vec * 0.10
 		else:
-			target_pos += right_vec * 0.14
+			target_pos += right_vec * 0.10
 			
 	if animate:
 		var tw = create_tween().set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
@@ -488,36 +559,64 @@ func _update_stage_preview(player_id: int, slot: Dictionary) -> void:
 		
 	if data.model_scene:
 		var model = data.model_scene.instantiate()
-		model.position = data.model_offset
+		model.position = Vector3(data.model_offset.x, 0.0, data.model_offset.z)
 		var s = data.model_scale
 		model.scale = Vector3(s, s, s)
 		model.rotation.y = facing_yaw
 		container.add_child(model)
 		
-		# Play Idle Animation
+		# Try to play built-in Idle animation
+		var played_idle := false
 		var ap: AnimationPlayer = _find_animation_player(model)
 		if ap:
 			var anim_name = _find_idle_anim(ap)
 			if anim_name != "":
 				ap.play(anim_name)
-		elif data.animation_library:
+				played_idle = true
+		
+		if not played_idle and data.animation_library:
 			var new_ap := AnimationPlayer.new()
 			new_ap.add_animation_library("", data.animation_library)
 			model.add_child(new_ap)
 			var anim_name = _find_idle_anim(new_ap)
 			if anim_name != "":
 				new_ap.play(anim_name)
+				played_idle = true
+		
+		# If no idle animation found, create a procedural breathing idle
+		if not played_idle:
+			_apply_procedural_idle(model)
 	else:
 		# Procedural stylized fighting dummy for Gogeta / John
 		var dummy := _create_procedural_dummy(data.character_color)
 		dummy.rotation.y = facing_yaw
 		dummy.position = Vector3(0, 0, 0)
 		container.add_child(dummy)
+		_apply_procedural_idle(dummy)
 		
 	# Scale punch transition
 	container.scale = Vector3(0.85, 0.85, 0.85)
 	var tw = create_tween().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	tw.tween_property(container, "scale", Vector3(1.0, 1.0, 1.0), 0.2)
+
+## Creates a subtle breathing/bobbing idle animation using tweens
+func _apply_procedural_idle(node: Node3D) -> void:
+	# Subtle vertical bob (breathing)
+	var base_y = node.position.y
+	var breath_tween = create_tween().set_loops()
+	breath_tween.tween_property(node, "position:y", base_y + 0.025, 1.2) \
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	breath_tween.tween_property(node, "position:y", base_y, 1.2) \
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	
+	# Subtle scale pulse (chest expanding with breath)
+	var base_scale = node.scale
+	var expand = base_scale * 1.008
+	var scale_tween = create_tween().set_loops()
+	scale_tween.tween_property(node, "scale", expand, 1.4) \
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	scale_tween.tween_property(node, "scale", base_scale, 1.4) \
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 
 func _create_procedural_dummy(color: Color) -> Node3D:
 	var root := Node3D.new()
@@ -582,11 +681,15 @@ func _find_animation_player(node: Node) -> AnimationPlayer:
 	return null
 
 func _find_idle_anim(ap: AnimationPlayer) -> String:
+	# First pass: exact "idle" match
+	for a in ap.get_animation_list():
+		if a.to_lower() == "idle":
+			return a
+	# Second pass: contains "idle" 
 	for a in ap.get_animation_list():
 		if "idle" in a.to_lower():
 			return a
-	var list = ap.get_animation_list()
-	return list[0] if list.size() > 0 else ""
+	return ""
 
 # ==============================================================================
 # Lock & Ready Flow
@@ -629,6 +732,8 @@ func _unlock_player(player_id: int) -> void:
 	start_countdown_timer = -1.0
 	if countdown_label:
 		countdown_label.visible = false
+	_build_stage_preview()
+	_sync_initial_tokens()
 	if start_battle_button:
 		start_battle_button.visible = false
 
@@ -655,9 +760,7 @@ func _resolve_slot_selection(slot_idx: int) -> CharacterData:
 	# Random slot selected: pick a random character from available list
 	var playable: Array[CharacterData] = [
 		lego_batman_data,
-		miyabi_data,
 		sakuya_data,
-		nekomiya_data,
 		gogeta_data,
 		john_data
 	]

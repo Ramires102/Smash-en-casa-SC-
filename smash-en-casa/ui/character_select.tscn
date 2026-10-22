@@ -1,10 +1,8 @@
-[gd_scene load_steps=21 format=3 uid="uid://c_char_select"]
+[gd_scene load_steps=19 format=3 uid="uid://c_char_select"]
 
 [ext_resource type="Script" path="res://ui/character_select.gd" id="1_cselect"]
-[ext_resource type="Resource" uid="uid://c_miyabi_data" path="res://resources/instances/miyabi_data.tres" id="2_miyabi"]
 [ext_resource type="Resource" uid="uid://c_lego_batman_data" path="res://resources/instances/lego_batman_data.tres" id="3_batman"]
 [ext_resource type="Resource" uid="uid://c_sakuya_data" path="res://resources/instances/sakuya_data.tres" id="4_sakuya"]
-[ext_resource type="Resource" uid="uid://c_nekomiya_data" path="res://resources/instances/nekomiya_data.tres" id="5_nekomiya"]
 [ext_resource type="Resource" uid="uid://c_gogeta_data" path="res://resources/instances/gogeta_data.tres" id="6_gogeta"]
 [ext_resource type="Resource" uid="uid://c_john_placeholder_data" path="res://resources/instances/john_placeholder_data.tres" id="7_john"]
 [ext_resource type="FontVariation" path="res://ui/Fondos de texto/kamikaze_condensed.tres" id="8_font"]
@@ -16,8 +14,8 @@ ambient_light_source = 2
 ambient_light_color = Color(0.4, 0.42, 0.5, 1)
 tonemap_mode = 2
 glow_enabled = true
-glow_intensity = 0.8
-glow_bloom = 0.25
+glow_intensity = 0.5
+glow_bloom = 0.08
 
 [sub_resource type="StandardMaterial3D" id="Mat_Floor"]
 albedo_color = Color(0.07, 0.08, 0.11, 1)
@@ -65,12 +63,12 @@ emission = Color(0.15, 0.55, 1, 1)
 emission_energy_multiplier = 0.5
 
 [sub_resource type="CylinderMesh" id="CylinderMesh_token"]
-top_radius = 0.11
-bottom_radius = 0.11
-height = 0.02
+top_radius = 0.055
+bottom_radius = 0.055
+height = 0.012
 
 [sub_resource type="PrismMesh" id="PrismMesh_arrow"]
-size = Vector3(0.09, 0.11, 0.02)
+size = Vector3(0.045, 0.055, 0.012)
 
 [sub_resource type="StandardMaterial3D" id="Mat_TokenP2"]
 albedo_color = Color(1, 0.2, 0.2, 1)
@@ -87,10 +85,8 @@ border_color = Color(0.85, 0.68, 0.22, 1)
 
 [node name="CharacterSelect" type="Node3D"]
 script = ExtResource("1_cselect")
-miyabi_data = ExtResource("2_miyabi")
 lego_batman_data = ExtResource("3_batman")
 sakuya_data = ExtResource("4_sakuya")
-nekomiya_data = ExtResource("5_nekomiya")
 gogeta_data = ExtResource("6_gogeta")
 john_data = ExtResource("7_john")
 
@@ -98,41 +94,41 @@ john_data = ExtResource("7_john")
 environment = SubResource("Environment_dbfz")
 
 [node name="Camera3D" type="Camera3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 0.97237, 0.23344, 0, -0.23344, 0.97237, 0, 1.45, 3.8)
-fov = 46.0
+transform = Transform3D(1, 0, 0, 0, 0.984808, 0.173648, 0, -0.173648, 0.984808, 0, 1.20, 4.0)
+fov = 48.0
 
 [node name="Lights" type="Node3D" parent="."]
 
 [node name="KeyLight" type="DirectionalLight3D" parent="Lights"]
 transform = Transform3D(0.939693, -0.116978, 0.321394, 0, 0.939693, 0.34202, -0.34202, -0.321394, 0.883022, 1.5, 4, 3)
 light_color = Color(1, 0.96, 0.9, 1)
-light_energy = 1.2
+light_energy = 0.95
 shadow_enabled = true
 
 [node name="FillLight" type="DirectionalLight3D" parent="Lights"]
 transform = Transform3D(0.866025, 0.25, -0.433013, 0, 0.866025, 0.5, 0.5, -0.433013, 0.75, -2, 2, 2)
 light_color = Color(0.5, 0.6, 0.85, 1)
-light_energy = 0.6
+light_energy = 0.5
 
 [node name="StageLightP1" type="SpotLight3D" parent="Lights"]
-transform = Transform3D(0.965926, 0.148453, -0.212012, 0, 0.819152, 0.573576, 0.258819, -0.554032, 0.79124, -2.1, 3, 1)
+transform = Transform3D(0.965926, 0.148453, -0.212012, 0, 0.819152, 0.573576, 0.258819, -0.554032, 0.79124, -1.85, 3.0, 1.0)
 light_color = Color(0.3, 0.7, 1, 1)
-light_energy = 2.5
-spot_range = 6.0
-spot_angle = 35.0
+light_energy = 2.0
+spot_range = 7.0
+spot_angle = 40.0
 
 [node name="StageLightP2" type="SpotLight3D" parent="Lights"]
-transform = Transform3D(0.965926, -0.148453, 0.212012, 0, 0.819152, 0.573576, -0.258819, -0.554032, 0.79124, 2.1, 3, 1)
+transform = Transform3D(0.965926, -0.148453, 0.212012, 0, 0.819152, 0.573576, -0.258819, -0.554032, 0.79124, 1.85, 3.0, 1.0)
 light_color = Color(1, 0.35, 0.3, 1)
-light_energy = 2.5
-spot_range = 6.0
-spot_angle = 35.0
+light_energy = 2.0
+spot_range = 7.0
+spot_angle = 40.0
 
 [node name="Floor" type="MeshInstance3D" parent="."]
 mesh = SubResource("PlaneMesh_floor")
 
 [node name="StageP1" type="Node3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.1, 0, 0.2)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.85, 0.05, -0.4)
 
 [node name="PedestalP1" type="MeshInstance3D" parent="StageP1"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.04, 0)
@@ -142,7 +138,7 @@ mesh = SubResource("CylinderMesh_p1")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.08, 0)
 
 [node name="StageP2" type="Node3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.1, 0, 0.2)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.85, 0.05, -0.4)
 
 [node name="PedestalP2" type="MeshInstance3D" parent="StageP2"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.04, 0)
@@ -152,7 +148,7 @@ mesh = SubResource("CylinderMesh_p2")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.08, 0)
 
 [node name="CardArc" type="Node3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 0.707107, 0.707107, 0, -0.707107, 0.707107, 0, 0.02, 1.85)
+transform = Transform3D(1, 0, 0, 0, 0.866025, 0.5, 0, -0.5, 0.866025, 0, 0.35, 1.55)
 
 [node name="Tokens" type="Node3D" parent="."]
 
@@ -165,7 +161,7 @@ material_override = SubResource("Mat_TokenP1")
 mesh = SubResource("CylinderMesh_token")
 
 [node name="Arrow" type="MeshInstance3D" parent="Tokens/P1Token"]
-transform = Transform3D(1, 0, 0, 0, -1, 8.74228e-08, 0, -8.74228e-08, -1, 0, -0.11, 0)
+transform = Transform3D(1, 0, 0, 0, -1, 8.74228e-08, 0, -8.74228e-08, -1, 0, -0.055, 0)
 material_override = SubResource("Mat_TokenP1")
 mesh = SubResource("PrismMesh_arrow")
 
@@ -173,8 +169,8 @@ mesh = SubResource("PrismMesh_arrow")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.015)
 text = "1"
 font = ExtResource("8_font")
-font_size = 20
-outline_size = 6
+font_size = 14
+outline_size = 4
 outline_modulate = Color(0, 0, 0, 1)
 
 [node name="P2Token" type="Node3D" parent="Tokens"]
@@ -186,7 +182,7 @@ material_override = SubResource("Mat_TokenP2")
 mesh = SubResource("CylinderMesh_token")
 
 [node name="Arrow" type="MeshInstance3D" parent="Tokens/P2Token"]
-transform = Transform3D(1, 0, 0, 0, -1, 8.74228e-08, 0, -8.74228e-08, -1, 0, -0.11, 0)
+transform = Transform3D(1, 0, 0, 0, -1, 8.74228e-08, 0, -8.74228e-08, -1, 0, -0.055, 0)
 material_override = SubResource("Mat_TokenP2")
 mesh = SubResource("PrismMesh_arrow")
 
@@ -194,8 +190,8 @@ mesh = SubResource("PrismMesh_arrow")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.015)
 text = "2"
 font = ExtResource("8_font")
-font_size = 20
-outline_size = 6
+font_size = 14
+outline_size = 4
 outline_modulate = Color(0, 0, 0, 1)
 
 [node name="SFXPlayer" type="AudioStreamPlayer" parent="."]
@@ -265,7 +261,7 @@ theme_override_constants/shadow_offset_x = 2
 theme_override_constants/shadow_offset_y = 2
 theme_override_fonts/font = ExtResource("8_font")
 theme_override_font_sizes/font_size = 22
-text = "MIYABI"
+text = "LEGO BATMAN"
 
 [node name="StatusLabel" type="Label" parent="CanvasLayer/UI/P1Info"]
 layout_mode = 2
