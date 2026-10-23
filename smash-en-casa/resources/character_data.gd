@@ -17,6 +17,9 @@ extends Resource
 @export var fall_speed: float = 1.60      # Terminal velocity (caída normal)
 @export var fast_fall_speed: float = 2.56  # Terminal velocity (caída rápida)
 @export var pushbox_radius: float = 0.5
+@export var facing_angle_degrees: float = 75.6
+@export var jumpsquat_frames: int = 3
+@export var instant_run: bool = false
 @export var icon: Texture2D
 @export var character_color: Color = Color.WHITE
 @export var model_scene: PackedScene

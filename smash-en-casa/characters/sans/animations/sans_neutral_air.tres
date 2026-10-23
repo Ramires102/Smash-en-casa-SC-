@@ -1,0 +1,26 @@
+[gd_resource type="Animation" format=3]
+
+[resource]
+resource_name = "NeutralAir"
+length = 0.38
+tracks/0/type = "rotation_3d"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Humanoid/ModelRoot/Sans_Root/Skeleton3D:Root_01")
+tracks/0/interp = 2
+tracks/0/loop_wrap = true
+tracks/0/keys = PackedFloat32Array(0, 1, 0.5817751, -0.4047184, -0.42439693, 0.5635849, 0.18, 1, 0.4243969, 0.5635849, 0.5817751, 0.40471837, 0.38, 1, 0.5817752, -0.40471834, -0.42439687, 0.563585)
+tracks/1/type = "rotation_3d"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("Humanoid/ModelRoot/Sans_Root/Skeleton3D:Upperarm.R_010")
+tracks/1/interp = 2
+tracks/1/loop_wrap = true
+tracks/1/keys = PackedFloat32Array(0, 1, -0.1169045, -0.13361809, 0.2521885, 0.9512521, 0.18, 1, -0.31801745, -0.31340334, -0.07117239, 0.89195174, 0.38, 1, -0.1169045, -0.13361809, 0.2521885, 0.9512521)
+tracks/2/type = "rotation_3d"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("Humanoid/ModelRoot/Sans_Root/Skeleton3D:Upperarm.L_021")
+tracks/2/interp = 2
+tracks/2/loop_wrap = true
+tracks/2/keys = PackedFloat32Array(0, 1, -0.08633112, 0.119545005, -0.1745998, 0.97353524, 0.18, 1, -0.30765104, 0.2715981, 0.14686434, 0.90000904, 0.38, 1, -0.08633112, 0.119545005, -0.1745998, 0.97353524)

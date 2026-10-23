@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="AttackData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://resources/attack_data.gd" id="1_atk"]
+[ext_resource type="Resource" path="res://resources/instances/gogeta_ssj/attacks/gogeta_special_down2.tres" id="2_next"]
+
+[resource]
+script = ExtResource("1_atk")
+attack_name = "Down Special (1/2): Codazo Cambia-Lado"
+damage = 6
+base_knockback = 9.6
+knockback_scaling = 2.0
+angle_degrees = 115.0
+startup_frames = 9
+active_frames = 18
+recovery_frames = 12
+faf_frame = 39
+animation_name = "SpecialDown"
+hitbox_offset = Vector3(0.889, 0.041, 0.0)
+hitbox_radius = 0.864
+combo_next = null
+combo_window_frames = 0
+auto_followup_on_hit = ExtResource("2_next")
+self_impulse = Vector3(13.229, 0.000, 0.0)
+self_impulse_frame = 2
+toss_behind_on_hit = true
+auto_followup_always = true
+is_special_attack = true
+sub_hitboxes = []

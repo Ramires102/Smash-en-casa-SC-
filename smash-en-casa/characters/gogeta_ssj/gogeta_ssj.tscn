@@ -1,0 +1,5 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="PackedScene" path="res://characters/gogeta_ssj/gogeta_ssj.glb" id="1_gogeta_glb"]
+
+[node name="gogeta_ssj" instance=ExtResource("1_gogeta_glb")]

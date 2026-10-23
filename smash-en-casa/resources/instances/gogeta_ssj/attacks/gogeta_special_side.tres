@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="AttackData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://resources/attack_data.gd" id="1_atk"]
+[ext_resource type="Resource" path="res://resources/instances/gogeta_ssj/attacks/gogeta_special_side2.tres" id="2_next"]
+
+[resource]
+script = ExtResource("1_atk")
+attack_name = "Rekka 1: Rodillazo Volador (1/3)"
+damage = 7.5
+base_knockback = 10.8
+knockback_scaling = 4.0
+angle_degrees = 38.0
+startup_frames = 6
+active_frames = 9
+recovery_frames = 13
+faf_frame = 28
+animation_name = "SpecialSide"
+hitbox_offset = Vector3(0.971, 0.016, 0.0)
+hitbox_radius = 0.708
+combo_next = ExtResource("2_next")
+combo_window_frames = 16
+self_impulse = Vector3(19.334, 1.903, 0.0)
+self_impulse_frame = 2
+is_special_attack = true
+sub_hitboxes = []

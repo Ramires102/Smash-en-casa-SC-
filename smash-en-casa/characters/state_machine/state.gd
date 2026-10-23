@@ -1,7 +1,7 @@
 class_name State
 extends Node
 
-const FSM_DEBUG_ENABLED: bool = true
+const FSM_DEBUG_ENABLED: bool = false
 const FSM_DEBUG_TICK_INTERVAL: float = 0.20
 
 var character: Character

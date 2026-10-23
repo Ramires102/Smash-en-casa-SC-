@@ -1,0 +1,33 @@
+[gd_resource type="Animation" format=3]
+
+[resource]
+resource_name = "Idle"
+loop_mode = 1
+tracks/0/type = "position_3d"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Humanoid/ModelRoot/Sans_Root/Skeleton3D:Root_01")
+tracks/0/interp = 2
+tracks/0/loop_wrap = true
+tracks/0/keys = PackedFloat32Array(0, 1, -0.70123434, 1.555271, 14.904421, 0.5, 1, -0.70123434, 1.555271, 14.30442, 1, 1, -0.70123434, 1.555271, 14.904421)
+tracks/1/type = "rotation_3d"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("Humanoid/ModelRoot/Sans_Root/Skeleton3D:Spine_02")
+tracks/1/interp = 2
+tracks/1/loop_wrap = true
+tracks/1/keys = PackedFloat32Array(0, 1, 0.015250521, -0.00040129153, 0.05480183, 0.9983807, 0.5, 1, 0.041379854, 0.0010333906, 0.054793555, 0.99763936, 1, 1, 0.015250521, -0.00040129153, 0.05480183, 0.9983807)
+tracks/2/type = "rotation_3d"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("Humanoid/ModelRoot/Sans_Root/Skeleton3D:Spine 1_03")
+tracks/2/interp = 2
+tracks/2/loop_wrap = true
+tracks/2/keys = PackedFloat32Array(0, 1, 0.015196627, -0.0009575061, -0.010370777, 0.9998303, 0.5, 1, 0.032643758, -0.0011383554, -0.010352487, 0.9994128, 1, 1, 0.015196627, -0.0009575061, -0.010370777, 0.9998303)
+tracks/3/type = "rotation_3d"
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/path = NodePath("Humanoid/ModelRoot/Sans_Root/Skeleton3D:Head_05")
+tracks/3/interp = 2
+tracks/3/loop_wrap = true
+tracks/3/keys = PackedFloat32Array(0, 1, -0.14352745, -0.75556475, -0.09042835, 0.63272786, 0.5, 1, -0.16004114, -0.7529387, -0.11017574, 0.6287539, 1, 1, -0.14352745, -0.75556475, -0.09042835, 0.63272786)

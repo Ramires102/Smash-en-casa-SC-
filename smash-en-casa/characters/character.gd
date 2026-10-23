@@ -5,14 +5,13 @@ signal percentage_changed(new_percentage: float)
 @warning_ignore("unused_signal")
 signal character_ko(player_id: int)
 
-# Constantes de compatibilidad
 const MAX_SHIELD_HP: float = ShieldController.MAX_SHIELD_HP
 const SHIELD_BREAK_RESPAWN_HP: float = ShieldController.SHIELD_BREAK_RESPAWN_HP
 const SHIELD_DRAIN_RATE: float = ShieldController.SHIELD_DRAIN_RATE
-const INPUT_BUFFER_WINDOW_SEC: float = 0.12
+const INPUT_BUFFER_WINDOW_SEC: float = 0.11 # ~6.5 frames a 60 FPS
 const COYOTE_TIME_SEC: float = 0.08
+const FASTFALL_BUFFER_SEC: float = 0.09     # ~5.5 frames de tolerancia cerca del ápice
 
-# Contrato de nodos para Character.tscn
 const REQUIRED_NODE_PATHS: Array[NodePath] = [
 	NodePath("Controller"),
 	NodePath("Stats"),
@@ -28,7 +27,6 @@ const REQUIRED_NODE_PATHS: Array[NodePath] = [
 @export var player_id: int = 1
 @export var character_data: CharacterData
 
-# Componentes de arquitectura
 @onready var controller: CharacterController = $Controller
 @onready var stats: CharacterStats = $Stats
 @onready var attack_controller: AttackController = $AttackController
@@ -39,18 +37,18 @@ const REQUIRED_NODE_PATHS: Array[NodePath] = [
 @onready var shield_controller: ShieldController = get_node_or_null("ShieldController")
 @onready var visual_controller: VisualController = get_node_or_null("VisualController")
 
-# Propiedades delegadas al ShieldController
 var shield_health: float:
 	get: return shield_controller.shield_health if shield_controller else 50.0
 	set(val):
-		if shield_controller: shield_controller.shield_health = val
+		if shield_controller:
+			shield_controller.shield_health = val
 
 var shield_release_timer: float:
 	get: return shield_controller.shield_release_timer if shield_controller else 0.0
 	set(val):
-		if shield_controller: shield_controller.shield_release_timer = val
+		if shield_controller:
+			shield_controller.shield_release_timer = val
 
-# Propiedades delegadas al VisualController
 var visual_root_3d: Node3D:
 	get:
 		if visual_controller and visual_controller.visual_root_3d:
@@ -63,44 +61,46 @@ var visual_root_3d: Node3D:
 var timestop_shiver_timer: float:
 	get: return visual_controller.timestop_shiver_timer if visual_controller else 0.0
 	set(val):
-		if visual_controller: visual_controller.timestop_shiver_timer = val
+		if visual_controller:
+			visual_controller.timestop_shiver_timer = val
 
-# Variables de Input & Buffer
 var current_input: PlayerInput = PlayerInput.new()
 var _intent_buffer: InputBuffer = InputBuffer.new()
 var _coyote_timer: float = 0.0
+var _fastfall_buffer_timer: float = 0.0
+var _platform_drop_timer: float = 0.0
 var _previous_input_y: float = 0.0
 var _down_just_pressed: bool = false
 var _previous_shield_pressed: bool = false
 var _shield_just_pressed: bool = false
 
-# Variables de Ledge Grab (2D)
 var snapped_ledge: LedgePoint = null
 var ledge_regrab_timer: float = 0.0
 var can_grab_ledge: bool = true
 
-# Movilidad Aérea & Barra de Especial
 var max_air_jumps: int = 1
 var air_jumps_left: int = 1
 var can_air_dodge: bool = true
 var can_up_special: bool = true
+
 const SPECIAL_DOWN_MAX_CHARGE: float = 100.0
 var special_down_charge: float = 0.0
 
-# Stats de daño y peso
 var damage_percentage: float:
 	get: return stats.damage_percentage if stats else 0.0
-
 var weight: float:
 	get: return stats.weight if stats else 100.0
 
-# Variables de Time Stop
 var accumulated_timestop_knockback: Vector2 = Vector2.ZERO
 var accumulated_timestop_hitstun: int = 0
 
 var can_act: bool = true
 var is_fast_falling: bool = false
 var _self_hitlag_remaining: int = 0
+
+var _last_consumed_was_special: bool = false
+var combo_window_timer: float = 0.0
+var next_combo_override: AttackData = null
 
 func _ready() -> void:
 	if not _validate_required_nodes():
@@ -113,8 +113,8 @@ func _ready() -> void:
 	var ledge_det: Area2D = get_node_or_null("LedgeDetector")
 	if ledge_det:
 		ledge_det.area_entered.connect(_on_ledge_detector_area_entered)
-
 	add_to_group("characters")
+
 	Events.time_stop_started.connect(_on_time_stop_started)
 	Events.time_stop_ended.connect(_on_time_stop_ended)
 
@@ -131,21 +131,24 @@ func _validate_required_nodes() -> bool:
 	var is_valid: bool = true
 	for required_path in REQUIRED_NODE_PATHS:
 		if get_node_or_null(required_path) == null:
-			push_error("Character contract violation: missing required node '%s'" % required_path)
+			push_error("Character contract violation: missing required node %s" % required_path)
 			is_valid = false
 	return is_valid
 
-## Configura el personaje con sus datos y componentes modulares
 func configure(data: CharacterData) -> void:
 	character_data = data
 	if not data:
 		return
-	
-	if controller: controller.setup(data)
-	if stats: stats.setup(data)
-	if attack_controller: attack_controller.setup(data)
-	if shield_controller: shield_controller.setup(self)
-	if visual_controller: visual_controller.setup(self, data)
+	if controller:
+		controller.setup(data)
+	if stats:
+		stats.setup(data)
+	if attack_controller:
+		attack_controller.setup(data)
+	if shield_controller:
+		shield_controller.setup(self)
+	if visual_controller:
+		visual_controller.setup(self, data)
 	if anim_controller and anim_controller.has_method("setup"):
 		anim_controller.setup(data)
 	elif has_node("AnimationController"):
@@ -160,13 +163,20 @@ func update_visual_rotation(dir: float) -> void:
 		visual_controller.update_rotation(dir)
 
 func _physics_process(delta: float) -> void:
-	# Congelación Física Total durante Time Stop
 	if Events.is_time_stopped and self != Events.time_stop_instigator:
 		velocity = Vector2.ZERO
 		return
 
+	if combo_window_timer > 0.0:
+		combo_window_timer = maxf(0.0, combo_window_timer - delta)
+		if combo_window_timer <= 0.0:
+			next_combo_override = null
+
+	if _platform_drop_timer > 0.0:
+		_platform_drop_timer = maxf(0.0, _platform_drop_timer - delta)
+
 	current_input = InputManager.get_player_input(player_id)
-	_update_directional_input_edges()
+	_update_directional_input_edges(delta)
 	_update_button_input_edges()
 	_register_input_intents()
 
@@ -189,7 +199,8 @@ func _physics_process(delta: float) -> void:
 
 	if not in_defender_hitlag:
 		if not is_on_floor():
-			var grav_mult: float = 0.55 if in_hitstate else 1.0
+			# En HitState la gravedad es más suave (0.42) para que el knockback diagonal mantenga su arco
+			var grav_mult: float = 0.42 if in_hitstate else 1.0
 			velocity.y += get_gravity_value() * grav_mult * delta
 			var max_fall: float = get_terminal_fall_speed()
 			if not in_hitstate and velocity.y > max_fall:
@@ -197,13 +208,13 @@ func _physics_process(delta: float) -> void:
 		else:
 			if not in_hitstate:
 				is_fast_falling = false
+				_fastfall_buffer_timer = 0.0
 				air_jumps_left = max_air_jumps
 				can_air_dodge = true
 				can_up_special = true
 				ledge_regrab_timer = 0.0
 
-		move_and_slide()
-
+	move_and_slide()
 
 func get_gravity_value() -> float:
 	return controller.get_gravity_value() if controller else 1320.0
@@ -211,7 +222,13 @@ func get_gravity_value() -> float:
 func get_terminal_fall_speed() -> float:
 	return controller.get_terminal_fall_speed(is_fast_falling) if controller else 500.0
 
-# ── Buffer de Intenciones & Coyote ─────────────────────────────────────────
+## Ejecuta una caída limpia a través de plataformas one-way sin teletransportar bruscamente
+func drop_through_platform() -> void:
+	global_position.y += 4.0
+	velocity.y = maxf(velocity.y, 115.0)
+	_platform_drop_timer = 0.14
+
+# ── Buffer de Intenciones & Coyote ──────────────────────────────────────
 func _register_input_intents() -> void:
 	if current_input.jump_pressed:
 		_intent_buffer.register_action("jump")
@@ -234,6 +251,11 @@ func _consume_buffered_action(action_name: String, raw_pressed: bool) -> bool:
 		_intent_buffer.consume_action(action_name)
 		return true
 	return false
+
+func has_attack_buffered() -> bool:
+	if not can_act:
+		return false
+	return current_input.attack_pressed or _intent_buffer.is_action_buffered("attack")
 
 func has_coyote_jump() -> bool:
 	return _coyote_timer > 0.0
@@ -261,8 +283,6 @@ func is_jump_held() -> bool:
 		return false
 	return current_input.jump_held
 
-var _last_consumed_was_special: bool = false
-
 func _can_execute_requested_special() -> bool:
 	if not current_input:
 		return true
@@ -281,6 +301,7 @@ func is_attack_just_pressed() -> bool:
 			return false
 		_last_consumed_was_special = true
 		return true
+
 	var normal_intent: bool = _consume_buffered_action("attack", current_input.attack_pressed)
 	if normal_intent:
 		_last_consumed_was_special = false
@@ -318,17 +339,27 @@ func is_shield_just_pressed() -> bool:
 func is_down_just_pressed() -> bool:
 	return _down_just_pressed
 
-func _update_directional_input_edges() -> void:
+func consume_fastfall_intent() -> bool:
+	if _down_just_pressed or _fastfall_buffer_timer > 0.0:
+		_fastfall_buffer_timer = 0.0
+		return true
+	return false
+
+func _update_directional_input_edges(delta: float) -> void:
 	var current_y: float = current_input.movement.y if current_input else 0.0
 	_down_just_pressed = _previous_input_y >= -0.55 and current_y < -0.55
 	_previous_input_y = current_y
+	if _down_just_pressed:
+		_fastfall_buffer_timer = FASTFALL_BUFFER_SEC
+	elif _fastfall_buffer_timer > 0.0:
+		_fastfall_buffer_timer = maxf(0.0, _fastfall_buffer_timer - delta)
 
 func _update_button_input_edges() -> void:
 	var current_shield: bool = current_input.shield_pressed if current_input else false
 	_shield_just_pressed = (not _previous_shield_pressed) and current_shield
 	_previous_shield_pressed = current_shield
 
-# ── Dirección, Barra de Especial y Ataques ────────────────────────────────
+# ── Dirección, Barra de Especial y Ataques ──────────────────────────────
 func is_special_move(atk: AttackData) -> bool:
 	if atk == null:
 		return false
@@ -367,9 +398,21 @@ func get_current_attack() -> AttackData:
 		return null
 	if current_input and _last_consumed_was_special:
 		current_input.special_pressed = true
-	return attack_controller.get_attack_data_for_input(current_input, is_on_floor(), get_facing_direction())
+	var base_atk = attack_controller.get_attack_data_for_input(current_input, is_on_floor(), get_facing_direction())
+
+	if next_combo_override != null and combo_window_timer > 0.0 and attack_controller.current_moveset != null:
+		if (base_atk == attack_controller.current_moveset.neutral_attack and next_combo_override.animation_name.begins_with("AttackNeutral")) 		or (base_atk == attack_controller.current_moveset.special_side and next_combo_override.animation_name.begins_with("SpecialSide")):
+			return next_combo_override
+
+	return base_atk
 
 func execute_attack(attack_data: AttackData) -> void:
+	if attack_data and attack_data.combo_next != null:
+		next_combo_override = attack_data.combo_next
+		combo_window_timer = 1.45
+	else:
+		next_combo_override = null
+		combo_window_timer = 0.0
 	if attack_controller:
 		attack_controller.start_attack(attack_data, self)
 
@@ -381,7 +424,6 @@ func deactivate_hitbox() -> void:
 	if attack_controller:
 		attack_controller.disable_hitbox()
 
-# ── Métodos Puente para Shield & VFX (100% retrocompatibilidad) ───────────
 func break_shield() -> void:
 	if shield_controller:
 		shield_controller.break_shield()
@@ -413,13 +455,12 @@ func _is_current_state(state_name: String) -> bool:
 		return false
 	return state_machine.current_state.name.to_lower() == state_name.to_lower()
 
-# ── Combate & Recepción de Impacto ────────────────────────────────────────
+# ── Combate & Recepción de Impacto ──────────────────────────────────────
 func on_impact_received(impact: ImpactData) -> void:
 	if impact == null:
 		return
 	if Events.is_time_stopped and self == Events.time_stop_instigator:
 		return
-
 	if shield_controller and shield_controller.handle_shield_impact(impact):
 		return
 
@@ -430,18 +471,17 @@ func on_impact_received(impact: ImpactData) -> void:
 	impact.target_percent_after = new_percent
 	percentage_changed.emit(new_percent)
 	Events.player_damaged.emit(player_id, new_percent, impact)
-	
+
 	if impact.attack_data and impact.attack_data.hit_sfx:
 		AudioManager.play_sfx(impact.attack_data.hit_sfx)
 
-	# Acumulación Cinética durante Time Stop
 	if Events.is_time_stopped and self != Events.time_stop_instigator:
 		accumulated_timestop_knockback += impact.knockback_vector * 0.95
 		accumulated_timestop_hitstun = maxi(accumulated_timestop_hitstun, impact.hitstun_frames)
 		timestop_shiver_timer = 0.2
 		Events.camera_shake_requested.emit(5.0)
 		return
-	
+
 	can_up_special = true
 	state_machine.transition_to("Hit", {
 		"knockback": impact.knockback_vector,
@@ -465,7 +505,6 @@ func _on_time_stop_ended() -> void:
 		var final_stun := maxi(24, accumulated_timestop_hitstun)
 		accumulated_timestop_knockback = Vector2.ZERO
 		accumulated_timestop_hitstun = 0
-		
 		Events.camera_shake_requested.emit(14.0)
 		can_up_special = true
 		state_machine.transition_to("Hit", {
@@ -478,13 +517,11 @@ func _on_time_stop_ended() -> void:
 			"impact": null
 		})
 
-# ── Ledge Grab (2D) ───────────────────────────────────────────────────────
 func snap_to_ledge(ledge: LedgePoint) -> void:
 	if not can_grab_ledge or ledge_regrab_timer > 0.0 or is_on_floor():
 		return
 	if ledge == null or not ledge.can_occupy(self):
 		return
-
 	if state_machine and state_machine.current_state:
 		var st_name: String = state_machine.current_state.name.to_lower()
 		if st_name in ["daze", "death", "ledge", "ledgegetup"]:
@@ -522,12 +559,15 @@ func reset_player(spawn_position: Vector2) -> void:
 	_intent_buffer = InputBuffer.new()
 	_intent_buffer.buffer_window_seconds = INPUT_BUFFER_WINDOW_SEC
 	_coyote_timer = COYOTE_TIME_SEC
+	_fastfall_buffer_timer = 0.0
 	_previous_input_y = 0.0
 	_down_just_pressed = false
 	_previous_shield_pressed = false
 	_shield_just_pressed = false
-	if stats: stats.reset()
-	if shield_controller: shield_controller.reset()
+	if stats:
+		stats.reset()
+	if shield_controller:
+		shield_controller.reset()
 	if hurtbox:
 		hurtbox.clear_received_swings()
 		hurtbox.set_state(Hurtbox.HurtboxState.NORMAL)
@@ -542,4 +582,3 @@ func apply_self_hitlag(frames: int) -> void:
 
 func is_self_hitlag_active() -> bool:
 	return _self_hitlag_remaining > 0
-

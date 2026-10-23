@@ -1,0 +1,35 @@
+[gd_resource type="Resource" script_class="MoveSet" load_steps=15 format=3]
+
+[ext_resource type="Script" path="res://resources/moveset.gd" id="1_mset"]
+[ext_resource type="Resource" path="res://resources/instances/gogeta_ssj/attacks/gogeta_back_air.tres" id="2_back_air"]
+[ext_resource type="Resource" path="res://resources/instances/gogeta_ssj/attacks/gogeta_down_air.tres" id="3_down_air"]
+[ext_resource type="Resource" path="res://resources/instances/gogeta_ssj/attacks/gogeta_down_tilt.tres" id="4_down_tilt"]
+[ext_resource type="Resource" path="res://resources/instances/gogeta_ssj/attacks/gogeta_forward_air.tres" id="5_forward_air"]
+[ext_resource type="Resource" path="res://resources/instances/gogeta_ssj/attacks/gogeta_jab1.tres" id="6_jab1"]
+[ext_resource type="Resource" path="res://resources/instances/gogeta_ssj/attacks/gogeta_neutral_air.tres" id="7_neutral_air"]
+[ext_resource type="Resource" path="res://resources/instances/gogeta_ssj/attacks/gogeta_side_tilt.tres" id="8_side_tilt"]
+[ext_resource type="Resource" path="res://resources/instances/gogeta_ssj/attacks/gogeta_special_down.tres" id="9_special_down"]
+[ext_resource type="Resource" path="res://resources/instances/gogeta_ssj/attacks/gogeta_special_neutral.tres" id="10_special_neutral"]
+[ext_resource type="Resource" path="res://resources/instances/gogeta_ssj/attacks/gogeta_special_side.tres" id="11_special_side"]
+[ext_resource type="Resource" path="res://resources/instances/gogeta_ssj/attacks/gogeta_special_up.tres" id="12_special_up"]
+[ext_resource type="Resource" path="res://resources/instances/gogeta_ssj/attacks/gogeta_up_air.tres" id="13_up_air"]
+[ext_resource type="Resource" path="res://resources/instances/gogeta_ssj/attacks/gogeta_up_tilt.tres" id="14_up_tilt"]
+
+[resource]
+script = ExtResource("1_mset")
+neutral_attack = ExtResource("6_jab1")
+side_tilt = ExtResource("8_side_tilt")
+up_tilt = ExtResource("14_up_tilt")
+down_tilt = ExtResource("4_down_tilt")
+forward_smash = ExtResource("8_side_tilt")
+up_smash = ExtResource("14_up_tilt")
+down_smash = ExtResource("4_down_tilt")
+neutral_air = ExtResource("7_neutral_air")
+forward_air = ExtResource("5_forward_air")
+back_air = ExtResource("2_back_air")
+up_air = ExtResource("13_up_air")
+down_air = ExtResource("3_down_air")
+special_neutral = ExtResource("10_special_neutral")
+special_side = ExtResource("11_special_side")
+special_up = ExtResource("12_special_up")
+special_down = ExtResource("9_special_down")

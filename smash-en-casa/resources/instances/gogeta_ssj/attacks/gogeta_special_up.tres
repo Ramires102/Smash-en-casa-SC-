@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="AttackData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://resources/attack_data.gd" id="1_atk"]
+[ext_resource type="Resource" path="res://resources/instances/gogeta_ssj/attacks/gogeta_special_up2.tres" id="2_next"]
+
+[resource]
+script = ExtResource("1_atk")
+attack_name = "Up Special: Voltereta en Diagonal"
+damage = 5.5
+base_knockback = 10.2
+knockback_scaling = 3.0
+angle_degrees = 68.0
+startup_frames = 5
+active_frames = 12
+recovery_frames = 13
+faf_frame = 30
+animation_name = "SpecialUp"
+hitbox_offset = Vector3(0.288, 0.016, 0.0)
+hitbox_radius = 0.921
+combo_next = null
+combo_window_frames = 0
+auto_followup_on_hit = ExtResource("2_next")
+self_impulse = Vector3(10.854, 21.411, 0.0)
+self_impulse_frame = 3
+second_hit_frame = 11
+drag_defender_on_hit = true
+disable_gravity_during_active = true
+is_special_attack = true
+sub_hitboxes = []

@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="AttackData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/attack_data.gd" id="1_atk"]
+
+[resource]
+script = ExtResource("1_atk")
+attack_name = "Somersault Flash Kick"
+damage = 11.5
+base_knockback = 21.0
+knockback_scaling = 14.0
+angle_degrees = 88.0
+startup_frames = 7
+active_frames = 7
+recovery_frames = 11
+faf_frame = 25
+animation_name = "UpAir"
+hitbox_offset = Vector3(0.123, 0.823, 0.0)
+hitbox_radius = 0.658
+combo_next = null
+combo_window_frames = 0
+is_aerial = true
+landing_lag_frames = 8
+sub_hitboxes = []

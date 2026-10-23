@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="AttackData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/attack_data.gd" id="1_atk"]
+
+[resource]
+script = ExtResource("1_atk")
+attack_name = "Up Special: Piña Explosiva (Remate)"
+damage = 10.5
+base_knockback = 27.6
+knockback_scaling = 17.0
+angle_degrees = 36.0
+startup_frames = 5
+active_frames = 6
+recovery_frames = 14
+faf_frame = 25
+animation_name = "SpecialUp2"
+hitbox_offset = Vector3(0.864, 0.123, 0.0)
+hitbox_radius = 0.790
+combo_next = null
+combo_window_frames = 0
+self_impulse = Vector3(4.410, 3.806, 0.0)
+self_impulse_frame = 1
+is_special_attack = true
+sub_hitboxes = []

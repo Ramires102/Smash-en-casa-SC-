@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="AttackData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/attack_data.gd" id="1_atk"]
+
+[resource]
+script = ExtResource("1_atk")
+attack_name = "Aura Vortex Spin"
+damage = 9
+base_knockback = 17.4
+knockback_scaling = 11.0
+angle_degrees = 45.0
+startup_frames = 5
+active_frames = 10
+recovery_frames = 9
+faf_frame = 24
+animation_name = "NeutralAir"
+hitbox_offset = Vector3(0.000, 0.041, 0.0)
+hitbox_radius = 0.864
+combo_next = null
+combo_window_frames = 0
+is_aerial = true
+landing_lag_frames = 8
+sub_hitboxes = []

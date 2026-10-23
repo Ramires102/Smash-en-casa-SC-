@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="AttackData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/attack_data.gd" id="1_atk"]
+
+[resource]
+script = ExtResource("1_atk")
+attack_name = "Forward Air: Puño en Ángulo Descendente"
+damage = 12
+base_knockback = 23.4
+knockback_scaling = 15.0
+angle_degrees = 295.0
+startup_frames = 7
+active_frames = 6
+recovery_frames = 12
+faf_frame = 25
+animation_name = "ForwardAir"
+hitbox_offset = Vector3(0.971, -0.181, 0.0)
+hitbox_radius = 0.691
+combo_next = null
+combo_window_frames = 0
+self_impulse = Vector3(3.731, 0.952, 0.0)
+self_impulse_frame = 2
+is_aerial = true
+landing_lag_frames = 8
+sub_hitboxes = []

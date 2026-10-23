@@ -7,8 +7,9 @@ extends Projectile
 func _ready() -> void:
 	super._ready()
 	var sfx: AudioStream = preload("res://assets/audio/sfx/undertale_bone.wav")
-	if AudioManager and sfx:
-		AudioManager.play_sfx(sfx, randf_range(0.95, 1.1))
+	var audio_mgr = get_node_or_null("/root/AudioManager")
+	if audio_mgr and sfx:
+		audio_mgr.play_sfx(sfx, randf_range(0.95, 1.1))
 
 func _process(delta: float) -> void:
 	super._process(delta)

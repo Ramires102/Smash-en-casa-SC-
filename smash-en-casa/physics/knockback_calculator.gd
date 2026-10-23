@@ -1,14 +1,17 @@
 class_name KnockbackCalculator
 extends RefCounted
 
-## Calculadora de knockback 2D pura porteada 1:1 desde Splash N Dash (Hitboxes.gd).
-## Todas las fórmulas operan en espacio de coordenadas 2D de Godot (X derecho +, Y abajo +).
+const ANGLE_CONVERSION: float = PI / 180.0
 
-const ANGLE_CONVERSION: float = PI / 180.0  ## Hitboxes.gd:98
+## Normaliza knockback_scaling por si un recurso .tres usa escala 1.0 (multiplicador) o 100.0 (porcentaje)
+static func _normalize_kb_scaling(raw_scaling: float) -> float:
+	if raw_scaling <= 0.0:
+		return 1.0
+	if raw_scaling <= 5.0:
+		return raw_scaling
+	return raw_scaling / 100.0
 
-# ── Fórmula de Knockback Escalar (Hitboxes.gd:178-188) ──────────────────
-# KB = ((kb_scaling/100) * ((14 * (p+d) * (d+2)) / (w+100) + 18) + base_kb) / 10
-# p = target percentage tras recibir el daño, d = damage, w = weight
+# ── Fórmula de Knockback Escalar (Híbrida Smash + Escala 2D) ────────────
 static func calculate_knockback_magnitude(
 	target_percentage: float,
 	attack_damage: float,
@@ -16,176 +19,129 @@ static func calculate_knockback_magnitude(
 	base_knockback: float,
 	knockback_scaling: float
 ) -> float:
-	var p: float = target_percentage
-	var d: float = attack_damage
-	var w: float = target_weight
-	var ks: float = knockback_scaling
+	var p: float = maxf(0.0, target_percentage)
+	var d: float = maxf(1.0, attack_damage)
+	var w: float = maxf(40.0, target_weight)
+	var ks_mult: float = _normalize_kb_scaling(knockback_scaling)
 	var bk: float = base_knockback
-	return ((ks / 100.0) * ((((14.0 * (p + d) * (d + 2.0))) / (w + 100.0)) + 18.0) + bk) / 10.0
 
-# ── Hitstun (Hitboxes.gd:99-100) ──────────────────────────────────────
-# getHitstun(knockback / 0.3) → floor(knockback / 0.3 * 0.4)
-# = floor(knockback * 1.33333)
+	# Si base_knockback fue cargado en escala chica (< 8.0), escalarlo proporcionalmente
+	var normalized_bk: float = bk * 10.0 if (bk > 0.0 and bk < 6.0) else bk
+
+	# Curva oficial de Smash Bros. adaptada a la escala /10 del proyecto
+	var weight_factor: float = 200.0 / (w + 100.0)
+	var percent_term: float = (p / 10.0) + ((p * d) / 18.0)
+	var raw_kb: float = (((percent_term * weight_factor * 1.4) + 18.0) * ks_mult + normalized_bk) / 8.2
+
+	return maxf(Constants.KB_MINIMUM_LAUNCH, raw_kb)
+
+# ── Hitstun ─────────────────────────────────────────────────────────────
 static func calculate_hitstun(kb: float) -> int:
-	return int(floor(kb / 0.3 * 0.4))
+	var frames: int = int(floor(kb * Constants.HITSTUN_MULTIPLIER))
+	return maxi(Constants.HITSTUN_MIN_FRAMES, frames)
 
-# ── Hitlag (Hitboxes.gd:90-93) ────────────────────────────────────────
-# hitlag(d, hit) → floor(((floor(d) * 0.65) + 6) / hit)
+# ── Hitlag ──────────────────────────────────────────────────────────────
 static func calculate_hitlag(damage: float, hitlag_modifier: float = 1.0) -> int:
-	return int(floor(((floor(damage) * 0.65) + 6.0) / hitlag_modifier))
+	var mod: float = maxf(0.25, hitlag_modifier)
+	var raw_frames: int = int(floor(((floor(damage) * Constants.HITLAG_DAMAGE_MULT) + Constants.HITLAG_BASE_FRAMES) / mod))
+	return clampi(raw_frames, 3, Constants.HITLAG_MAX_FRAMES)
 
-# ── Velocidad Horizontal de Lanzamiento (Hitboxes.gd:120-127) ────────
-# initialVelocity = knockback * 30
-# horizontalVelocity = initialVelocity * cos(angle * PI/180)
-static func get_horizontal_velocity(kb: float, angle: float) -> float:
+# ── Velocidad Horizontal de Lanzamiento ─────────────────────────────────
+static func get_horizontal_velocity(kb: float, angle_deg: float) -> float:
 	var initial_velocity: float = kb * Constants.KB_VELOCITY_SCALE
-	var horizontal_angle: float = cos(angle * ANGLE_CONVERSION)
-	var horizontal_velocity: float = initial_velocity * horizontal_angle
-	horizontal_velocity = round(horizontal_velocity * 100000.0) / 100000.0
-	return horizontal_velocity
+	var horizontal_velocity: float = initial_velocity * cos(angle_deg * ANGLE_CONVERSION)
+	return round(horizontal_velocity * 1000.0) / 1000.0
 
-# ── Velocidad Vertical de Lanzamiento (Hitboxes.gd:129-136) ──────────
-# verticalVelocity = initialVelocity * sin(angle * PI/180)
-static func get_vertical_velocity(kb: float, angle: float) -> float:
+# ── Velocidad Vertical de Lanzamiento ───────────────────────────────────
+static func get_vertical_velocity(kb: float, angle_deg: float) -> float:
 	var initial_velocity: float = kb * Constants.KB_VELOCITY_SCALE
-	var vertical_angle: float = sin(angle * ANGLE_CONVERSION)
-	var vertical_velocity: float = initial_velocity * vertical_angle
-	vertical_velocity = round(vertical_velocity * 100000.0) / 100000.0
-	return vertical_velocity
+	var vertical_velocity: float = initial_velocity * sin(angle_deg * ANGLE_CONVERSION)
+	return round(vertical_velocity * 1000.0) / 1000.0
 
-# ── Decay Horizontal (Hitboxes.gd:108-112) ────────────────────────────
-# decay = 0.051 * cos(angle * PI/180); decay = round(decay*100000)/100000; decay *= 1000
-static func get_horizontal_decay(angle: float) -> float:
-	var decay: float = Constants.KB_DECAY_BASE * cos(angle * ANGLE_CONVERSION)
+# ── Decay Horizontal (Siempre positivo para evitar aceleración inversa) ─
+static func get_horizontal_decay(angle_deg: float) -> float:
+	var decay: float = Constants.KB_DECAY_BASE * cos(angle_deg * ANGLE_CONVERSION)
 	decay = round(decay * 100000.0) / 100000.0
-	decay = decay * 1000.0
-	return decay
+	return absf(decay * 1000.0)
 
-# ── Decay Vertical (Hitboxes.gd:114-118) ──────────────────────────────
-# decay = 0.051 * sin(angle * PI/180); decay = round(decay*100000)/100000; decay *= 1000; return abs(decay)
-static func get_vertical_decay(angle: float) -> float:
-	var decay: float = Constants.KB_DECAY_BASE * sin(angle * ANGLE_CONVERSION)
+# ── Decay Vertical (Siempre positivo) ───────────────────────────────────
+static func get_vertical_decay(angle_deg: float) -> float:
+	var decay: float = Constants.KB_DECAY_BASE * sin(angle_deg * ANGLE_CONVERSION)
 	decay = round(decay * 100000.0) / 100000.0
-	decay = decay * 1000.0
-	return abs(decay)
+	return absf(decay * 1000.0)
 
-# ── Ángulo Sakurai / S-Angle (Hitboxes.gd:190-213) ───────────────────
-# Ángulo 361 y -181 se resuelven dinámicamente según KB y estado aéreo/terrestre
+# ── Ángulo Sakurai (361°) ───────────────────────────────────────────────
 static func resolve_sakurai_angle(raw_angle: float, kb: float, target_in_air: bool) -> float:
-	if raw_angle == Constants.SAKURAI_ANGLE:
-		# Hitboxes.gd:191-201
+	if is_equal_approx(raw_angle, Constants.SAKURAI_ANGLE) or is_equal_approx(raw_angle, Constants.SAKURAI_ANGLE_NEG):
 		if kb > Constants.SAKURAI_KB_THRESHOLD:
 			return Constants.SAKURAI_HIGH_AIR if target_in_air else Constants.SAKURAI_HIGH_GROUND
 		else:
 			return Constants.SAKURAI_LOW_AIR if target_in_air else Constants.SAKURAI_LOW_GROUND
-	elif raw_angle == Constants.SAKURAI_ANGLE_NEG:
-		# Hitboxes.gd:202-212 — ángulo negado: (-angle) + 180
-		if kb > Constants.SAKURAI_KB_THRESHOLD:
-			if target_in_air:
-				return (-Constants.SAKURAI_HIGH_AIR) + 180.0
-			else:
-				return (-Constants.SAKURAI_HIGH_GROUND) + 180.0
-		else:
-			if target_in_air:
-				return (-Constants.SAKURAI_LOW_AIR) + 180.0
-			else:
-				return (-Constants.SAKURAI_LOW_GROUND) + 180.0
 	return raw_angle
 
-# ── Angle Flippers 2D (Hitboxes.gd:217-284) ─────────────────────────
-# Calcula el vector de lanzamiento 2D y decays según el modo de angle flipper.
-# attacker_pos, target_pos, hitbox_pos: Vector2 en world space
-# attacker_dir: 1.0 o -1.0
+# ── Angle Flippers 2D Corregidos ────────────────────────────────────────
 static func apply_angle_flipper(
 	flipper: int,
 	kb: float,
-	angle: float,
+	angle_deg: float,
 	attacker_dir: float,
 	attacker_pos: Vector2,
 	target_pos: Vector2,
 	hitbox_pos: Vector2
 ) -> Dictionary:
+	var dir_sign: float = -1.0 if attacker_dir < 0.0 else 1.0
 	var result: Dictionary = {"vx": 0.0, "vy": 0.0, "hdecay": 0.0, "vdecay": 0.0}
-	var xangle: float = 0.0
-	
+
 	match flipper:
-		0: # Hitboxes.gd:224-228 — Trayectoria estándar
-			result.vx = get_horizontal_velocity(kb, -angle)
-			result.vy = get_vertical_velocity(kb, -angle)
-			result.hdecay = get_horizontal_decay(-angle)
-			result.vdecay = get_vertical_decay(angle)
-			
-		1: # Hitboxes.gd:229-237 — Lanzamiento alejándose del centro de la Hitbox (hitbox -> target)
-			if attacker_dir == -1.0:
-				xangle = -(hitbox_pos.angle_to_point(target_pos) * 180.0 / PI)
-			else:
-				xangle = (hitbox_pos.angle_to_point(target_pos) * 180.0 / PI)
-			result.vx = get_horizontal_velocity(kb, xangle + 180.0)
-			result.vy = get_vertical_velocity(kb, -xangle)
-			result.hdecay = get_horizontal_decay(angle + 180.0)
-			result.vdecay = get_vertical_decay(xangle)
-			
-		2: # Hitboxes.gd:240-248 — Lanzamiento hacia el centro de la Hitbox (target -> hitbox)
-			if attacker_dir == -1.0:
-				xangle = -(target_pos.angle_to_point(hitbox_pos) * 180.0 / PI)
-			else:
-				xangle = (target_pos.angle_to_point(hitbox_pos) * 180.0 / PI)
-			result.vx = get_horizontal_velocity(kb, -xangle + 180.0)
-			result.vy = get_vertical_velocity(kb, -xangle)
-			result.hdecay = get_horizontal_decay(xangle + 180.0)
-			result.vdecay = get_vertical_decay(xangle)
-			
-		3: # Hitboxes.gd:251-259 — Hacia el centro horizontal del atacante
-			if attacker_dir == -1.0:
-				xangle = -(target_pos.angle_to_point(hitbox_pos) * 180.0 / PI) + 180.0
-			else:
-				xangle = (target_pos.angle_to_point(hitbox_pos) * 180.0 / PI)
-			result.vx = get_horizontal_velocity(kb, xangle)
-			result.vy = get_vertical_velocity(kb, -angle)
-			result.hdecay = get_horizontal_decay(xangle)
-			result.vdecay = get_vertical_decay(angle)
-			
-		4: # Hitboxes.gd:260-268 — Alejándose del centro horizontal del atacante
-			if attacker_dir == -1.0:
-				xangle = -(target_pos.angle_to_point(hitbox_pos) * 180.0 / PI) + 180.0
-			else:
-				xangle = (target_pos.angle_to_point(hitbox_pos) * 180.0 / PI)
-			result.vx = get_horizontal_velocity(kb, -xangle * 180.0)
-			result.vy = get_vertical_velocity(kb, -angle)
-			result.hdecay = get_horizontal_decay(angle)
-			result.vdecay = get_vertical_decay(angle)
-			
-		5: # Hitboxes.gd:269-273 — Ángulo invertido horizontalmente
-			result.vx = get_horizontal_velocity(kb, angle + 180.0)
-			result.vy = get_vertical_velocity(kb, -angle)
-			result.hdecay = get_horizontal_decay(angle + 180.0)
-			result.vdecay = get_vertical_decay(angle)
-			
-		6: # Hitboxes.gd:274-278 — Lanzamiento horizontal directo hacia el atacante
-			if attacker_dir == -1.0:
-				xangle = -(target_pos.angle_to_point(attacker_pos) * 180.0 / PI)
-			else:
-				xangle = (target_pos.angle_to_point(attacker_pos) * 180.0 / PI)
-			result.vx = get_horizontal_velocity(kb, xangle)
-			result.vy = get_vertical_velocity(kb, -angle)
-			result.hdecay = get_horizontal_decay(xangle)
-			result.vdecay = get_vertical_decay(angle)
-			
-		7: # Hitboxes.gd:280-284 — Lanzamiento horizontal directo alejándose del atacante
-			if attacker_dir == -1.0:
-				xangle = -(target_pos.angle_to_point(attacker_pos) * 180.0 / PI)
-			else:
-				xangle = (target_pos.angle_to_point(attacker_pos) * 180.0 / PI)
-			result.vx = get_horizontal_velocity(kb, -xangle + 180.0)
-			result.vy = get_vertical_velocity(kb, -angle)
-			result.hdecay = get_horizontal_decay(angle)
-			result.vdecay = get_vertical_decay(angle)
-	
+		0: # Estándar: angle_deg se define mirando a la derecha (0°=adelante, 90°=arriba, 270°=spike abajo)
+			var base_vx: float = get_horizontal_velocity(kb, angle_deg)
+			var base_vy: float = -get_vertical_velocity(kb, angle_deg) # En 2D de Godot, Y negativo es hacia arriba
+			result.vx = base_vx * dir_sign
+			result.vy = base_vy
+			result.hdecay = get_horizontal_decay(angle_deg)
+			result.vdecay = get_vertical_decay(angle_deg)
+
+		1, 2: # Radial desde/hacia el centro de la Hitbox
+			var delta_vec: Vector2 = (target_pos - hitbox_pos) if flipper == 1 else (hitbox_pos - target_pos)
+			if delta_vec.length_squared() < 1.0:
+				delta_vec = Vector2(dir_sign, -0.5)
+			var dir_norm: Vector2 = delta_vec.normalized()
+			var speed: float = kb * Constants.KB_VELOCITY_SCALE
+			result.vx = dir_norm.x * speed
+			result.vy = dir_norm.y * speed
+			var rad_deg: float = rad_to_deg(atan2(-dir_norm.y, absf(dir_norm.x)))
+			result.hdecay = get_horizontal_decay(rad_deg)
+			result.vdecay = get_vertical_decay(rad_deg)
+
+		3, 4: # Hacia el centro del atacante (3) o alejándose del centro del atacante (4)
+			var away_sign: float = signf(target_pos.x - attacker_pos.x)
+			if is_zero_approx(away_sign):
+				away_sign = dir_sign
+			var final_dir: float = -away_sign if flipper == 3 else away_sign
+			result.vx = absf(get_horizontal_velocity(kb, angle_deg)) * final_dir
+			result.vy = -get_vertical_velocity(kb, angle_deg)
+			result.hdecay = get_horizontal_decay(angle_deg)
+			result.vdecay = get_vertical_decay(angle_deg)
+
+		5: # Reverse Hit (invierte dirección horizontal)
+			result.vx = -get_horizontal_velocity(kb, angle_deg) * dir_sign
+			result.vy = -get_vertical_velocity(kb, angle_deg)
+			result.hdecay = get_horizontal_decay(angle_deg)
+			result.vdecay = get_vertical_decay(angle_deg)
+
+		6, 7: # Autolink / Empuje relativo al atacante
+			var rel_sign: float = signf(target_pos.x - attacker_pos.x)
+			if is_zero_approx(rel_sign):
+				rel_sign = dir_sign
+			var horiz_sign: float = -rel_sign if flipper == 6 else rel_sign
+			result.vx = absf(get_horizontal_velocity(kb, angle_deg)) * horiz_sign
+			result.vy = -get_vertical_velocity(kb, angle_deg)
+			result.hdecay = get_horizontal_decay(angle_deg)
+			result.vdecay = get_vertical_decay(angle_deg)
+
 	return result
 
-# ── Hitlag DI (influencia direccional durante freeze) ─────────────────────
-# Basado en PlatformFighter: input horizontal rota el ángulo de salida,
-# input vertical modifica levemente la velocidad resultante.
+# ── Hitlag DI (Directional Influence Perpendicular Real) ────────────────
 static func apply_hitlag_di(knockback_vector: Vector2, di_input: Vector2) -> Dictionary:
 	var speed: float = knockback_vector.length()
 	if speed <= 0.001:
@@ -199,29 +155,33 @@ static func apply_hitlag_di(knockback_vector: Vector2, di_input: Vector2) -> Dic
 	if di_input.length() < Constants.HITLAG_DI_DEADZONE:
 		return _build_di_result_from_vector(knockback_vector)
 
-	var di_x: float = clampf(di_input.x, -1.0, 1.0)
-	var di_y_pf: float = -clampf(di_input.y, -1.0, 1.0)
-	var launch_angle_rad: float = atan2(knockback_vector.y, knockback_vector.x)
-	var adjusted_angle_rad: float = launch_angle_rad + (Constants.HITLAG_DI_ANGLE_INFLUENCE * di_x)
+	# En coordenadas 2D de Godot (Y negativo = arriba), convertimos el stick del jugador
+	# (donde arriba es +Y) al espacio 2D de pantalla (arriba es -Y):
+	var stick_2d := Vector2(clampf(di_input.x, -1.0, 1.0), -clampf(di_input.y, -1.0, 1.0)).normalized()
+	var launch_dir := knockback_vector.normalized()
 
-	var adjusted_vector: Vector2 = Vector2(cos(adjusted_angle_rad), sin(adjusted_angle_rad)) * speed
+	# El DI real en Smash es máximo cuando el stick es PERPENDICULAR al vector de lanzamiento
+	var cross_factor: float = launch_dir.cross(stick_2d)
+	var angle_offset: float = cross_factor * Constants.HITLAG_DI_ANGLE_INFLUENCE
 
-	# El input Y interno usa arriba(+)/abajo(-); se invierte para mantener el
-	# mismo sentido de modificación de velocidad que PlatformFighter.
-	adjusted_vector -= adjusted_vector * (Constants.HITLAG_DI_SPEED_INFLUENCE * di_y_pf)
+	var rotated_dir: Vector2 = launch_dir.rotated(angle_offset)
 
-	return _build_di_result_from_vector(adjusted_vector)
+	# Ligerísima modulación de velocidad según qué tan alineado está el stick (TDI)
+	var dot_factor: float = launch_dir.dot(stick_2d)
+	var adjusted_speed: float = speed * (1.0 + dot_factor * Constants.HITLAG_DI_SPEED_INFLUENCE)
+
+	return _build_di_result_from_vector(rotated_dir * adjusted_speed)
 
 static func _build_di_result_from_vector(launch_vector: Vector2) -> Dictionary:
-	var vector_angle_deg: float = rad_to_deg(atan2(launch_vector.y, launch_vector.x))
+	var vector_angle_deg: float = rad_to_deg(atan2(-launch_vector.y, absf(launch_vector.x)))
 	return {
 		"vector": launch_vector,
 		"hdecay": get_horizontal_decay(vector_angle_deg),
-		"vdecay": get_vertical_decay(-vector_angle_deg),
-		"angle_deg": -vector_angle_deg
+		"vdecay": get_vertical_decay(vector_angle_deg),
+		"angle_deg": vector_angle_deg
 	}
 
-# ── API Principal 2D ────────────────────────────────────────────────
+# ── API Principal 2D ────────────────────────────────────────────────────
 static func calculate_full_knockback(
 	target_percentage: float,
 	attack_damage: float,
@@ -237,25 +197,21 @@ static func calculate_full_knockback(
 	hitbox_pos: Vector2,
 	target_in_air: bool
 ) -> Dictionary:
-	# 1. Calcular KB escalar
 	var kb: float = calculate_knockback_magnitude(
 		target_percentage, attack_damage, target_weight,
 		base_knockback, knockback_scaling
 	)
-	
-	# 2. Resolver Sakurai angle
+
 	var resolved_angle: float = resolve_sakurai_angle(raw_angle, kb, target_in_air)
-	
-	# 3. Aplicar angle flipper en 2D
+
 	var flipper_result: Dictionary = apply_angle_flipper(
 		angle_flipper, kb, resolved_angle,
 		attacker_dir, attacker_pos, target_pos, hitbox_pos
 	)
-	
-	# 4. Calcular hitstun y hitlag
+
 	var hitstun: int = calculate_hitstun(kb)
 	var hitlag: int = calculate_hitlag(attack_damage, hitlag_modifier)
-	
+
 	return {
 		"kb": kb,
 		"vx": flipper_result.vx,
@@ -266,4 +222,3 @@ static func calculate_full_knockback(
 		"hitlag": hitlag,
 		"resolved_angle": resolved_angle
 	}
-

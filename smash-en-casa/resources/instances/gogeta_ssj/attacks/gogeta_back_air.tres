@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="AttackData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/attack_data.gd" id="1_atk"]
+
+[resource]
+script = ExtResource("1_atk")
+attack_name = "Reverse Heel Thrust"
+damage = 14
+base_knockback = 24.6
+knockback_scaling = 17.0
+angle_degrees = 148.0
+startup_frames = 9
+active_frames = 5
+recovery_frames = 14
+faf_frame = 28
+animation_name = "BackAir"
+hitbox_offset = Vector3(-0.946, 0.041, 0.0)
+hitbox_radius = 0.609
+combo_next = null
+combo_window_frames = 0
+is_aerial = true
+landing_lag_frames = 8
+sub_hitboxes = []

@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="AttackData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/attack_data.gd" id="1_atk"]
+
+[resource]
+script = ExtResource("1_atk")
+attack_name = "Rekka 3: Patada de Hacha (3/3)"
+damage = 13.5
+base_knockback = 26.4
+knockback_scaling = 16.0
+angle_degrees = 285.0
+startup_frames = 7
+active_frames = 7
+recovery_frames = 15
+faf_frame = 29
+animation_name = "SpecialSide3"
+hitbox_offset = Vector3(0.889, 0.041, 0.0)
+hitbox_radius = 0.757
+combo_next = null
+combo_window_frames = 0
+self_impulse = Vector3(3.731, -13.481, 0.0)
+self_impulse_frame = 7
+is_special_attack = true
+sub_hitboxes = []

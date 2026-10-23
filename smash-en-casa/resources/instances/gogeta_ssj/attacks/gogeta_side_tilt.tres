@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="AttackData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/attack_data.gd" id="1_atk"]
+
+[resource]
+script = ExtResource("1_atk")
+attack_name = "Fusion Spin Kick"
+damage = 11
+base_knockback = 21.6
+knockback_scaling = 14.0
+angle_degrees = 32.0
+startup_frames = 8
+active_frames = 6
+recovery_frames = 14
+faf_frame = 28
+animation_name = "AttackSide"
+hitbox_offset = Vector3(0.987, 0.041, 0.0)
+hitbox_radius = 0.592
+combo_next = null
+combo_window_frames = 0
+self_impulse = Vector3(7.632, 0.000, 0.0)
+self_impulse_frame = 6
+sub_hitboxes = []

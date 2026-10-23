@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="AttackData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/attack_data.gd" id="1_atk"]
+
+[resource]
+script = ExtResource("1_atk")
+attack_name = "Jab 3: Doble Mazo y Voltereta (3/3)"
+damage = 11.5
+base_knockback = 24.6
+knockback_scaling = 15.0
+angle_degrees = 42.0
+startup_frames = 8
+active_frames = 7
+recovery_frames = 16
+faf_frame = 31
+animation_name = "AttackNeutral3"
+hitbox_offset = Vector3(0.864, -0.041, 0.0)
+hitbox_radius = 0.642
+combo_next = null
+combo_window_frames = 0
+self_impulse = Vector3(9.158, 9.199, 0.0)
+self_impulse_frame = 2
+sub_hitboxes = []

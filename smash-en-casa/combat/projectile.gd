@@ -165,17 +165,13 @@ func _process_projectile_hit(hurtbox: Hurtbox, target_owner: Node2D) -> void:
 	if target_owner and target_owner.has_method("is_on_floor"):
 		target_in_air = not target_owner.is_on_floor()
 		
-	var final_angle: float = angle_deg
-	if facing < 0.0:
-		final_angle = -angle_deg + 180.0
-		
 	var result: Dictionary = KnockbackCalculator.calculate_full_knockback(
 		impact.target_percent_after,
 		impact.damage,
 		target_weight,
 		kb_base,
 		kb_scaling,
-		final_angle,
+		angle_deg,
 		flipper,
 		hitlag_mod,
 		facing,

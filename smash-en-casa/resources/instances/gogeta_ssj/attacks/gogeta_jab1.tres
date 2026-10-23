@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="AttackData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://resources/attack_data.gd" id="1_atk"]
+[ext_resource type="Resource" path="res://resources/instances/gogeta_ssj/attacks/gogeta_jab2.tres" id="2_next"]
+
+[resource]
+script = ExtResource("1_atk")
+attack_name = "Jab 1: Dos Golpes Rápidos (1/3)"
+damage = 3.5
+base_knockback = 6.6
+knockback_scaling = 2.0
+angle_degrees = 25.0
+startup_frames = 3
+active_frames = 9
+recovery_frames = 10
+faf_frame = 22
+animation_name = "AttackNeutral"
+hitbox_offset = Vector3(0.806, 0.066, 0.0)
+hitbox_radius = 0.559
+combo_next = ExtResource("2_next")
+combo_window_frames = 16
+self_impulse = Vector3(4.070, 0.000, 0.0)
+self_impulse_frame = 2
+second_hit_frame = 8
+sub_hitboxes = []

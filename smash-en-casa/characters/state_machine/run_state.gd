@@ -30,6 +30,10 @@ func physics_update(delta: float) -> void:
 	var input_vec: Vector2 = character.get_input_vector()
 
 	if character.is_jump_just_pressed():
+		if character.controller and character.controller.get_jumpsquat_frames() <= 0:
+			dbg("to_jump_instant", {"reason": "jump_pressed_instant"})
+			state_machine.transition_to("Jump")
+			return
 		dbg("to_jumpsquat", {"reason": "jump_pressed"})
 		state_machine.transition_to("JumpSquat")
 		return

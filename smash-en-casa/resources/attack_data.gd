@@ -1,68 +1,84 @@
 class_name AttackData
 extends Resource
 
-@export var attack_name: String = "Neutral Attack"
-@export var damage: float = 8.0
-@export var base_knockback: float = 15.0
-@export var knockback_scaling: float = 1.0
-@export var angle_degrees: float = 45.0
-@export var startup_frames: int = 4
-@export var active_frames: int = 6
+@export var id: String = ""
+@export var display_name: String = ""
+@export var attack_name: String = "":
+	get:
+		if attack_name != "":
+			return attack_name
+		return display_name if display_name != "" else id
+	set(val):
+		attack_name = val
+
+@export var animation_name: String = "Attack"
+@export var pose_style: String = "jab_combo"
+@export var vfx_type: String = "slash_gold"
+
+@export_group("Frame Data (60 FPS)")
+@export var startup_frames: int = 5
+@export var active_frames: int = 5
 @export var recovery_frames: int = 10
-@export var animation_name: String = "AttackNeutral"
-@export var hit_sfx: AudioStream
-@export var bonus_shield_damage: float = 0.0
-@export var is_aerial: bool = false
-@export var landing_lag_frames: int = 0 ## 0 = usar fallback dinámico basado en recovery restante
-## FAF (First Actionable Frame): frame en que el ataque permite ser cancelado por movimiento/salto/escudo (0 = usar total_frames)
 @export var faf_frame: int = 0
-## Ventana de auto-cancel antes de golpear (frames de startup que cancelan a landing lag normal)
+@export var second_hit_frame: int = 0
+@export var landing_lag_frames: int = 0
 @export var autocancel_before: int = 0
-## Ventana de auto-cancel al final del recovery (frames finales que cancelan a landing lag normal)
 @export var autocancel_after: int = 0
 
-# ── Propiedades de Splash N Dash (Hitboxes.gd) ──
-## Angle Flipper: controla la dirección de lanzamiento (0-7). Ver Hitboxes.gd:217-284
+@export_group("Damage & Knockback")
+@export var damage: float = 8.0
+@export var base_knockback: float = 5.0
+@export var knockback_scaling: float = 0.12
+@export var knockback_angle: float = 45.0
+@export var angle_degrees: float:
+	get: return knockback_angle
+	set(val): knockback_angle = val
+@export var hitlag_multiplier: float = 1.0
+@export var hitlag_modifier: float:
+	get: return hitlag_multiplier
+	set(val): hitlag_multiplier = val
 @export_range(0, 7) var angle_flipper: int = 0
-## Modificador de hitlag: multiplica/divide el freeze de impacto. Ver Hitboxes.gd:90-93
-@export var hitlag_modifier: float = 1.0
-## Tipo de ataque: "normal", "slash", "explode", "Flip", "none". Ver Hitboxes.gd:157-176
 @export var attack_type: String = "normal"
+@export var hit_sfx: AudioStream
+@export var bonus_shield_damage: float = 0.0
 
-# Configuración espacial de Hitbox estándar
-@export var hitbox_offset: Vector3 = Vector3(0.8, 0.0, 0.0)
-@export var hitbox_radius: float = 0.6
-
-# Configuración de combos (Jab 1 -> Jab 2 -> Jab 3)
-@export var combo_next: AttackData = null
-@export var combo_window_frames: int = 14
-
-# Movilidad y recuperación del atacante (Up-B Recovery, lunge forward, etc.)
-@export var self_impulse: Vector3 = Vector3.ZERO
-@export var self_impulse_frame: int = 0
-@export var disable_gravity_during_active: bool = false
-
-# Soporte para ataques multi-hitbox / sweetspots
+@export_group("Hitbox Geometry")
+@export var hitbox_offset: Variant = Vector3(1.0, 1.0, 0.0)
+@export var hitbox_size: Vector2 = Vector2(1.4, 1.4)
+@export var hitbox_radius: float = 0.72
+@export var is_aerial: bool = false
 @export var sub_hitboxes: Array[HitboxData] = []
 
-# Proyectiles y Habilidades Especiales (Knives, Cards, Time Stop)
-@export_group("Projectile / Special")
+@export_group("Movement & Special Mechanics")
+@export var self_impulse: Variant = Vector3.ZERO
+@export var self_impulse_frame: int = 0
+@export var disable_gravity_during_active: bool = false
+@export var is_divekick: bool = false
+@export var divekick_speed: Vector2 = Vector2(540.0, 800.0)
+
+@export var vault_behind_on_hit: bool = false
+@export var snap_in_front_of_opponent: bool = false
+@export var drag_defender_on_hit: bool = false
+@export var toss_behind_on_hit: bool = false
+@export var flip_facing_on_start: bool = false
+@export var sliding_knockdown: bool = false
+
+@export_group("Combos & Follow-ups")
+@export var combo_next: AttackData = null
+@export var combo_window_frames: int = 35
+@export var auto_followup_on_hit: AttackData = null
+@export var auto_followup_always: bool = false
+
+@export_group("Projectiles & Time Stop")
 @export var is_special_attack: bool = false
 @export var spawns_projectile: bool = false
 @export var projectile_scene: PackedScene = null
-@export var projectile_speed: float = 18.0
-@export var projectile_count: int = 1
-@export var projectile_spread_angles: Array[float] = [0.0]
+@export var projectile_spawn_frame: int = 0
+@export var projectile_offset: Variant = Vector3(1.2, 1.1, 0.0)
+@export var projectile_speed: float = 650.0
+@export var projectile_lifetime: float = 1.6
+@export var projectile_spread_angles: Array[float] = []
 @export var aerial_projectile_angle_offset: float = 0.0
-@export var projectile_spawn_frame: int = 4
-@export var projectile_offset: Vector3 = Vector3(0.8, 0.2, 0.0)
-@export var projectile_lifetime: float = 2.5
-@export var use_distance_damage_falloff: bool = false
-@export var close_range_damage: float = 3.0
-@export var mid_range_damage: float = 2.0
-@export var far_range_damage: float = 1.3
-@export var close_range_max_meters: float = 3.2
-@export var mid_range_max_meters: float = 7.5
 @export var is_time_stop: bool = false
-@export var time_stop_duration_sec: float = 2.0
-@export var time_stop_frame: int = 6
+@export var time_stop_frame: int = 0
+@export var time_stop_duration_sec: float = 1.5

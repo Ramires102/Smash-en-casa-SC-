@@ -1,0 +1,83 @@
+[gd_resource type="AnimationLibrary" load_steps=27 format=3 uid="uid://c_gogeta_ssj_anim_lib"]
+
+[ext_resource type="Animation" path="res://resources/instances/gogeta_ssj/animations/gogeta_attack_down.tres" id="1_attackdown"]
+[ext_resource type="Animation" path="res://resources/instances/gogeta_ssj/animations/gogeta_attack_neutral.tres" id="2_attackneutral"]
+[ext_resource type="Animation" path="res://resources/instances/gogeta_ssj/animations/gogeta_attack_neutral_2.tres" id="3_attackneutral2"]
+[ext_resource type="Animation" path="res://resources/instances/gogeta_ssj/animations/gogeta_attack_neutral_3.tres" id="4_attackneutral3"]
+[ext_resource type="Animation" path="res://resources/instances/gogeta_ssj/animations/gogeta_attack_side.tres" id="5_attackside"]
+[ext_resource type="Animation" path="res://resources/instances/gogeta_ssj/animations/gogeta_attack_up.tres" id="6_attackup"]
+[ext_resource type="Animation" path="res://resources/instances/gogeta_ssj/animations/gogeta_back_air.tres" id="7_backair"]
+[ext_resource type="Animation" path="res://resources/instances/gogeta_ssj/animations/gogeta_double_jump.tres" id="8_doublejump"]
+[ext_resource type="Animation" path="res://resources/instances/gogeta_ssj/animations/gogeta_down_air.tres" id="9_downair"]
+[ext_resource type="Animation" path="res://resources/instances/gogeta_ssj/animations/gogeta_fall.tres" id="10_fall"]
+[ext_resource type="Animation" path="res://resources/instances/gogeta_ssj/animations/gogeta_forward_air.tres" id="11_forwardair"]
+[ext_resource type="Animation" path="res://resources/instances/gogeta_ssj/animations/gogeta_hit.tres" id="12_hit"]
+[ext_resource type="Animation" path="res://resources/instances/gogeta_ssj/animations/gogeta_idle.tres" id="13_idle"]
+[ext_resource type="Animation" path="res://resources/instances/gogeta_ssj/animations/gogeta_jump.tres" id="14_jump"]
+[ext_resource type="Animation" path="res://resources/instances/gogeta_ssj/animations/gogeta_neutral_air.tres" id="15_neutralair"]
+[ext_resource type="Animation" path="res://resources/instances/gogeta_ssj/animations/gogeta_run.tres" id="16_run"]
+[ext_resource type="Animation" path="res://resources/instances/gogeta_ssj/animations/gogeta_special_down.tres" id="17_specialdown"]
+[ext_resource type="Animation" path="res://resources/instances/gogeta_ssj/animations/gogeta_special_down_2.tres" id="18_specialdown2"]
+[ext_resource type="Animation" path="res://resources/instances/gogeta_ssj/animations/gogeta_special_neutral.tres" id="19_specialneutral"]
+[ext_resource type="Animation" path="res://resources/instances/gogeta_ssj/animations/gogeta_special_side.tres" id="20_specialside"]
+[ext_resource type="Animation" path="res://resources/instances/gogeta_ssj/animations/gogeta_special_side_2.tres" id="21_specialside2"]
+[ext_resource type="Animation" path="res://resources/instances/gogeta_ssj/animations/gogeta_special_side_3.tres" id="22_specialside3"]
+[ext_resource type="Animation" path="res://resources/instances/gogeta_ssj/animations/gogeta_special_up.tres" id="23_specialup"]
+[ext_resource type="Animation" path="res://resources/instances/gogeta_ssj/animations/gogeta_special_up_2.tres" id="24_specialup2"]
+[ext_resource type="Animation" path="res://resources/instances/gogeta_ssj/animations/gogeta_squat.tres" id="25_squat"]
+[ext_resource type="Animation" path="res://resources/instances/gogeta_ssj/animations/gogeta_up_air.tres" id="26_upair"]
+
+[resource]
+_data = {
+"AirDodge": ExtResource("14_jump"),
+"Attack": ExtResource("2_attackneutral"),
+"AttackBair": ExtResource("7_backair"),
+"AttackDair": ExtResource("9_downair"),
+"AttackDown": ExtResource("1_attackdown"),
+"AttackDownTilt": ExtResource("1_attackdown"),
+"AttackFair": ExtResource("11_forwardair"),
+"AttackJab1": ExtResource("2_attackneutral"),
+"AttackJab2": ExtResource("3_attackneutral2"),
+"AttackJab3": ExtResource("4_attackneutral3"),
+"AttackNair": ExtResource("15_neutralair"),
+"AttackNeutral": ExtResource("2_attackneutral"),
+"AttackNeutral2": ExtResource("3_attackneutral2"),
+"AttackNeutral3": ExtResource("4_attackneutral3"),
+"AttackSide": ExtResource("5_attackside"),
+"AttackSideTilt": ExtResource("5_attackside"),
+"AttackUair": ExtResource("26_upair"),
+"AttackUp": ExtResource("6_attackup"),
+"AttackUpTilt": ExtResource("6_attackup"),
+"BackAir": ExtResource("7_backair"),
+"Crouch": ExtResource("25_squat"),
+"Dash": ExtResource("16_run"),
+"Daze": ExtResource("12_hit"),
+"Death": ExtResource("12_hit"),
+"DoubleJump": ExtResource("8_doublejump"),
+"DownAir": ExtResource("9_downair"),
+"Fall": ExtResource("10_fall"),
+"ForwardAir": ExtResource("11_forwardair"),
+"Hit": ExtResource("12_hit"),
+"Idle": ExtResource("13_idle"),
+"Jump": ExtResource("14_jump"),
+"JumpSquat": ExtResource("25_squat"),
+"NeutralAir": ExtResource("15_neutralair"),
+"Pivot": ExtResource("13_idle"),
+"Roll": ExtResource("16_run"),
+"Run": ExtResource("16_run"),
+"RunBrake": ExtResource("13_idle"),
+"Shield": ExtResource("25_squat"),
+"SpecialDown": ExtResource("17_specialdown"),
+"SpecialDown2": ExtResource("18_specialdown2"),
+"SpecialNeutral": ExtResource("19_specialneutral"),
+"SpecialSide": ExtResource("20_specialside"),
+"SpecialSide2": ExtResource("21_specialside2"),
+"SpecialSide3": ExtResource("22_specialside3"),
+"SpecialUp": ExtResource("23_specialup"),
+"SpecialUp2": ExtResource("24_specialup2"),
+"Spotdodge": ExtResource("25_squat"),
+"Squat": ExtResource("25_squat"),
+"Tumble": ExtResource("12_hit"),
+"UpAir": ExtResource("26_upair"),
+"Walk": ExtResource("16_run")
+}

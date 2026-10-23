@@ -1,0 +1,26 @@
+[gd_resource type="Animation" format=3]
+
+[resource]
+resource_name = "AttackUpTilt"
+length = 0.35
+tracks/0/type = "rotation_3d"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Humanoid/ModelRoot/Sans_Root/Skeleton3D:Spine_02")
+tracks/0/interp = 2
+tracks/0/loop_wrap = true
+tracks/0/keys = PackedFloat32Array(0, 1, 0.015250521, -0.00040129153, 0.05480183, 0.9983807, 0.1, 1, -0.10653516, -0.007076964, 0.054344438, 0.9927975, 0.35, 1, 0.015250521, -0.00040129153, 0.05480183, 0.9983807)
+tracks/1/type = "rotation_3d"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("Humanoid/ModelRoot/Sans_Root/Skeleton3D:Head_05")
+tracks/1/interp = 2
+tracks/1/loop_wrap = true
+tracks/1/keys = PackedFloat32Array(0, 1, -0.14352745, -0.75556475, -0.09042835, 0.63272786, 0.1, 1, -0.27194256, -0.72025275, -0.24554303, 0.5890602, 0.35, 1, -0.14352745, -0.75556475, -0.09042835, 0.63272786)
+tracks/2/type = "rotation_3d"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("Humanoid/ModelRoot/Sans_Root/Skeleton3D:Upperarm.R_010")
+tracks/2/interp = 2
+tracks/2/loop_wrap = true
+tracks/2/keys = PackedFloat32Array(0, 1, -0.1169045, -0.13361809, 0.2521885, 0.9512521, 0.1, 1, -0.6718321, -0.259529, 0.11873307, 0.68351215, 0.35, 1, -0.1169045, -0.13361809, 0.2521885, 0.9512521)

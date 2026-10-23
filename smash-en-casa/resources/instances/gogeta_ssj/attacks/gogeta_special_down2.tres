@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="AttackData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/attack_data.gd" id="1_atk"]
+
+[resource]
+script = ExtResource("1_atk")
+attack_name = "Down Special (2/2): Giro y Patada de Lanzamiento"
+damage = 11.5
+base_knockback = 29.4
+knockback_scaling = 19.0
+angle_degrees = 28.0
+startup_frames = 13
+active_frames = 16
+recovery_frames = 18
+faf_frame = 47
+animation_name = "SpecialDown2"
+hitbox_offset = Vector3(1.028, 0.099, 0.0)
+hitbox_radius = 0.921
+combo_next = null
+combo_window_frames = 0
+self_impulse = Vector3(4.070, 3.489, 0.0)
+self_impulse_frame = 4
+flip_facing_on_start = true
+is_special_attack = true
+sub_hitboxes = []

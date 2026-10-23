@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="AttackData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/attack_data.gd" id="1_atk"]
+
+[resource]
+script = ExtResource("1_atk")
+attack_name = "Down Air: Meteor Divekick"
+damage = 13.5
+base_knockback = 25.2
+knockback_scaling = 16.0
+angle_degrees = 295.0
+startup_frames = 7
+active_frames = 24
+recovery_frames = 11
+faf_frame = 42
+animation_name = "DownAir"
+hitbox_offset = Vector3(0.790, -0.757, 0.0)
+hitbox_radius = 0.782
+combo_next = null
+combo_window_frames = 0
+is_divekick = true
+divekick_speed = Vector2(378.0, 560.0)
+is_aerial = true
+landing_lag_frames = 9
+sub_hitboxes = []

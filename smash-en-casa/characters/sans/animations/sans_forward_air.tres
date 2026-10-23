@@ -1,0 +1,19 @@
+[gd_resource type="Animation" format=3]
+
+[resource]
+resource_name = "ForwardAir"
+length = 0.35
+tracks/0/type = "rotation_3d"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Humanoid/ModelRoot/Sans_Root/Skeleton3D:Spine_02")
+tracks/0/interp = 2
+tracks/0/loop_wrap = true
+tracks/0/keys = PackedFloat32Array(0, 1, 0.015250521, -0.00040129153, 0.05480183, 0.9983807, 0.1, 1, 0.1475392, 0.11075541, 0.04108136, 0.98197645, 0.35, 1, 0.015250521, -0.00040129153, 0.05480183, 0.9983807)
+tracks/1/type = "rotation_3d"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("Humanoid/ModelRoot/Sans_Root/Skeleton3D:Upperarm.R_010")
+tracks/1/interp = 2
+tracks/1/loop_wrap = true
+tracks/1/keys = PackedFloat32Array(0, 1, -0.1169045, -0.13361809, 0.2521885, 0.9512521, 0.1, 1, -0.5002658, -0.12574853, 0.13191204, 0.8464755, 0.35, 1, -0.1169045, -0.13361809, 0.2521885, 0.9512521)

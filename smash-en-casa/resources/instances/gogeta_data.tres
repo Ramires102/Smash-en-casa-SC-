@@ -1,24 +1,33 @@
-[gd_resource type="Resource" script_class="CharacterData" load_steps=3 format=3 uid="uid://c_gogeta_data"]
+[gd_resource type="Resource" script_class="CharacterData" load_steps=5 format=3 uid="uid://c_gogeta_data"]
 
 [ext_resource type="Script" path="res://resources/character_data.gd" id="1_chardata"]
-[ext_resource type="Resource" uid="uid://moveset_default" path="res://resources/instances/default_moveset.tres" id="2_mset"]
+[ext_resource type="Resource" path="res://resources/instances/gogeta_ssj_moveset.tres" id="2_mset"]
+[ext_resource type="PackedScene" path="res://characters/gogeta_ssj/gogeta_ssj.tscn" id="3_scene"]
+[ext_resource type="AnimationLibrary" uid="uid://c_gogeta_ssj_anim_lib" path="res://resources/instances/gogeta_ssj_anim_lib.tres" id="4_animlib"]
 
 [resource]
 script = ExtResource("1_chardata")
 character_name = "Gogeta"
-run_speed = 2.552
-walk_speed = 1.24
-initial_dash_speed = 2.3
-traction = 0.103
-jump_velocity = 14.5
-short_hop_velocity = 11.0
-air_speed = 1.218
+run_speed = 1.505
+walk_speed = 1.346
+initial_dash_speed = 1.309
+traction = 0.222
+jump_velocity = 9.137
+short_hop_velocity = 7.105
+air_speed = 1.05
 air_acceleration = 0.05
-air_friction = 0.01
-weight = 110.0
-gravity = 0.09
-fall_speed = 1.6
-fast_fall_speed = 2.56
+air_friction = 0.015
+weight = 102.0
+gravity = 0.04667
+fall_speed = 1.925
+fast_fall_speed = 2.75
 pushbox_radius = 0.5
-character_color = Color(0.2, 0.5, 1.0, 1)
+facing_angle_degrees = 75.6
+jumpsquat_frames = 0
+instant_run = true
+character_color = Color(0.96, 0.62, 0.04, 1)
+model_scene = ExtResource("3_scene")
+model_offset = Vector3(0, -0.9, 0)
+model_scale = 0.92
+animation_library = ExtResource("4_animlib")
 moveset = ExtResource("2_mset")

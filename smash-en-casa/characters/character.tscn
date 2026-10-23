@@ -29,7 +29,6 @@
 [ext_resource type="Script" path="res://characters/state_machine/daze_state.gd" id="27_daze"]
 [ext_resource type="Script" path="res://characters/state_machine/roll_state.gd" id="28_roll"]
 [ext_resource type="Script" path="res://characters/state_machine/spotdodge_state.gd" id="29_spot"]
-[ext_resource type="AnimationLibrary" uid="uid://c_sakuya_anim_lib" path="res://resources/instances/sakuya_anim_lib.tres" id="30_animlib"]
 [ext_resource type="Script" path="res://characters/shield_controller.gd" id="31_shieldctrl"]
 [ext_resource type="Script" path="res://characters/visual_controller.gd" id="32_visctrl"]
 [ext_resource type="Script" path="res://characters/state_machine/run_brake_state.gd" id="33_runbrake"]
@@ -196,7 +195,6 @@ script = ExtResource("7_anim")
 animation_player = NodePath("../AnimationPlayer")
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="."]
-libraries/ = ExtResource("30_animlib")
 
 [node name="StateMachine" type="Node" parent="." node_paths=PackedStringArray("initial_state")]
 script = ExtResource("8_fsm")

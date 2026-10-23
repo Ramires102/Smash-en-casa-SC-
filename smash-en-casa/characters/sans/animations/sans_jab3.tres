@@ -1,0 +1,26 @@
+[gd_resource type="Animation" format=3]
+
+[resource]
+resource_name = "AttackJab3"
+length = 0.35
+tracks/0/type = "rotation_3d"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Humanoid/ModelRoot/Sans_Root/Skeleton3D:Spine_02")
+tracks/0/interp = 2
+tracks/0/loop_wrap = true
+tracks/0/keys = PackedFloat32Array(0, 1, 0.015250521, -0.00040129153, 0.05480183, 0.9983807, 0.12, 1, 0.119526185, 0.0053292583, 0.054543566, 0.9913174, 0.35, 1, 0.015250521, -0.00040129153, 0.05480183, 0.9983807)
+tracks/1/type = "rotation_3d"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("Humanoid/ModelRoot/Sans_Root/Skeleton3D:Upperarm.R_010")
+tracks/1/interp = 2
+tracks/1/loop_wrap = true
+tracks/1/keys = PackedFloat32Array(0, 1, -0.1169045, -0.13361809, 0.2521885, 0.9512521, 0.12, 1, -0.45835438, -0.13649946, 0.08699733, 0.8739055, 0.35, 1, -0.1169045, -0.13361809, 0.2521885, 0.9512521)
+tracks/2/type = "rotation_3d"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("Humanoid/ModelRoot/Sans_Root/Skeleton3D:Upperarm.L_021")
+tracks/2/interp = 2
+tracks/2/loop_wrap = true
+tracks/2/keys = PackedFloat32Array(0, 1, -0.08633112, 0.119545005, -0.1745998, 0.97353524, 0.12, 1, -0.43215382, 0.09092815, -0.021007296, 0.8969581, 0.35, 1, -0.08633112, 0.119545005, -0.1745998, 0.97353524)

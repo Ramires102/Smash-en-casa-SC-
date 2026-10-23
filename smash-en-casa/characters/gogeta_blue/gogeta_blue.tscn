@@ -1,0 +1,177 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://characters/character.gd" id="1_char"]
+[ext_resource type="Script" path="res://characters/character_stats.gd" id="1_fbc8d"]
+[ext_resource type="Script" path="res://combat/hitbox.gd" id="2_xxhbf"]
+[ext_resource type="Script" path="res://combat/hurtbox.gd" id="3_rr80j"]
+[ext_resource type="Script" path="res://characters/animation_controller.gd" id="4_d0seq"]
+[ext_resource type="Script" path="res://characters/state_machine/state_machine.gd" id="5_orfcl"]
+[ext_resource type="Animation" path="res://characters/gogeta_blue/animations/GSN431_body.res" id="6_2ix22"]
+[ext_resource type="Script" path="res://characters/state_machine/run_state.gd" id="6_ghjn8"]
+[ext_resource type="Script" path="res://characters/state_machine/jump_state.gd" id="7_acvxc"]
+[ext_resource type="Animation" path="res://characters/gogeta_blue/animations/GSN233_body.res" id="7_rkxcb"]
+[ext_resource type="Script" path="res://characters/state_machine/attack_state.gd" id="8_fxyft"]
+[ext_resource type="Animation" path="res://characters/gogeta_blue/animations/GSN036_body.res" id="8_vwiay"]
+[ext_resource type="Script" path="res://characters/state_machine/hit_state.gd" id="9_brds2"]
+[ext_resource type="Animation" path="res://characters/gogeta_blue/animations/GSN060_body.res" id="9_w30f4"]
+[ext_resource type="Animation" path="res://characters/gogeta_blue/animations/GSN205_body.res" id="10_pj3su"]
+[ext_resource type="Script" path="res://characters/state_machine/death_state.gd" id="10_r12i8"]
+[ext_resource type="Script" path="res://characters/state_machine/shield_state.gd" id="11_succ2"]
+[ext_resource type="Animation" path="res://characters/gogeta_blue/animations/GSN264_body.res" id="11_xj5uw"]
+[ext_resource type="PackedScene" path="res://characters/gogeta_blue/GSS_body.gltf" id="12_70d0k"]
+[ext_resource type="Animation" path="res://characters/gogeta_blue/animations/GSN267_body.res" id="12_d2x5c"]
+[ext_resource type="Animation" path="res://characters/gogeta_blue/animations/GSN432_body.res" id="13_lqpiv"]
+[ext_resource type="Animation" path="res://characters/gogeta_blue/animations/GSN432cs_body.res" id="14_rbxof"]
+[ext_resource type="Animation" path="res://characters/gogeta_blue/animations/GSN433_body.res" id="15_h6sv3"]
+[ext_resource type="Animation" path="res://characters/gogeta_blue/animations/GSN600cs_body.res" id="16_ms8bl"]
+[ext_resource type="Animation" path="res://characters/gogeta_blue/animations/GSN610cs_body.res" id="17_jgt6e"]
+[ext_resource type="Animation" path="res://characters/gogeta_blue/animations/GSN_face000_body.res" id="18_1yfib"]
+[ext_resource type="Animation" path="res://characters/gogeta_blue/animations/GSN_face010_body.res" id="19_fqhrk"]
+[ext_resource type="Animation" path="res://characters/gogeta_blue/animations/GSN_face030_body.res" id="20_4np3b"]
+[ext_resource type="Animation" path="res://characters/gogeta_blue/animations/GSN_face031_body.res" id="21_i4j52"]
+[ext_resource type="Animation" path="res://characters/gogeta_blue/animations/GSN_face032_body.res" id="22_xo3vq"]
+[ext_resource type="Animation" path="res://characters/gogeta_blue/animations/GSN_face080_body.res" id="23_w4cr2"]
+[ext_resource type="Animation" path="res://characters/gogeta_blue/animations/GSN_face090_body.res" id="24_2tlp1"]
+[ext_resource type="Animation" path="res://characters/gogeta_blue/animations/GSN_face500_body.res" id="25_dlwj7"]
+[ext_resource type="Animation" path="res://characters/gogeta_blue/animations/GSS_face000_body.res" id="26_gucd5"]
+[ext_resource type="Animation" path="res://characters/gogeta_blue/animations/GSS_face010_body.res" id="27_bdwy4"]
+[ext_resource type="Animation" path="res://characters/gogeta_blue/animations/GSS_face030_body.res" id="28_gvxx1"]
+[ext_resource type="Animation" path="res://characters/gogeta_blue/animations/GSS_face031_body.res" id="29_ifnnd"]
+[ext_resource type="Animation" path="res://characters/gogeta_blue/animations/GSS_face032_body.res" id="30_x1vs4"]
+[ext_resource type="Animation" path="res://characters/gogeta_blue/animations/GSS_face080_body.res" id="31_mw7yw"]
+[ext_resource type="Animation" path="res://characters/gogeta_blue/animations/GSS_face090_body.res" id="32_yyu0y"]
+[ext_resource type="Animation" path="res://characters/gogeta_blue/animations/GSS_face500_body.res" id="33_gp7o7"]
+[ext_resource type="Animation" path="res://characters/gogeta_blue/animations/GSU_face000_body.res" id="34_jr51t"]
+[ext_resource type="Animation" path="res://characters/gogeta_blue/animations/GSU_face010_body.res" id="35_odxms"]
+[ext_resource type="Animation" path="res://characters/gogeta_blue/animations/GSU_face030_body.res" id="36_2bg0h"]
+[ext_resource type="Animation" path="res://characters/gogeta_blue/animations/GSU_face031_body.res" id="37_daswj"]
+[ext_resource type="Animation" path="res://characters/gogeta_blue/animations/GSU_face032_body.res" id="38_g0r5i"]
+[ext_resource type="Animation" path="res://characters/gogeta_blue/animations/GSU_face080_body.res" id="39_jhy2o"]
+[ext_resource type="Animation" path="res://characters/gogeta_blue/animations/GSU_face090_body.res" id="40_27sw0"]
+[ext_resource type="Animation" path="res://characters/gogeta_blue/animations/GSU_face500_body.res" id="41_v145b"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_1"]
+height = 1.8
+
+[sub_resource type="BoxMesh" id="BoxMesh_torso"]
+size = Vector3(0.5, 0.7, 0.3)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_hit"]
+size = Vector3(1.2, 1.2, 1.2)
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_hurt"]
+radius = 0.55
+height = 1.85
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_2ix22"]
+_data = {
+&"Attack": ExtResource("6_2ix22"),
+&"Fall": ExtResource("7_rkxcb"),
+&"GSN036_body": ExtResource("8_vwiay"),
+&"GSN060_body": ExtResource("9_w30f4"),
+&"GSN205_body": ExtResource("10_pj3su"),
+&"GSN233_body": ExtResource("7_rkxcb"),
+&"GSN264_body": ExtResource("11_xj5uw"),
+&"GSN267_body": ExtResource("12_d2x5c"),
+&"GSN431_body": ExtResource("6_2ix22"),
+&"GSN432_body": ExtResource("13_lqpiv"),
+&"GSN432cs_body": ExtResource("14_rbxof"),
+&"GSN433_body": ExtResource("15_h6sv3"),
+&"GSN600cs_body": ExtResource("16_ms8bl"),
+&"GSN610cs_body": ExtResource("17_jgt6e"),
+&"GSN_face000_body": ExtResource("18_1yfib"),
+&"GSN_face010_body": ExtResource("19_fqhrk"),
+&"GSN_face030_body": ExtResource("20_4np3b"),
+&"GSN_face031_body": ExtResource("21_i4j52"),
+&"GSN_face032_body": ExtResource("22_xo3vq"),
+&"GSN_face080_body": ExtResource("23_w4cr2"),
+&"GSN_face090_body": ExtResource("24_2tlp1"),
+&"GSN_face500_body": ExtResource("25_dlwj7"),
+&"GSS_face000_body": ExtResource("26_gucd5"),
+&"GSS_face010_body": ExtResource("27_bdwy4"),
+&"GSS_face030_body": ExtResource("28_gvxx1"),
+&"GSS_face031_body": ExtResource("29_ifnnd"),
+&"GSS_face032_body": ExtResource("30_x1vs4"),
+&"GSS_face080_body": ExtResource("31_mw7yw"),
+&"GSS_face090_body": ExtResource("32_yyu0y"),
+&"GSS_face500_body": ExtResource("33_gp7o7"),
+&"GSU_face000_body": ExtResource("34_jr51t"),
+&"GSU_face010_body": ExtResource("35_odxms"),
+&"GSU_face030_body": ExtResource("36_2bg0h"),
+&"GSU_face031_body": ExtResource("37_daswj"),
+&"GSU_face032_body": ExtResource("38_g0r5i"),
+&"GSU_face080_body": ExtResource("39_jhy2o"),
+&"GSU_face090_body": ExtResource("40_27sw0"),
+&"GSU_face500_body": ExtResource("41_v145b"),
+&"Idle": ExtResource("8_vwiay"),
+&"Jump": ExtResource("10_pj3su"),
+&"Run": ExtResource("9_w30f4"),
+&"Walk": ExtResource("9_w30f4")
+}
+
+[node name="GogetaBlue" type="CharacterBody3D" unique_id=1808562099]
+script = ExtResource("1_char")
+
+[node name="Controller" type="Node" parent="." unique_id=2028227640]
+
+[node name="Stats" type="Node" parent="." unique_id=1949345242]
+script = ExtResource("1_fbc8d")
+
+[node name="AttackController" type="Node" parent="." unique_id=1439810641]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1968444897]
+shape = SubResource("CapsuleShape3D_1")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=581258354]
+visible = false
+mesh = SubResource("BoxMesh_torso")
+
+[node name="Hitbox" type="Area2D" parent="." unique_id=589444555]
+script = ExtResource("2_xxhbf")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Hitbox" unique_id=1780484679]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.8, 0, 0)
+shape = SubResource("BoxShape3D_hit")
+
+[node name="Hurtbox" type="Area2D" parent="." unique_id=1442714568]
+script = ExtResource("3_rr80j")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Hurtbox" unique_id=1029733117]
+shape = SubResource("CapsuleShape3D_hurt")
+
+[node name="AnimationController" type="Node" parent="." unique_id=1678511069 node_paths=PackedStringArray("animation_player")]
+script = ExtResource("4_d0seq")
+animation_player = NodePath("../AnimationPlayer")
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=1004046220]
+root_node = NodePath("../GogetaModel/GSS_body")
+libraries/ = SubResource("AnimationLibrary_2ix22")
+autoplay = &"Idle"
+
+[node name="StateMachine" type="Node" parent="." unique_id=1524433163]
+script = ExtResource("5_orfcl")
+
+[node name="Idle" type="Node" parent="StateMachine" unique_id=85554084]
+
+[node name="Run" type="Node" parent="StateMachine" unique_id=360306155]
+script = ExtResource("6_ghjn8")
+
+[node name="Jump" type="Node" parent="StateMachine" unique_id=1436318000]
+script = ExtResource("7_acvxc")
+
+[node name="Fall" type="Node" parent="StateMachine" unique_id=1368551774]
+
+[node name="Attack" type="Node" parent="StateMachine" unique_id=512332127]
+script = ExtResource("8_fxyft")
+
+[node name="Hit" type="Node" parent="StateMachine" unique_id=521782386]
+script = ExtResource("9_brds2")
+
+[node name="Death" type="Node" parent="StateMachine" unique_id=1234581095]
+script = ExtResource("10_r12i8")
+
+[node name="Shield" type="Node" parent="StateMachine" unique_id=519068410]
+script = ExtResource("11_succ2")
+
+[node name="GogetaModel" type="Node3D" parent="." unique_id=1252655037 instance=ExtResource("12_70d0k")]
+transform = Transform3D(0.01, 0, 0, 0, 0.01, 0, 0, 0, 0.01, 0, -0.9, 0)

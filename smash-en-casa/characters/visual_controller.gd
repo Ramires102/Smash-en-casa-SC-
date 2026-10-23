@@ -74,7 +74,10 @@ func sync_3d_visuals(delta: float) -> void:
 
 func update_rotation(dir: float) -> void:
 	if visual_root_3d:
-		visual_root_3d.rotation_degrees.y = 90.0 if dir > 0.0 else -90.0
+		var angle: float = 75.6
+		if character and character.character_data and character.character_data.facing_angle_degrees > 0.0:
+			angle = character.character_data.facing_angle_degrees
+		visual_root_3d.rotation_degrees.y = angle if dir > 0.0 else -angle
 	if character and character.anim_controller and character.anim_controller.has_method("on_facing_direction_changed"):
 		character.anim_controller.on_facing_direction_changed(dir)
 
