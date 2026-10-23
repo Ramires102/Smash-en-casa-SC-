@@ -1,6 +1,7 @@
-[gd_resource type="Resource" script_class="AttackData" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="AttackData" format=3 uid="uid://icu02lecmf7t"]
 
-[ext_resource type="Script" path="res://resources/attack_data.gd" id="1_atk"]
+[ext_resource type="Script" uid="uid://dbegbdutf63rr" path="res://resources/attack_data.gd" id="1_atk"]
+[ext_resource type="Script" uid="uid://ldv5jefy6yfj" path="res://combat/hitbox_data.gd" id="2_vk4q4"]
 
 [resource]
 script = ExtResource("1_atk")
@@ -13,29 +14,13 @@ startup_frames = 5
 active_frames = 0
 recovery_frames = 11
 animation_name = "SpecialNeutral"
-hitbox_offset = Vector3(0.6, 0.2, 0.0)
+hitbox_offset = Vector3(0.6, 0.2, 0)
 hitbox_radius = 0.4
-combo_next = null
 combo_window_frames = 0
-self_impulse = Vector3(0.0, 0.0, 0.0)
-self_impulse_frame = 0
-disable_gravity_during_active = false
-sub_hitboxes = []
 is_special_attack = true
 spawns_projectile = true
 projectile_speed = 28.0
-projectile_count = 1
-projectile_spread_angles = [0.0]
 aerial_projectile_angle_offset = -28.0
 projectile_spawn_frame = 5
-projectile_offset = Vector3(0.55, 0.2, 0.0)
-projectile_lifetime = 2.5
+projectile_offset = Vector3(0.55, 0.2, 0)
 use_distance_damage_falloff = true
-close_range_damage = 3.0
-mid_range_damage = 2.0
-far_range_damage = 1.3
-close_range_max_meters = 3.2
-mid_range_max_meters = 7.5
-is_time_stop = false
-time_stop_duration_sec = 2.0
-time_stop_frame = 6

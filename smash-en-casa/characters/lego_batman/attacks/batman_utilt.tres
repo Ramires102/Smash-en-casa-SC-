@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="AttackData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/attack_data.gd" id="1_atk"]
+
+[resource]
+script = ExtResource("1_atk")
+attack_name = "Bat Rising Strike"
+damage = 9.0
+base_knockback = 13.0
+knockback_scaling = 60.0
+angle_degrees = 85.0
+startup_frames = 5
+active_frames = 6
+recovery_frames = 11
+animation_name = "AttackAirUp"
+is_aerial = false
+hitbox_offset = Vector3(0.1, 0.6, 0.0)
+hitbox_radius = 0.7
