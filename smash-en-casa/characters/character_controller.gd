@@ -3,8 +3,19 @@ extends Node
 
 @export var character: Character
 
+# Constantes globales 1:1 con shared/constants.ts
+const TS_GRAVITY: float = 26.0
+const TS_TERMINAL_VELOCITY: float = 22.0
+const TS_GROUND_FRICTION: float = 14.0
+const TS_AIR_FRICTION: float = 3.5
 
-# Valores de físicas 2D (cargados de CharacterData)
+# Stats en metros/s (idénticos a GogetaData / SansData en TypeScript)
+var ts_movement_speed: float = 8.6
+var ts_acceleration: float = 38.0
+var ts_jump_force: float = 12.4
+var ts_air_speed: float = 7.8
+
+# Variables heredadas para compatibilidad con otros estados
 var run_speed: float = 2.18
 var walk_speed: float = 1.05
 var initial_dash_speed: float = 2.35
@@ -17,15 +28,16 @@ var air_friction: float = 0.012
 var smash_gravity: float = 0.09
 var smash_fall_speed: float = 1.62
 var smash_fast_fall_speed: float = 2.55
-
-# Factores de escala 2D nativos (Píxeles/segundo)
-const SPEED_SCALE_2D: float = 160.0
-const JUMP_SCALE_2D: float = 38.0
-const GRAVITY_SCALE_2D: float = 260.0
+var jumpsquat_frames: int = 0
+var instant_run: bool = true
 
 var facing_direction: float = 1.0
 
+static func damp(current: float, target: float, lambda_val: float, dt: float) -> float:
+	return lerpf(current, target, 1.0 - exp(-lambda_val * dt))
+
 func setup(data: CharacterData) -> void:
+	var is_sans: bool = false
 	if data:
 		run_speed = data.run_speed
 		walk_speed = data.walk_speed
@@ -40,97 +52,102 @@ func setup(data: CharacterData) -> void:
 		smash_fall_speed = data.fall_speed
 		smash_fast_fall_speed = data.fast_fall_speed
 
+		var c_name: String = ""
+		if "character_name" in data:
+			c_name = str(data.character_name).to_lower()
+		elif "display_name" in data:
+			c_name = str(data.display_name).to_lower()
+		is_sans = c_name.contains("sans")
 
-# ── Movimiento Terrestre 2D (px/s) ──────────────────────────────────────────
+	if is_sans:
+		# Stats exactos de SansData (sans_data.ts)
+		ts_movement_speed = 7.4
+		ts_acceleration = 34.0
+		ts_jump_force = 11.8
+		ts_air_speed = 7.2
+	else:
+		# Stats exactos de GogetaData (gogeta_data.ts)
+		ts_movement_speed = 8.6
+		ts_acceleration = 38.0
+		ts_jump_force = 12.4
+		ts_air_speed = 7.8
+
+	jumpsquat_frames = 0
+	instant_run = true
+
+func get_jumpsquat_frames() -> int:
+	return 0
+
+func is_instant_run() -> bool:
+	return true
+
+# ── Movimiento Terrestre 2D (px/s) 1:1 con TypeScript ────────────────────────
 func get_run_speed() -> float:
-	return run_speed * SPEED_SCALE_2D
+	return ts_movement_speed * Constants.UNIT_SIZE
 
 func get_walk_speed() -> float:
-	return walk_speed * (SPEED_SCALE_2D * 0.65)
+	return ts_movement_speed * Constants.UNIT_SIZE
 
 func get_initial_dash_speed() -> float:
-	return initial_dash_speed * (SPEED_SCALE_2D * 1.15)
+	return ts_movement_speed * Constants.UNIT_SIZE
 
 func get_traction() -> float:
-	return traction * 60.0 * 180.0
+	return TS_GROUND_FRICTION * Constants.UNIT_SIZE * 4.0
 
-func accelerate_ground_velocity(target_speed_x: float, delta: float, accel_multiplier: float = 1.0) -> void:
+func accelerate_ground_velocity(target_speed_x: float, delta: float, _accel_multiplier: float = 1.0) -> void:
 	if character == null:
 		return
-	var accel: float = max(50.0, get_traction() * accel_multiplier)
-	character.velocity.x = move_toward(character.velocity.x, target_speed_x, accel * delta)
+	character.velocity.x = damp(character.velocity.x, target_speed_x, ts_acceleration * 0.4, delta)
 
-# ── Salto y Gravedad 2D (px/s) ──────────────────────────────────────────────
+func apply_ground_friction(delta: float, mult: float = 1.0) -> void:
+	if character == null:
+		return
+	character.velocity.x = damp(character.velocity.x, 0.0, TS_GROUND_FRICTION * mult, delta)
+
+# ── Salto y Gravedad 2D (px/s) 1:1 con TypeScript ───────────────────────────
 func get_jump_velocity() -> float:
-	return jump_velocity * JUMP_SCALE_2D
+	return ts_jump_force * Constants.UNIT_SIZE
 
 func get_short_hop_velocity() -> float:
-	return short_hop_velocity * JUMP_SCALE_2D
+	return ts_jump_force * Constants.UNIT_SIZE
 
 func get_air_speed() -> float:
-	return air_speed * (SPEED_SCALE_2D * 1.3)
+	return ts_air_speed * Constants.UNIT_SIZE
 
 func get_air_acceleration() -> float:
-	return air_acceleration * 60.0 * 200.0
+	return 8.0 * Constants.UNIT_SIZE
 
 func get_air_friction() -> float:
-	return air_friction * 60.0 * 150.0
+	return TS_AIR_FRICTION * Constants.UNIT_SIZE
 
 func get_gravity_value() -> float:
-	# En Godot 2D, Y positivo es abajo (+), por lo que la gravedad es POSITIVA (+)
-	return smash_gravity * 60.0 * GRAVITY_SCALE_2D
+	return TS_GRAVITY * Constants.UNIT_SIZE
 
 func get_fall_speed() -> float:
-	return smash_fall_speed * 320.0
+	return TS_TERMINAL_VELOCITY * Constants.UNIT_SIZE
 
 func get_fast_fall_speed() -> float:
-	return smash_fast_fall_speed * 280.0
+	return TS_TERMINAL_VELOCITY * 1.25 * Constants.UNIT_SIZE
 
 func get_terminal_fall_speed(is_fast_falling: bool = false) -> float:
 	return get_fast_fall_speed() if is_fast_falling else get_fall_speed()
 
-
 func apply_air_friction(delta: float) -> void:
 	if character == null:
 		return
-	var friction: float = get_air_friction()
-	character.velocity.x = move_toward(character.velocity.x, 0.0, friction * delta)
+	character.velocity.x = damp(character.velocity.x, 0.0, TS_AIR_FRICTION, delta)
 
-## Air drift estilo Splash N Dash: acelera fuerte por input opuesto y fricción leve en neutral.
-func apply_snd_air_movement(input_x: float, delta: float) -> void:
+func apply_snd_air_movement(input_x: float, delta: float, lambda_val: float = 7.5) -> void:
 	if character == null:
 		return
-
-	var max_air_speed: float = get_air_speed()
-	var air_accel: float = get_air_acceleration() * delta
-
-	if absf(character.velocity.x) >= absf(max_air_speed):
-		if character.velocity.x > 0.0:
-			if input_x < -0.1:
-				character.velocity.x -= air_accel
-		elif character.velocity.x < 0.0:
-			if input_x > 0.1:
-				character.velocity.x += air_accel
+	if absf(input_x) > 0.1:
+		var target_vx: float = input_x * get_air_speed()
+		character.velocity.x = damp(character.velocity.x, target_vx, lambda_val, delta)
 	else:
-		if input_x < -0.1:
-			character.velocity.x -= air_accel
-		elif input_x > 0.1:
-			character.velocity.x += air_accel
+		character.velocity.x = damp(character.velocity.x, 0.0, TS_AIR_FRICTION, delta)
 
-	if absf(input_x) <= 0.1:
-		var neutral_friction: float = air_accel / Constants.AIR_NEUTRAL_FRICTION_DIV
-		if character.velocity.x < 0.0:
-			character.velocity.x += neutral_friction
-			if character.velocity.x > 0.0:
-				character.velocity.x = 0.0
-		elif character.velocity.x > 0.0:
-			character.velocity.x -= neutral_friction
-			if character.velocity.x < 0.0:
-				character.velocity.x = 0.0
-
-func set_facing_direction(dir: float) -> void:
+func set_facing_direction(dir: float, smooth_turn: bool = false) -> void:
 	if dir != 0.0:
-		facing_direction = sign(dir)
+		facing_direction = signf(dir)
 		if character and character.has_method("update_visual_rotation"):
-			character.update_visual_rotation(facing_direction)
-
+			character.update_visual_rotation(facing_direction, smooth_turn)

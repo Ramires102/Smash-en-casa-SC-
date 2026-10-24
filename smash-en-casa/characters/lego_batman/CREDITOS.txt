@@ -1,0 +1,3 @@
+"Lego Batman Minifigure" (https://skfb.ly/o6zRw) by Neut2000 is licensed under Creative Commons Attribution (http://creativecommons.org/licenses/by/4.0/).
+Modelo 3D y texturas originales creados por Neut2000.
+Rigging, articulación de minifigura Lego, animaciones de combate (17 acciones) y adaptación para Smash en Casa realizados por el pipeline del proyecto.

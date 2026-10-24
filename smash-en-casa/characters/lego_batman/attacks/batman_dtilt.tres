@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="AttackData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/attack_data.gd" id="1_atk"]
+
+[resource]
+script = ExtResource("1_atk")
+attack_name = "Bat Low Sweep"
+damage = 7.0
+base_knockback = 10.0
+knockback_scaling = 50.0
+angle_degrees = 80.0
+startup_frames = 4
+active_frames = 5
+recovery_frames = 10
+animation_name = "AttackDown"
+is_aerial = false
+hitbox_offset = Vector3(0.65, -0.4, 0.0)
+hitbox_radius = 0.6

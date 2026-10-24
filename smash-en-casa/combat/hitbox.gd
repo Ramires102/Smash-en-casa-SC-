@@ -155,6 +155,13 @@ func deactivate() -> void:
 	for sub_m in _sub_debug_meshes:
 		sub_m.visible = false
 
+func reset_hit_registry() -> void:
+	hit_hurtboxes.clear()
+	_next_swing_id += 1
+	current_swing_id = _next_swing_id
+	if monitoring:
+		call_deferred("_check_immediate_overlaps")
+
 func _compute_attacker_hitlag_frames(impact: ImpactData, target_owner: Node2D) -> int:
 	if impact == null:
 		return 1

@@ -6,7 +6,8 @@ extends Node
 
 var timestop_shiver_timer: float = 0.0
 var hitlag_shake_offset: Vector3 = Vector3.ZERO
-
+var target_rotation_y: float = PI * 0.42
+var smooth_turn_active: bool = false
 
 func _ready() -> void:
 	if character == null and get_parent() is Character:
@@ -16,13 +17,20 @@ func _ready() -> void:
 
 func setup(char_node: Character, data: CharacterData) -> void:
 	character = char_node
-	if visual_root_3d == null:
-		if character and character.has_node("Humanoid"):
-			visual_root_3d = character.get_node("Humanoid") as Node3D
+	if visual_root_3d == null and character and character.has_node("Humanoid"):
+		visual_root_3d = character.get_node("Humanoid") as Node3D
 	if visual_root_3d == null or data == null:
 		return
 
 	if data.model_scene:
+		if data.animation_library == null and character and character.has_node("AnimationPlayer"):
+			var ap: AnimationPlayer = character.get_node("AnimationPlayer") as AnimationPlayer
+			if ap:
+				ap.stop()
+				if ap.has_animation_library(""):
+					ap.remove_animation_library("")
+				ap.active = false
+
 		for child in visual_root_3d.get_children():
 			if child.name.begins_with("Debug") or child.name in ["ShieldMesh", "DazeStars", "MenacingAura", "ModelRoot"]:
 				continue
@@ -31,16 +39,21 @@ func setup(char_node: Character, data: CharacterData) -> void:
 
 		var old_model: Node = visual_root_3d.get_node_or_null("ModelRoot")
 		if old_model:
+			old_model.name = "OldModelRoot"
+			visual_root_3d.remove_child(old_model)
 			old_model.queue_free()
 
 		var model_instance: Node3D = data.model_scene.instantiate()
 		model_instance.name = "ModelRoot"
 		model_instance.position = data.model_offset
-		var s: float = data.model_scale
+		var s: float = data.model_scale if data.model_scale > 0.0 else 1.0
 		model_instance.scale = Vector3(s, s, s)
 		visual_root_3d.add_child(model_instance)
 	else:
 		_apply_color_recursive(visual_root_3d, data.character_color)
+
+	var initial_dir: float = character.get_facing_direction() if character else 1.0
+	update_rotation(initial_dir, false)
 
 func _apply_color_recursive(node: Node, color: Color) -> void:
 	for child in node.get_children():
@@ -54,29 +67,41 @@ func _apply_color_recursive(node: Node, color: Color) -> void:
 			mesh_inst.visible = true
 		_apply_color_recursive(child, color)
 
-
 func sync_3d_visuals(delta: float) -> void:
 	if visual_root_3d == null or character == null:
 		return
-
 	var target_3d_pos := Vector3(
 		character.global_position.x / Constants.UNIT_SIZE,
 		-character.global_position.y / Constants.UNIT_SIZE,
 		0.0
 	)
-
 	if timestop_shiver_timer > 0.0:
 		timestop_shiver_timer -= delta
 		target_3d_pos.x += randf_range(-0.06, 0.06)
-
 	visual_root_3d.global_position = target_3d_pos + hitlag_shake_offset
 
+	var desired_rot_y: float = target_rotation_y
+	if character and character.anim_controller and character.anim_controller.is_sans:
+		if character.anim_controller.active_state_name == "Attack" and character.anim_controller.active_attack != null:
+			if character.anim_controller.active_attack.pose_style == "sans_parry_shrug" and character.anim_controller.attack_phase in ["startup", "active"]:
+				desired_rot_y = 0.0
 
-func update_rotation(dir: float) -> void:
-	if visual_root_3d:
-		visual_root_3d.rotation_degrees.y = 90.0 if dir > 0.0 else -90.0
+	var damp_speed: float = 13.5 if smooth_turn_active else 22.0
+	visual_root_3d.rotation.y = CharacterController.damp(visual_root_3d.rotation.y, desired_rot_y, damp_speed, minf(delta, 0.05))
+	if absf(visual_root_3d.rotation.y - desired_rot_y) < 0.02:
+		smooth_turn_active = false
+
+func update_rotation(dir: float, smooth_turn: bool = false) -> void:
+	var sign_dir: float = 1.0 if dir >= 0.0 else -1.0
+	var angle_rad: float = PI * 0.42
+	if character and character.character_data and character.character_data.facing_angle_degrees > 0.0:
+		angle_rad = deg_to_rad(character.character_data.facing_angle_degrees)
+	target_rotation_y = sign_dir * angle_rad
+	smooth_turn_active = smooth_turn
+	if not smooth_turn and visual_root_3d != null:
+		visual_root_3d.rotation.y = target_rotation_y
 	if character and character.anim_controller and character.anim_controller.has_method("on_facing_direction_changed"):
-		character.anim_controller.on_facing_direction_changed(dir)
+		character.anim_controller.on_facing_direction_changed(sign_dir)
 
 func set_menacing_aura_enabled(enabled: bool) -> void:
 	if visual_root_3d:

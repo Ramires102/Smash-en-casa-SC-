@@ -2,6 +2,8 @@ class_name CharacterData
 extends Resource
 
 @export var character_name: String = "Luchador"
+@export var display_name: String = ""
+@export var facing_angle_degrees: float = 75.6
 # Smash Ultimate physics (internal units, 1 unit ≈ 1 Smash unit scaled to 3D)
 @export var run_speed: float = 1.76       # Velocidad de carrera sostenida
 @export var walk_speed: float = 1.05      # Velocidad de caminata
@@ -24,4 +26,3 @@ extends Resource
 @export var model_scale: float = 1.0
 @export var animation_library: AnimationLibrary
 @export var moveset: MoveSet
-

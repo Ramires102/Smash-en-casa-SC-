@@ -197,4 +197,3 @@ func _process_projectile_hit(hurtbox: Hurtbox, target_owner: Node2D) -> void:
 	
 	hit_confirmed.emit(impact)
 	hurtbox.receive_impact(impact)
-

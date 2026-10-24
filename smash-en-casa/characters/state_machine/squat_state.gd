@@ -1,9 +1,7 @@
 class_name SquatState
 extends State
 
-## Estado de Agachado (Crouch / Squat)
-## Permite: agacharse en el suelo, frenar suavemente, Down-Tilts / Smashes,
-## Spotdodge (con Escudo), y atravesar plataformas flotantes con tap hacia abajo.
+## Estado de Agachado (Crouch / Squat) sin bloqueos de frames.
 
 func enter(_msg: Dictionary = {}) -> void:
 	dbg("enter")
@@ -16,10 +14,12 @@ func exit() -> void:
 func physics_update(delta: float) -> void:
 	if not character:
 		return
-		
-	# Frenado suave hacia 0 mientras está agachado
-	var trac: float = character.controller.get_traction() if character.controller else 300.0
-	character.velocity.x = move_toward(character.velocity.x, 0.0, trac * delta)
+
+	# Frenado exponencial suave mientras está agachado
+	if character.controller:
+		character.controller.apply_ground_friction(delta)
+	else:
+		character.velocity.x = CharacterController.damp(character.velocity.x, 0.0, 14.0, delta)
 
 	dbg_tick(delta, {
 		"input_x": snapped(character.get_input_vector().x, 0.001),
@@ -27,7 +27,6 @@ func physics_update(delta: float) -> void:
 		"vx": snapped(character.velocity.x, 0.001)
 	})
 
-	# Si ya no está en el suelo (ej: empujado o cae por el borde)
 	if not character.is_on_floor():
 		dbg("to_fall", {"reason": "left_floor"})
 		state_machine.transition_to("Fall")
@@ -63,23 +62,19 @@ func physics_update(delta: float) -> void:
 	if character.current_input:
 		character.current_input.movement.y = prev_y
 
-	# Salto desde agachado
+	# Salto instantáneo desde agachado (Frame 1)
 	if character.is_jump_just_pressed():
-		dbg("to_jumpsquat", {"reason": "crouch_jump_pressed"})
-		state_machine.transition_to("JumpSquat")
+		dbg("to_jump", {"reason": "crouch_jump_pressed"})
+		state_machine.transition_to("Jump")
 		return
 
 	var input_vec: Vector2 = character.get_input_vector()
 
 	# Reanudar estado de pie cuando se suelta la flechita abajo
 	if input_vec.y >= -0.5:
-		if absf(input_vec.x) > 0.1:
-			if character.is_dash_intent():
-				dbg("to_dash", {"reason": "dash_intent_from_squat", "input_x": snapped(input_vec.x, 0.001)})
-				state_machine.transition_to("Dash")
-			else:
-				dbg("to_walk", {"reason": "horizontal_input_from_squat", "input_x": snapped(input_vec.x, 0.001)})
-				state_machine.transition_to("Walk")
+		if absf(input_vec.x) > 0.15:
+			dbg("to_run", {"reason": "horizontal_input_from_squat", "input_x": snapped(input_vec.x, 0.001)})
+			state_machine.transition_to("Run")
 		else:
 			dbg("to_idle", {"reason": "neutral_from_squat"})
 			state_machine.transition_to("Idle")
