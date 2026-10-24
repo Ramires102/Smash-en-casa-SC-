@@ -58,10 +58,8 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 20
 text = "Batalla"
 
-[node name="GachaButton" type="Button" parent="VBoxContainer" unique_id=939706773]
 layout_mode = 2
 theme_override_font_sizes/font_size = 20
-text = "Gacha"
 
 [node name="QuitButton" type="Button" parent="VBoxContainer" unique_id=1378407416]
 layout_mode = 2
@@ -69,5 +67,4 @@ theme_override_font_sizes/font_size = 20
 text = "Salir"
 
 [connection signal="pressed" from="VBoxContainer/StartButton" to="." method="_on_start_button_pressed"]
-[connection signal="pressed" from="VBoxContainer/GachaButton" to="." method="_on_gacha_button_pressed"]
 [connection signal="pressed" from="VBoxContainer/QuitButton" to="." method="_on_quit_button_pressed"]

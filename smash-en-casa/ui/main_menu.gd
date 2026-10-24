@@ -9,8 +9,5 @@ func _ready() -> void:
 func _on_start_button_pressed() -> void:
 	get_tree().change_scene_to_file("res://ui/character_select.tscn")
 
-func _on_gacha_button_pressed() -> void:
-	get_tree().change_scene_to_file("res://ui/gacha/gacha.tscn")
-
 func _on_quit_button_pressed() -> void:
 	get_tree().quit()

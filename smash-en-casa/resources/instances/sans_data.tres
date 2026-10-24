@@ -1,9 +1,10 @@
-[gd_resource type="Resource" script_class="CharacterData" load_steps=5 format=3 uid="uid://c_sans_data"]
+[gd_resource type="Resource" script_class="CharacterData" load_steps=6 format=3 uid="uid://c_sans_data"]
 
 [ext_resource type="Script" path="res://resources/character_data.gd" id="1_chardata"]
 [ext_resource type="Resource" uid="uid://sans_moveset" path="res://characters/sans/sans_moveset.tres" id="2_mset"]
 [ext_resource type="PackedScene" uid="uid://c_sans_model_scene" path="res://characters/sans/sans.tscn" id="3_scene"]
 [ext_resource type="AnimationLibrary" path="res://characters/sans/sans_anim_lib.tres" id="4_animlib"]
+[ext_resource type="Texture2D" path="res://assets/logos/logo_sans.png" id="5_logo"]
 
 [resource]
 script = ExtResource("1_chardata")
@@ -23,6 +24,7 @@ fall_speed = 1.55
 fast_fall_speed = 2.45
 pushbox_radius = 0.45
 character_color = Color(0.2, 0.6, 1, 1)
+logo_texture = ExtResource("5_logo")
 model_scene = ExtResource("3_scene")
 model_offset = Vector3(0, -0.9, 0)
 model_scale = 0.0003

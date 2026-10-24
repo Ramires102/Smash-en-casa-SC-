@@ -21,6 +21,7 @@ extends Resource
 @export var jumpsquat_frames: int = 3
 @export var instant_run: bool = false
 @export var icon: Texture2D
+@export var logo_texture: Texture2D
 @export var character_color: Color = Color.WHITE
 @export var model_scene: PackedScene
 @export var model_offset: Vector3 = Vector3(0.0, -0.9, 0.0)

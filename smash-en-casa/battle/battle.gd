@@ -22,6 +22,20 @@ func _ready() -> void:
 		get_tree().call_deferred("change_scene_to_file", "res://ui/character_select.tscn")
 		return
 
+	# Cargar escenario seleccionado
+	var stage_path = GameManager.get_selected_stage_scene_path()
+	if stage_path != "" and stage_path != "res://battle/stage.tscn":
+		var stage_scene: PackedScene = load(stage_path)
+		if stage_scene:
+			var new_stage = stage_scene.instantiate() as Stage
+			var old_stage = stage
+			var idx = old_stage.get_index()
+			remove_child(old_stage)
+			old_stage.queue_free()
+			add_child(new_stage)
+			move_child(new_stage, idx)
+			stage = new_stage
+
 	p1_character = spawn_manager.spawn_player(character_base_scene, 1, p1_data)
 	p2_character = spawn_manager.spawn_player(character_base_scene, 2, p2_data)
 

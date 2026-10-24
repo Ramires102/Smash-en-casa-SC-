@@ -4,6 +4,7 @@
 [ext_resource type="Resource" uid="uid://ujrwrrxqc0v2" path="res://resources/instances/sakuya_prism_moveset.tres" id="2_mset"]
 [ext_resource type="PackedScene" uid="uid://dux7d7n8g18m5" path="res://characters/sakuya/sakuya.tscn" id="3_scene"]
 [ext_resource type="AnimationLibrary" path="res://resources/instances/sakuya_anim_lib.tres" id="4_animlib"]
+[ext_resource type="Texture2D" path="res://assets/logos/logo_sakuya.png" id="5_logo"]
 
 [resource]
 script = ExtResource("1_chardata")
@@ -17,6 +18,7 @@ short_hop_velocity = 12.0
 air_speed = 1.18
 weight = 80.0
 character_color = Color(0.8, 0.8, 0.9, 1)
+logo_texture = ExtResource("5_logo")
 model_scene = ExtResource("3_scene")
 model_scale = 0.1
 animation_library = ExtResource("4_animlib")

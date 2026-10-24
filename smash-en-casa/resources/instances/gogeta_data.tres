@@ -1,9 +1,10 @@
-[gd_resource type="Resource" script_class="CharacterData" load_steps=5 format=3 uid="uid://c_gogeta_data"]
+[gd_resource type="Resource" script_class="CharacterData" load_steps=6 format=3 uid="uid://c_gogeta_data"]
 
 [ext_resource type="Script" path="res://resources/character_data.gd" id="1_chardata"]
 [ext_resource type="Resource" path="res://resources/instances/gogeta_ssj_moveset.tres" id="2_mset"]
 [ext_resource type="PackedScene" path="res://characters/gogeta_ssj/gogeta_ssj.tscn" id="3_scene"]
 [ext_resource type="AnimationLibrary" uid="uid://c_gogeta_ssj_anim_lib" path="res://resources/instances/gogeta_ssj_anim_lib.tres" id="4_animlib"]
+[ext_resource type="Texture2D" path="res://assets/logos/logo_gogeta.png" id="5_logo"]
 
 [resource]
 script = ExtResource("1_chardata")
@@ -26,6 +27,7 @@ facing_angle_degrees = 75.6
 jumpsquat_frames = 0
 instant_run = true
 character_color = Color(0.96, 0.62, 0.04, 1)
+logo_texture = ExtResource("5_logo")
 model_scene = ExtResource("3_scene")
 model_offset = Vector3(0, -0.9, 0)
 model_scale = 0.92

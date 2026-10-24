@@ -20,10 +20,23 @@ func _ready() -> void:
 	# Conexión mediante EventBus desacoplado
 	Events.player_damaged.connect(_on_player_damaged)
 	Events.special_meter_changed.connect(_on_special_meter_changed)
+	Events.player_ko_event.connect(_on_player_ko_event)
 	if countdown_container:
 		countdown_container.visible = false
 	update_special_meter(1, 0.0, 100.0)
 	update_special_meter(2, 0.0, 100.0)
+
+	if GameManager.player_1_data:
+		var p1_name = get_node_or_null("MarginContainer/VBoxContainer/TopRow/P1Box/NameLabel") as Label
+		if p1_name:
+			p1_name.text = GameManager.player_1_data.character_name.to_upper()
+	if GameManager.player_2_data:
+		var p2_name = get_node_or_null("MarginContainer/VBoxContainer/TopRow/P2Box/NameLabel") as Label
+		if p2_name:
+			p2_name.text = GameManager.player_2_data.character_name.to_upper()
+
+func _on_player_ko_event(player_id: int, _death_pos: Vector3, p1_lives: int, p2_lives: int) -> void:
+	show_stock_score(player_id, p1_lives, p2_lives)
 
 func _on_player_damaged(player_id: int, new_percentage: float, _impact: ImpactData) -> void:
 	update_player_percentage(player_id, new_percentage)

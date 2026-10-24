@@ -74,9 +74,23 @@ func _on_player_ko(character: Character) -> void:
 	Events.camera_shake_requested.emit(10.0)
 	_enter_death_state(character)
 
+	# Rayo de partículas y haz luminoso desde la zona de muerte hacia el centro del mapa
+	var death_pos_3d := Vector3(
+		character.global_position.x / Constants.UNIT_SIZE,
+		-character.global_position.y / Constants.UNIT_SIZE,
+		0.0
+	)
+	var stage_center := Vector3(0.0, 1.5, 0.0)
+	var streak = DeathStreakVFX.new()
+	var parent_node = character.get_parent()
+	if parent_node:
+		parent_node.add_child(streak)
+		streak.setup(death_pos_3d, stage_center)
+
 	if pid == 1:
 		p1_lives -= 1
 		lives_updated.emit(1, p1_lives)
+		Events.player_ko_event.emit(1, death_pos_3d, p1_lives, p2_lives)
 		if p1_lives <= 0:
 			get_tree().create_timer(0.2).timeout.connect(func():
 				_finish_game(2) # P2 gana
@@ -91,6 +105,7 @@ func _on_player_ko(character: Character) -> void:
 	elif pid == 2:
 		p2_lives -= 1
 		lives_updated.emit(2, p2_lives)
+		Events.player_ko_event.emit(2, death_pos_3d, p1_lives, p2_lives)
 		if p2_lives <= 0:
 			get_tree().create_timer(0.2).timeout.connect(func():
 				_finish_game(1) # P1 gana
@@ -121,12 +136,5 @@ func _end_match_by_time() -> void:
 
 func _finish_game(winner_id: int) -> void:
 	is_active = false
-
-	# ── Recompensa de polvo (modo local, misma cuenta) ────────
-	# En local: ganador recibe 15 de victoria, nadie recibe derrota.
-	# TODO online: ganador +30 victoria / perdedor +30 derrota a sus cuentas separadas.
-	if winner_id > 0:
-		ProfileManager.add_victory_dust(15)
-
 	match_finished.emit(winner_id)
 	GameManager.end_match(winner_id)

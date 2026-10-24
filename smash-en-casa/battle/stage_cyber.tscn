@@ -1,0 +1,249 @@
+[gd_scene load_steps=22 format=3 uid="uid://b_stage_cyber"]
+
+[ext_resource type="Script" path="res://battle/stage.gd" id="1_stage"]
+[ext_resource type="Script" path="res://battle/ledge_point.gd" id="2_ledge"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_floor"]
+size = Vector2(560, 40)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_soft_plat"]
+size = Vector2(130, 8)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_ledge"]
+size = Vector2(24, 30)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_blast_v"]
+size = Vector2(300, 2000)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_blast_h"]
+size = Vector2(2360, 300)
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_cyber"]
+sky_top_color = Color(0.04, 0.06, 0.16, 1)
+sky_horizon_color = Color(0.12, 0.35, 0.65, 1)
+sky_curve = 0.12
+ground_bottom_color = Color(0.02, 0.02, 0.06, 1)
+ground_horizon_color = Color(0.15, 0.1, 0.35, 1)
+ground_curve = 0.12
+use_debanding = true
+
+[sub_resource type="Sky" id="Sky_cyber"]
+sky_material = SubResource("ProceduralSkyMaterial_cyber")
+
+[sub_resource type="Environment" id="Environment_cyber"]
+background_mode = 2
+sky = SubResource("Sky_cyber")
+ambient_light_source = 2
+ambient_light_color = Color(0.45, 0.7, 1.0, 1)
+ambient_light_energy = 0.9
+tonemap_mode = 3
+glow_enabled = true
+glow_intensity = 0.6
+glow_bloom = 0.15
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_platform"]
+size = Vector3(20, 1, 4)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_cyber_main"]
+albedo_color = Color(0.08, 0.10, 0.15, 1)
+metallic = 0.8
+roughness = 0.25
+
+[sub_resource type="BoxMesh" id="BoxMesh_cyber_body"]
+size = Vector3(19.8, 0.7, 3.8)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_neon_cyan"]
+albedo_color = Color(0.1, 0.9, 1.0, 1)
+emission_enabled = true
+emission = Color(0.1, 0.9, 1.0, 1)
+emission_energy_multiplier = 2.0
+
+[sub_resource type="BoxMesh" id="BoxMesh_neon_rim"]
+size = Vector3(20, 0.06, 3.9)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_neon_magenta"]
+albedo_color = Color(1.0, 0.15, 0.75, 1)
+emission_enabled = true
+emission = Color(1.0, 0.15, 0.75, 1)
+emission_energy_multiplier = 2.0
+
+[sub_resource type="BoxMesh" id="BoxMesh_cyber_plat"]
+size = Vector3(4.5, 0.22, 3)
+
+[sub_resource type="TorusMesh" id="TorusMesh_cyber_ring"]
+inner_radius = 8.5
+outer_radius = 9.0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_data_particles"]
+transparency = 1
+shading_mode = 0
+albedo_color = Color(0.3, 0.95, 1, 0.9)
+
+[sub_resource type="BoxMesh" id="BoxMesh_data_cube"]
+material = SubResource("StandardMaterial3D_data_particles")
+size = Vector3(0.12, 0.12, 0.12)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_blast"]
+size = Vector3(60, 40, 20)
+
+[node name="Stage" type="Node3D"]
+script = ExtResource("1_stage")
+stage_name = "CÃ¡mara CibernÃ©tica"
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_cyber")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.866025, -0.353553, 0.353553, 0, 0.707107, 0.707107, -0.5, -0.612372, 0.612372, 0, 14, 8)
+light_color = Color(0.8, 0.92, 1, 1)
+light_energy = 1.1
+shadow_enabled = true
+
+[node name="FillLight" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.965926, 0.12941, -0.224144, 0, 0.866025, 0.5, 0.258819, -0.482963, 0.836516, 0, 6, 12)
+light_color = Color(0.8, 0.3, 0.9, 1)
+light_energy = 0.5
+
+[node name="MainPlatform" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MainPlatform"]
+shape = SubResource("BoxShape3D_platform")
+
+[node name="DeckBody" type="MeshInstance3D" parent="MainPlatform"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.15, 0)
+mesh = SubResource("BoxMesh_cyber_body")
+surface_material_override/0 = SubResource("StandardMaterial3D_cyber_main")
+
+[node name="NeonRim" type="MeshInstance3D" parent="MainPlatform"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.48, 0)
+mesh = SubResource("BoxMesh_neon_rim")
+surface_material_override/0 = SubResource("StandardMaterial3D_neon_cyan")
+
+[node name="FloatingPlatforms" type="Node3D" parent="."]
+
+[node name="PlatformLeft" type="StaticBody3D" parent="FloatingPlatforms"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.5, 3, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="FloatingPlatforms/PlatformLeft"]
+shape = SubResource("BoxShape3D_platform")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="FloatingPlatforms/PlatformLeft"]
+mesh = SubResource("BoxMesh_cyber_plat")
+surface_material_override/0 = SubResource("StandardMaterial3D_neon_magenta")
+
+[node name="PlatformRight" type="StaticBody3D" parent="FloatingPlatforms"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.5, 3, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="FloatingPlatforms/PlatformRight"]
+shape = SubResource("BoxShape3D_platform")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="FloatingPlatforms/PlatformRight"]
+mesh = SubResource("BoxMesh_cyber_plat")
+surface_material_override/0 = SubResource("StandardMaterial3D_neon_magenta")
+
+[node name="BackgroundDeco" type="Node3D" parent="."]
+
+[node name="CyberRing" type="Node3D" parent="BackgroundDeco"]
+transform = Transform3D(0.965926, -0.258819, 0, 0.258819, 0.965926, 0, 0, 0, 1, 0, 10, -32)
+
+[node name="RingMesh" type="MeshInstance3D" parent="BackgroundDeco/CyberRing"]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0)
+mesh = SubResource("TorusMesh_cyber_ring")
+surface_material_override/0 = SubResource("StandardMaterial3D_neon_cyan")
+
+[node name="AmbientParticles" type="CPUParticles3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1, 0)
+amount = 28
+lifetime = 4.0
+mesh = SubResource("BoxMesh_data_cube")
+emission_shape = 3
+emission_box_extents = Vector3(14, 2, 3)
+direction = Vector3(0, 1, 0)
+spread = 20.0
+gravity = Vector3(0, 0.3, 0)
+initial_velocity_min = 0.8
+initial_velocity_max = 2.0
+
+[node name="SpawnP1" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 2, 0)
+
+[node name="SpawnP2" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 2, 0)
+
+[node name="BlastZone" type="Area3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="BlastZone"]
+shape = SubResource("BoxShape3D_blast")
+
+[node name="StageColliders2D" type="Node2D" parent="."]
+
+[node name="MainFloor" type="StaticBody2D" parent="StageColliders2D"]
+collision_layer = 1
+collision_mask = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="StageColliders2D/MainFloor"]
+position = Vector2(0, 20)
+shape = SubResource("RectangleShape2D_floor")
+
+[node name="SoftPlatformLeft" type="StaticBody2D" parent="StageColliders2D"]
+position = Vector2(-154, -87.5)
+collision_layer = 1
+collision_mask = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="StageColliders2D/SoftPlatformLeft"]
+position = Vector2(0, 4)
+shape = SubResource("RectangleShape2D_soft_plat")
+one_way_collision = true
+
+[node name="SoftPlatformRight" type="StaticBody2D" parent="StageColliders2D"]
+position = Vector2(154, -87.5)
+collision_layer = 1
+collision_mask = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="StageColliders2D/SoftPlatformRight"]
+position = Vector2(0, 4)
+shape = SubResource("RectangleShape2D_soft_plat")
+one_way_collision = true
+
+[node name="LedgeLeft" type="Area2D" parent="StageColliders2D"]
+position = Vector2(-280, 0)
+collision_layer = 32
+collision_mask = 32
+script = ExtResource("2_ledge")
+ledge_direction = 1.0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="StageColliders2D/LedgeLeft"]
+position = Vector2(-6, 6)
+shape = SubResource("RectangleShape2D_ledge")
+
+[node name="LedgeRight" type="Area2D" parent="StageColliders2D"]
+position = Vector2(280, 0)
+collision_layer = 32
+collision_mask = 32
+script = ExtResource("2_ledge")
+ledge_direction = -1.0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="StageColliders2D/LedgeRight"]
+position = Vector2(6, 6)
+shape = SubResource("RectangleShape2D_ledge")
+
+[node name="BlastZone2D" type="Area2D" parent="StageColliders2D"]
+collision_layer = 0
+collision_mask = 2
+
+[node name="BlastLeft" type="CollisionShape2D" parent="StageColliders2D/BlastZone2D"]
+position = Vector2(-930, -50)
+shape = SubResource("RectangleShape2D_blast_v")
+
+[node name="BlastRight" type="CollisionShape2D" parent="StageColliders2D/BlastZone2D"]
+position = Vector2(930, -50)
+shape = SubResource("RectangleShape2D_blast_v")
+
+[node name="BlastTop" type="CollisionShape2D" parent="StageColliders2D/BlastZone2D"]
+position = Vector2(0, -800)
+shape = SubResource("RectangleShape2D_blast_h")
+
+[node name="BlastBottom" type="CollisionShape2D" parent="StageColliders2D/BlastZone2D"]
+position = Vector2(0, 700)
+shape = SubResource("RectangleShape2D_blast_h")
