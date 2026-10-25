@@ -1,6 +1,32 @@
-[gd_scene load_steps=2 format=3 uid="uid://c_victory_scene"]
+[gd_scene load_steps=5 format=3 uid="uid://c_victory_scene"]
 
 [ext_resource type="Script" path="res://ui/victory.gd" id="1_victory"]
+[ext_resource type="FontVariation" path="res://ui/Fondos de texto/kamikaze_condensed.tres" id="2_font"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_card"]
+bg_color = Color(0.04, 0.05, 0.09, 0.92)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(1, 0.85, 0.25, 0.9)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+shadow_color = Color(0, 0, 0, 0.8)
+shadow_size = 24
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn"]
+bg_color = Color(0.08, 0.12, 0.2, 0.92)
+border_width_left = 6
+border_color = Color(1, 0.85, 0.25, 0.9)
+corner_radius_top_left = 4
+corner_radius_bottom_right = 8
+content_margin_left = 20.0
+content_margin_top = 10.0
+content_margin_right = 20.0
+content_margin_bottom = 10.0
 
 [node name="VictoryMenu" type="Control"]
 layout_mode = 3
@@ -18,48 +44,90 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.08, 0.15, 0.1, 1)
+color = Color(0.02, 0.03, 0.06, 0.85)
 
-[node name="VBoxContainer" type="VBoxContainer" parent="."]
+[node name="CenterContainer" type="CenterContainer" parent="."]
 layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -200.0
-offset_top = -160.0
-offset_right = 200.0
-offset_bottom = 160.0
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+
+[node name="CardPanel" type="PanelContainer" parent="CenterContainer"]
+custom_minimum_size = Vector2(480, 420)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_card")
+
+[node name="MarginContainer" type="MarginContainer" parent="CenterContainer/CardPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 32
+theme_override_constants/margin_top = 28
+theme_override_constants/margin_right = 32
+theme_override_constants/margin_bottom = 28
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer/CardPanel/MarginContainer"]
+layout_mode = 2
 theme_override_constants/separation = 12
 alignment = 1
 
-[node name="WinnerLabel" type="Label" parent="VBoxContainer"]
+[node name="TopBanner" type="Label" parent="CenterContainer/CardPanel/MarginContainer/VBoxContainer"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 40
-text = "¡JUGADOR 1 GANA!"
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 54
+theme_override_colors/font_color = Color(1, 0.88, 0.25, 1)
+theme_override_colors/font_shadow_color = Color(0.85, 0.1, 0.25, 0.9)
+theme_override_constants/shadow_offset_x = 4
+theme_override_constants/shadow_offset_y = 4
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 8
+text = "¡VICTORIA!"
 horizontal_alignment = 1
 
-[node name="HSeparator" type="HSeparator" parent="VBoxContainer"]
+[node name="WinnerLogo" type="TextureRect" parent="CenterContainer/CardPanel/MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(64, 64)
+layout_mode = 2
+size_flags_horizontal = 4
+expand_mode = 1
+stretch_mode = 5
+
+[node name="WinnerLabel" type="Label" parent="CenterContainer/CardPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 32
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 5
+text = "JUGADOR 1"
+horizontal_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="CenterContainer/CardPanel/MarginContainer/VBoxContainer"]
 layout_mode = 2
 
-[node name="HSeparator2" type="HSeparator" parent="VBoxContainer"]
+[node name="RetryButton" type="Button" parent="CenterContainer/CardPanel/MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 22
+theme_override_styles/normal = SubResource("StyleBoxFlat_btn")
+text = "⚔  REVANCHA"
 
-[node name="RetryButton" type="Button" parent="VBoxContainer"]
+[node name="CharSelectButton" type="Button" parent="CenterContainer/CardPanel/MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
-text = "Revancha"
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 22
+theme_override_styles/normal = SubResource("StyleBoxFlat_btn")
+text = "👥  SELECCIÓN DE LUCHADORES"
 
-[node name="CharSelectButton" type="Button" parent="VBoxContainer"]
+[node name="MainMenuButton" type="Button" parent="CenterContainer/CardPanel/MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
-text = "Selección de Personajes"
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 22
+theme_override_styles/normal = SubResource("StyleBoxFlat_btn")
+text = "◄  MENÚ PRINCIPAL"
 
-[node name="MainMenuButton" type="Button" parent="VBoxContainer"]
-layout_mode = 2
-text = "Menú Principal"
-
-[connection signal="pressed" from="VBoxContainer/RetryButton" to="." method="_on_retry_pressed"]
-[connection signal="pressed" from="VBoxContainer/CharSelectButton" to="." method="_on_character_select_pressed"]
-[connection signal="pressed" from="VBoxContainer/MainMenuButton" to="." method="_on_main_menu_pressed"]
+[connection signal="pressed" from="CenterContainer/CardPanel/MarginContainer/VBoxContainer/RetryButton" to="." method="_on_retry_pressed"]
+[connection signal="pressed" from="CenterContainer/CardPanel/MarginContainer/VBoxContainer/CharSelectButton" to="." method="_on_character_select_pressed"]
+[connection signal="pressed" from="CenterContainer/CardPanel/MarginContainer/VBoxContainer/MainMenuButton" to="." method="_on_main_menu_pressed"]
