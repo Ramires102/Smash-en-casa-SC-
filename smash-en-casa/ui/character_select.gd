@@ -4,8 +4,10 @@ extends Node3D
 # ==============================================================================
 # DBFZ Character Select Screen (Dragon Ball FighterZ Style)
 # - Curved 3D fan/arc of roster cards
-# - P1 (Blue) and P2 (Red) floating cursor tokens
+# - Up to 4 Simultaneous Players (P1, P2, P3, P4)
+# - Floating cursor tokens per active player with automatic multi-token spacing
 # - Live 3D character models standing on pedestals playing Idle animations
+# - Real-time Profile and Leaderboard integration
 # - Random (?) card on elevated top pedestal
 # - Audio feedback with arcade sound effects
 # - Controller, Keyboard, and Mouse support
@@ -17,31 +19,111 @@ extends Node3D
 @export var john_data: CharacterData = preload("res://resources/instances/john_placeholder_data.tres")
 @export var miyabi_data: CharacterData = preload("res://resources/instances/miyabi_data.tres")
 
+const MAX_PLAYERS: int = 4
+const PLAYER_COLORS: Dictionary = {
+	1: Color(0.25, 0.70, 1.0),   # Blue
+	2: Color(1.0, 0.28, 0.20),   # Red
+	3: Color(0.20, 0.90, 0.35),  # Green
+	4: Color(1.0, 0.85, 0.20)    # Yellow
+}
+
 # Roster definition
 var roster_slots: Array[Dictionary] = []
 
-# Player states
-var p1_slot_index: int = 1 # Default: Lego Batman
-var p2_slot_index: int = 2 # Default: Sakuya
-var p1_locked: bool = false
-var p2_locked: bool = false
-var p1_selected: CharacterData = null
-var p2_selected: CharacterData = null
+# Player states (1 a 4)
+var players_state: Dictionary = {
+	1: {
+		"active": true,
+		"slot_index": 1,
+		"locked": false,
+		"selected_data": null,
+		"token": null,
+		"token_tween": null,
+		"stage_root": null,
+		"stage_model": null,
+		"stage_light": null,
+		"info_panel": null,
+		"badge_label": null,
+		"name_label": null,
+		"status_label": null,
+		"profile_label": null
+	},
+	2: {
+		"active": true,
+		"slot_index": 2,
+		"locked": false,
+		"selected_data": null,
+		"token": null,
+		"token_tween": null,
+		"stage_root": null,
+		"stage_model": null,
+		"stage_light": null,
+		"info_panel": null,
+		"badge_label": null,
+		"name_label": null,
+		"status_label": null,
+		"profile_label": null
+	},
+	3: {
+		"active": false,
+		"slot_index": 3,
+		"locked": false,
+		"selected_data": null,
+		"token": null,
+		"token_tween": null,
+		"stage_root": null,
+		"stage_model": null,
+		"stage_light": null,
+		"info_panel": null,
+		"badge_label": null,
+		"name_label": null,
+		"status_label": null,
+		"profile_label": null
+	},
+	4: {
+		"active": false,
+		"slot_index": 4,
+		"locked": false,
+		"selected_data": null,
+		"token": null,
+		"token_tween": null,
+		"stage_root": null,
+		"stage_model": null,
+		"stage_light": null,
+		"info_panel": null,
+		"badge_label": null,
+		"name_label": null,
+		"status_label": null,
+		"profile_label": null
+	}
+}
+
+# Retrocompatibilidad con propiedades anteriores
+var p1_slot_index: int:
+	get: return players_state[1]["slot_index"]
+	set(val): players_state[1]["slot_index"] = val
+var p2_slot_index: int:
+	get: return players_state[2]["slot_index"]
+	set(val): players_state[2]["slot_index"] = val
+var p1_locked: bool:
+	get: return players_state[1]["locked"]
+	set(val): players_state[1]["locked"] = val
+var p2_locked: bool:
+	get: return players_state[2]["locked"]
+	set(val): players_state[2]["locked"] = val
+var p1_selected: CharacterData:
+	get: return players_state[1]["selected_data"]
+	set(val): players_state[1]["selected_data"] = val
+var p2_selected: CharacterData:
+	get: return players_state[2]["selected_data"]
+	set(val): players_state[2]["selected_data"] = val
 
 # Node references
 @onready var camera: Camera3D = $Camera3D
 @onready var card_arc_root: Node3D = $CardArc
-@onready var p1_stage_model: Node3D = $StageP1/ModelContainer
-@onready var p2_stage_model: Node3D = $StageP2/ModelContainer
-@onready var p1_token: Node3D = $Tokens/P1Token
-@onready var p2_token: Node3D = $Tokens/P2Token
 @onready var sfx_player: AudioStreamPlayer = $SFXPlayer
 
 # UI Overlay references
-@onready var p1_name_label: Label = $CanvasLayer/UI/P1Info/NameLabel
-@onready var p1_status_label: Label = $CanvasLayer/UI/P1Info/StatusLabel
-@onready var p2_name_label: Label = $CanvasLayer/UI/P2Info/NameLabel
-@onready var p2_status_label: Label = $CanvasLayer/UI/P2Info/StatusLabel
 @onready var center_vs_panel: Control = $CanvasLayer/UI/CenterVS
 @onready var start_battle_button: Button = $CanvasLayer/UI/CenterVS/StartBattleButton
 @onready var countdown_label: Label = $CanvasLayer/UI/CenterVS/CountdownLabel
@@ -49,10 +131,7 @@ var p2_selected: CharacterData = null
 
 # Card visual meshes dictionary: slot_index -> Node3D (card root)
 var card_nodes: Dictionary = {}
-
-# Tweens
-var p1_token_tween: Tween = null
-var p2_token_tween: Tween = null
+var portrait_viewports: Array[SubViewport] = []
 var start_countdown_timer: float = -1.0
 
 # 3D Stage Background and Selector
@@ -68,27 +147,269 @@ var sfx_select: AudioStreamWAV
 var sfx_cancel: AudioStreamWAV
 var sfx_ready: AudioStreamWAV
 
+func _get_game_manager() -> Node:
+	return get_node_or_null("/root/GameManager")
+
 func _ready() -> void:
+	var am = get_node_or_null("/root/AudioManager")
+	if am and am.has_method("play_menu_theme"):
+		am.play_menu_theme()
+
 	_init_sfx()
 	_init_roster()
 	_build_3d_card_arc()
 	_setup_3d_stage_background()
-	_update_p1_selection(p1_slot_index, false)
-	_update_p2_selection(p2_slot_index, false)
+	_setup_nodes_for_4_players()
+	_build_stage_preview()
 	
+	# Restaurar jugadores activos previos de GameManager si existen
+	var gm = _get_game_manager()
+	var gm_active: Array = gm.active_player_ids if (gm and "active_player_ids" in gm) else [1, 2]
+	for pid in [3, 4]:
+		if gm_active.has(pid):
+			players_state[pid]["active"] = true
+
+	# Inicializar selección y UI para los 4 jugadores
+	_update_pedestal_positions()
+	for pid in [1, 2, 3, 4]:
+		_refresh_player_ui(pid)
+		_update_stage_preview(pid, roster_slots[players_state[pid]["slot_index"]])
+
+	_refresh_card_highlights()
+	_sync_initial_tokens()
+
 	if start_battle_button:
 		start_battle_button.pressed.connect(_on_start_battle_pressed)
 		start_battle_button.visible = false
 	if countdown_label:
 		countdown_label.visible = false
-	_build_stage_preview()
-	_sync_initial_tokens()
+
+func _setup_nodes_for_4_players() -> void:
+	var font_res = preload("res://ui/Fondos de texto/kamikaze_condensed.tres") if ResourceLoader.exists("res://ui/Fondos de texto/kamikaze_condensed.tres") else null
+
+	# 1. P1 & P2 Existentes en Escena
+	var p1_stage = get_node_or_null("StageP1")
+	var p2_stage = get_node_or_null("StageP2")
+	players_state[1]["stage_root"] = p1_stage
+	players_state[1]["stage_model"] = p1_stage.get_node_or_null("ModelContainer") if p1_stage else null
+	players_state[1]["stage_light"] = get_node_or_null("Lights/StageLightP1")
+	players_state[1]["token"] = get_node_or_null("Tokens/P1Token")
+
+	players_state[2]["stage_root"] = p2_stage
+	players_state[2]["stage_model"] = p2_stage.get_node_or_null("ModelContainer") if p2_stage else null
+	players_state[2]["stage_light"] = get_node_or_null("Lights/StageLightP2")
+	players_state[2]["token"] = get_node_or_null("Tokens/P2Token")
+
+	# 2. Configurar Pedestales para P3 y P4 duplicando P1/P2 si no existen
+	var tokens_parent: Node = get_node_or_null("Tokens")
+	var lights_parent: Node = get_node_or_null("Lights")
+
+	# P3 Stage Pedestal
+	var p3_stage = get_node_or_null("StageP3")
+	if not p3_stage and p1_stage:
+		p3_stage = p1_stage.duplicate()
+		p3_stage.name = "StageP3"
+		add_child(p3_stage)
+		var p3_ped = p3_stage.get_node_or_null("PedestalP1")
+		if p3_ped:
+			p3_ped.name = "PedestalP3"
+			var mat3 = StandardMaterial3D.new()
+			mat3.albedo_color = Color(0.08, 0.18, 0.10, 1)
+			mat3.metallic = 0.7
+			mat3.roughness = 0.3
+			mat3.emission_enabled = true
+			mat3.emission = PLAYER_COLORS[3]
+			mat3.emission_energy_multiplier = 1.2
+			p3_ped.material_override = mat3
+	players_state[3]["stage_root"] = p3_stage
+	players_state[3]["stage_model"] = p3_stage.get_node_or_null("ModelContainer") if p3_stage else null
+
+	# P4 Stage Pedestal
+	var p4_stage = get_node_or_null("StageP4")
+	if not p4_stage and p2_stage:
+		p4_stage = p2_stage.duplicate()
+		p4_stage.name = "StageP4"
+		add_child(p4_stage)
+		var p4_ped = p4_stage.get_node_or_null("PedestalP2")
+		if p4_ped:
+			p4_ped.name = "PedestalP4"
+			var mat4 = StandardMaterial3D.new()
+			mat4.albedo_color = Color(0.18, 0.16, 0.06, 1)
+			mat4.metallic = 0.7
+			mat4.roughness = 0.3
+			mat4.emission_enabled = true
+			mat4.emission = PLAYER_COLORS[4]
+			mat4.emission_energy_multiplier = 1.2
+			p4_ped.material_override = mat4
+	players_state[4]["stage_root"] = p4_stage
+	players_state[4]["stage_model"] = p4_stage.get_node_or_null("ModelContainer") if p4_stage else null
+
+	# P3 & P4 Spotlights
+	if lights_parent:
+		var l1 = lights_parent.get_node_or_null("StageLightP1")
+		var l3 = lights_parent.get_node_or_null("StageLightP3")
+		if not l3 and l1:
+			l3 = l1.duplicate()
+			l3.name = "StageLightP3"
+			l3.light_color = PLAYER_COLORS[3]
+			l3.position = Vector3(-1.45, 3.0, 1.0)
+			lights_parent.add_child(l3)
+		players_state[3]["stage_light"] = l3
+
+		var l2 = lights_parent.get_node_or_null("StageLightP2")
+		var l4 = lights_parent.get_node_or_null("StageLightP4")
+		if not l4 and l2:
+			l4 = l2.duplicate()
+			l4.name = "StageLightP4"
+			l4.light_color = PLAYER_COLORS[4]
+			l4.position = Vector3(2.6, 3.0, 1.0)
+			lights_parent.add_child(l4)
+		players_state[4]["stage_light"] = l4
+
+	# 3. P3 & P4 3D Tokens
+	if tokens_parent:
+		var tok1 = tokens_parent.get_node_or_null("P1Token")
+		var tok3 = tokens_parent.get_node_or_null("P3Token")
+		if not tok3 and tok1:
+			tok3 = tok1.duplicate()
+			tok3.name = "P3Token"
+			var mat_tok3 = StandardMaterial3D.new()
+			mat_tok3.albedo_color = PLAYER_COLORS[3]
+			mat_tok3.metallic = 0.8
+			mat_tok3.roughness = 0.2
+			mat_tok3.emission_enabled = true
+			mat_tok3.emission = PLAYER_COLORS[3]
+			mat_tok3.emission_energy_multiplier = 0.5
+			var d3 = tok3.get_node_or_null("Disc") as MeshInstance3D
+			if d3: d3.material_override = mat_tok3
+			var a3 = tok3.get_node_or_null("Arrow") as MeshInstance3D
+			if a3: a3.material_override = mat_tok3
+			var lbl3 = tok3.get_node_or_null("Label3D") as Label3D
+			if lbl3: lbl3.text = "3"
+			tokens_parent.add_child(tok3)
+		players_state[3]["token"] = tok3
+
+		var tok2 = tokens_parent.get_node_or_null("P2Token")
+		var tok4 = tokens_parent.get_node_or_null("P4Token")
+		if not tok4 and tok2:
+			tok4 = tok2.duplicate()
+			tok4.name = "P4Token"
+			var mat_tok4 = StandardMaterial3D.new()
+			mat_tok4.albedo_color = PLAYER_COLORS[4]
+			mat_tok4.metallic = 0.8
+			mat_tok4.roughness = 0.2
+			mat_tok4.emission_enabled = true
+			mat_tok4.emission = PLAYER_COLORS[4]
+			mat_tok4.emission_energy_multiplier = 0.5
+			var d4 = tok4.get_node_or_null("Disc") as MeshInstance3D
+			if d4: d4.material_override = mat_tok4
+			var a4 = tok4.get_node_or_null("Arrow") as MeshInstance3D
+			if a4: a4.material_override = mat_tok4
+			var lbl4 = tok4.get_node_or_null("Label3D") as Label3D
+			if lbl4: lbl4.text = "4"
+			tokens_parent.add_child(tok4)
+		players_state[4]["token"] = tok4
+
+	# 4. Configurar UI Overlay para 4 Jugadores (P1, P2, P3, P4)
+	var ui_root: Control = get_node_or_null("CanvasLayer/UI")
+	var p1_info: VBoxContainer = get_node_or_null("CanvasLayer/UI/P1Info") as VBoxContainer
+	var p2_info: VBoxContainer = get_node_or_null("CanvasLayer/UI/P2Info") as VBoxContainer
+
+	# Ajustar estilo compacto para P1
+	if p1_info:
+		p1_info.offset_top = 10
+		p1_info.offset_bottom = 90
+		p1_info.add_theme_constant_override("separation", 1)
+		var p1_name = p1_info.get_node_or_null("NameLabel") as Label
+		if p1_name: p1_name.add_theme_font_size_override("font_size", 17)
+		var p1_stat = p1_info.get_node_or_null("StatusLabel") as Label
+		if p1_stat: p1_stat.add_theme_font_size_override("font_size", 11)
+		var p1_badge = p1_info.get_node_or_null("Badge") as Label
+		if p1_badge: p1_badge.add_theme_font_size_override("font_size", 12)
+
+		players_state[1]["info_panel"] = p1_info
+		players_state[1]["badge_label"] = p1_badge
+		players_state[1]["name_label"] = p1_name
+		players_state[1]["status_label"] = p1_stat
+		var p1_prof = p1_info.get_node_or_null("ProfileLabel")
+		if not p1_prof:
+			p1_prof = Label.new()
+			p1_prof.name = "ProfileLabel"
+			if font_res: p1_prof.add_theme_font_override("font", font_res)
+			p1_prof.add_theme_font_size_override("font_size", 10)
+			p1_info.add_child(p1_prof)
+		players_state[1]["profile_label"] = p1_prof
+
+	# Ajustar estilo compacto para P2
+	if p2_info:
+		p2_info.offset_top = 10
+		p2_info.offset_bottom = 90
+		p2_info.add_theme_constant_override("separation", 1)
+		var p2_name = p2_info.get_node_or_null("NameLabel") as Label
+		if p2_name: p2_name.add_theme_font_size_override("font_size", 17)
+		var p2_stat = p2_info.get_node_or_null("StatusLabel") as Label
+		if p2_stat: p2_stat.add_theme_font_size_override("font_size", 11)
+		var p2_badge = p2_info.get_node_or_null("Badge") as Label
+		if p2_badge: p2_badge.add_theme_font_size_override("font_size", 12)
+
+		players_state[2]["info_panel"] = p2_info
+		players_state[2]["badge_label"] = p2_badge
+		players_state[2]["name_label"] = p2_name
+		players_state[2]["status_label"] = p2_stat
+		var p2_prof = p2_info.get_node_or_null("ProfileLabel")
+		if not p2_prof:
+			p2_prof = Label.new()
+			p2_prof.name = "ProfileLabel"
+			if font_res: p2_prof.add_theme_font_override("font", font_res)
+			p2_prof.add_theme_font_size_override("font_size", 10)
+			p2_prof.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+			p2_info.add_child(p2_prof)
+		players_state[2]["profile_label"] = p2_prof
+
+	# P3 Info (Ubicado limpiamente debajo de P1)
+	var p3_info = get_node_or_null("CanvasLayer/UI/P3Info")
+	if not p3_info and ui_root and p1_info:
+		p3_info = p1_info.duplicate()
+		p3_info.name = "P3Info"
+		p3_info.offset_top = 98
+		p3_info.offset_bottom = 178
+		p3_info.add_theme_constant_override("separation", 1)
+		ui_root.add_child(p3_info)
+	if p3_info:
+		p3_info.offset_top = 98
+		p3_info.offset_bottom = 178
+		players_state[3]["info_panel"] = p3_info
+		players_state[3]["badge_label"] = p3_info.get_node_or_null("Badge")
+		players_state[3]["name_label"] = p3_info.get_node_or_null("NameLabel")
+		players_state[3]["status_label"] = p3_info.get_node_or_null("StatusLabel")
+		players_state[3]["profile_label"] = p3_info.get_node_or_null("ProfileLabel")
+		if players_state[3]["badge_label"]:
+			players_state[3]["badge_label"].text = "◄ JUGADOR 3"
+
+	# P4 Info (Ubicado limpiamente debajo de P2)
+	var p4_info = get_node_or_null("CanvasLayer/UI/P4Info")
+	if not p4_info and ui_root and p2_info:
+		p4_info = p2_info.duplicate()
+		p4_info.name = "P4Info"
+		p4_info.offset_top = 98
+		p4_info.offset_bottom = 178
+		p4_info.add_theme_constant_override("separation", 1)
+		ui_root.add_child(p4_info)
+	if p4_info:
+		p4_info.offset_top = 98
+		p4_info.offset_bottom = 178
+		players_state[4]["info_panel"] = p4_info
+		players_state[4]["badge_label"] = p4_info.get_node_or_null("Badge")
+		players_state[4]["name_label"] = p4_info.get_node_or_null("NameLabel")
+		players_state[4]["status_label"] = p4_info.get_node_or_null("StatusLabel")
+		players_state[4]["profile_label"] = p4_info.get_node_or_null("ProfileLabel")
+		if players_state[4]["badge_label"]:
+			players_state[4]["badge_label"].text = "JUGADOR 4 ►"
 
 func _sync_initial_tokens() -> void:
 	await get_tree().process_frame
 	await get_tree().process_frame
-	_update_token_position(1, false)
-	_update_token_position(2, false)
+	_refresh_all_token_positions(false)
 
 func _setup_3d_stage_background() -> void:
 	if stage_bg_deco != null:
@@ -106,7 +427,8 @@ func _update_3d_stage_background() -> void:
 	for c in stage_bg_deco.get_children():
 		c.queue_free()
 		
-	var stage_data = GameManager.get_selected_stage()
+	var gm = _get_game_manager()
+	var stage_data = gm.get_selected_stage() if (gm and gm.has_method("get_selected_stage")) else {}
 	var stage_id: String = stage_data.get("id", "astral")
 	
 	# Update Sky Environment
@@ -132,7 +454,6 @@ func _update_3d_stage_background() -> void:
 	# 3D Decorative visual elements matching each stage
 	match stage_id:
 		"astral":
-			# Giant golden celestial ring
 			var ring_mesh = MeshInstance3D.new()
 			var torus = TorusMesh.new()
 			torus.inner_radius = 2.4
@@ -151,7 +472,6 @@ func _update_3d_stage_background() -> void:
 			ring_mesh.name = "CelestialRing"
 			stage_bg_deco.add_child(ring_mesh)
 			
-			# Astral pillars on sides
 			for side in [-4.5, 4.5]:
 				var pil = MeshInstance3D.new()
 				var cyl = CylinderMesh.new()
@@ -167,7 +487,6 @@ func _update_3d_stage_background() -> void:
 				stage_bg_deco.add_child(pil)
 				
 		"cyber":
-			# Neon Cyber Rings (Cyan & Magenta)
 			var c_ring1 = MeshInstance3D.new()
 			var torus1 = TorusMesh.new()
 			torus1.inner_radius = 2.0
@@ -195,7 +514,6 @@ func _update_3d_stage_background() -> void:
 			c_ring2.name = "CyberRing2"
 			stage_bg_deco.add_child(c_ring2)
 			
-			# Vertical cyber light columns
 			for side in [-3.5, -1.8, 1.8, 3.5]:
 				var beam = MeshInstance3D.new()
 				var box = BoxMesh.new()
@@ -209,7 +527,6 @@ func _update_3d_stage_background() -> void:
 				stage_bg_deco.add_child(beam)
 				
 		"volcano":
-			# Jagged obsidian basalt pillars
 			for side in [-4.2, -2.2, 2.2, 4.2]:
 				var pil = MeshInstance3D.new()
 				var cyl = CylinderMesh.new()
@@ -227,7 +544,6 @@ func _update_3d_stage_background() -> void:
 				pil.position = Vector3(side, 1.0, -1.8)
 				stage_bg_deco.add_child(pil)
 				
-			# Molten lava core glow strip
 			var lava = MeshInstance3D.new()
 			var l_mesh = BoxMesh.new()
 			l_mesh.size = Vector3(12.0, 0.3, 2.0)
@@ -244,7 +560,6 @@ func _build_stage_preview() -> void:
 	if not ui_root:
 		return
 	
-	# Interactive Stage Selection frame under title banner
 	var panel := PanelContainer.new()
 	panel.name = "StagePreviewPanel"
 	panel.set_anchors_preset(Control.PRESET_CENTER_TOP)
@@ -271,7 +586,6 @@ func _build_stage_preview() -> void:
 	var vbox := VBoxContainer.new()
 	vbox.add_theme_constant_override("separation", 3)
 	
-	# Header title
 	var header_label := Label.new()
 	header_label.text = "ESCENARIO [Q / E]"
 	var font_res = preload("res://ui/Fondos de texto/kamikaze_condensed.tres") if ResourceLoader.exists("res://ui/Fondos de texto/kamikaze_condensed.tres") else null
@@ -282,7 +596,6 @@ func _build_stage_preview() -> void:
 	header_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vbox.add_child(header_label)
 	
-	# Middle row with Arrow Left, Thumbnail, Arrow Right
 	var row := HBoxContainer.new()
 	row.alignment = BoxContainer.ALIGNMENT_CENTER
 	row.add_theme_constant_override("separation", 6)
@@ -314,7 +627,6 @@ func _build_stage_preview() -> void:
 	
 	vbox.add_child(row)
 	
-	# Stage name label
 	stage_name_label = Label.new()
 	if font_res:
 		stage_name_label.add_theme_font_override("font", font_res)
@@ -329,13 +641,16 @@ func _build_stage_preview() -> void:
 	_update_stage_display()
 
 func _cycle_stage(direction: int) -> void:
-	GameManager.set_selected_stage_index(GameManager.selected_stage_index + direction)
+	var gm = _get_game_manager()
+	if gm and gm.has_method("set_selected_stage_index"):
+		gm.set_selected_stage_index(gm.selected_stage_index + direction)
 	_update_stage_display()
 	_update_3d_stage_background()
 	_play_sfx(sfx_move, 1.25)
 	
 func _update_stage_display() -> void:
-	var stage_data = GameManager.get_selected_stage()
+	var gm = _get_game_manager()
+	var stage_data = gm.get_selected_stage() if (gm and gm.has_method("get_selected_stage")) else {}
 	if stage_name_label:
 		stage_name_label.text = stage_data.get("name", "ESCENARIO").to_upper()
 		stage_name_label.add_theme_color_override("font_color", stage_data.get("theme_color", Color(1.0, 0.9, 0.4)))
@@ -352,27 +667,23 @@ func _process(delta: float) -> void:
 	_preview_time += delta
 	var now = _preview_time
 	
-	# Continuous subtle floating bob on tokens
-	if p1_token:
-		p1_token.position.y += sin(now * 5.0) * (0.015 * delta)
-	if p2_token:
-		p2_token.position.y += cos(now * 5.0) * (0.015 * delta)
+	# Continuous subtle floating bob on active tokens
+	for pid in [1, 2, 3, 4]:
+		var tok: Node3D = players_state[pid]["token"]
+		if tok and tok.visible:
+			tok.position.y += sin(now * 5.0 + float(pid)) * (0.015 * delta)
 		
-	# Subtle living breathing bob on preview model pedestals (NO TWEENS)
-	var bob1 = sin(now * 2.2) * 0.015
-	var bob2 = cos(now * 2.2) * 0.015
-	if p1_stage_model:
-		p1_stage_model.position.y = 0.08 + bob1
-	if p2_stage_model:
-		p2_stage_model.position.y = 0.08 + bob2
-		
-	# Subtle idle sway for models facing center
-	if p1_stage_model and p1_stage_model.get_child_count() > 0:
-		var c1 = p1_stage_model.get_child(0)
-		c1.rotation.y = deg_to_rad(22.0) + sin(now * 1.5) * 0.03
-	if p2_stage_model and p2_stage_model.get_child_count() > 0:
-		var c2 = p2_stage_model.get_child(0)
-		c2.rotation.y = deg_to_rad(-22.0) - sin(now * 1.5) * 0.03
+	# Continuous living breathing bob on preview model pedestals
+	for pid in [1, 2, 3, 4]:
+		var st_model: Node3D = players_state[pid]["stage_model"]
+		if st_model and st_model.visible:
+			var bob = sin(now * 2.2 + float(pid) * 0.9) * 0.015
+			st_model.position.y = 0.08 + bob
+			if st_model.get_child_count() > 0:
+				var c = st_model.get_child(0)
+				if c is Node3D:
+					var base_yaw = deg_to_rad(22.0) if pid in [1, 3] else deg_to_rad(-22.0)
+					c.rotation.y = base_yaw + sin(now * 1.5 + float(pid)) * 0.03
 		
 	# Slow background deco rotation
 	if stage_bg_deco:
@@ -380,7 +691,7 @@ func _process(delta: float) -> void:
 			if "Ring" in child.name:
 				child.rotation.z += delta * 0.15
 		
-	# Auto-start countdown when both locked
+	# Auto-start countdown when all active players are locked
 	if start_countdown_timer > 0.0:
 		start_countdown_timer -= delta
 		if countdown_label:
@@ -394,7 +705,7 @@ func _init_roster() -> void:
 		{
 			"id": "random",
 			"name": "ALEATORIO",
-			"sub": "Â¿QUIÃ‰N SERÃ?",
+			"sub": "¿QUIÉN SERÁ?",
 			"data": null,
 			"row": 0,
 			"col": 0,
@@ -427,7 +738,7 @@ func _init_roster() -> void:
 		{
 			"id": "gogeta",
 			"name": "GOGETA",
-			"sub": "GUERRERO DE FUSIÃ“N",
+			"sub": "GUERRERO DE FUSIÓN",
 			"data": gogeta_data,
 			"row": 2,
 			"col": 0,
@@ -438,7 +749,7 @@ func _init_roster() -> void:
 		{
 			"id": "john",
 			"name": "JOHN\nPLACEHOLDER",
-			"sub": "MANIQUÃ DE ENTRENAMIENTO",
+			"sub": "MANIQUÍ DE ENTRENAMIENTO",
 			"data": john_data,
 			"row": 2,
 			"col": 1,
@@ -461,11 +772,15 @@ func _init_roster() -> void:
 func _build_3d_card_arc() -> void:
 	var font_res = preload("res://ui/Fondos de texto/kamikaze_condensed.tres")
 	
-	# Layout tuning (matching DBFZ compact tilted curved plane)
 	var col_spacing: float = 0.36
 	var row_spacing_y: float = 0.25
 	var row_spacing_z: float = 0.04
 	
+	for vp in portrait_viewports:
+		if is_instance_valid(vp):
+			vp.queue_free()
+	portrait_viewports.clear()
+
 	for i in range(roster_slots.size()):
 		var slot: Dictionary = roster_slots[i]
 		var row: int = slot["row"]
@@ -480,15 +795,12 @@ func _build_3d_card_arc() -> void:
 		var yaw: float = 0.0
 		
 		if row == 0:
-			# Random card at top center
 			px = 0.0
 			py += 0.06
 			pz -= 0.02
 			yaw = 0.0
 		else:
-			# 2 columns: col 0 is left (-1), col 1 is right (+1)
 			if row == 3:
-				# Solo center card (Miyabi)
 				px = 0.0
 				yaw = 0.0
 				pz -= 0.016
@@ -501,7 +813,6 @@ func _build_3d_card_arc() -> void:
 		card_root.position = Vector3(px, py, pz)
 		card_root.rotation.y = yaw
 		
-		# Glow Mesh (Behind Card for DBFZ outline effect)
 		var glow_mesh := MeshInstance3D.new()
 		glow_mesh.name = "Glow"
 		var glow_quad := QuadMesh.new()
@@ -515,32 +826,37 @@ func _build_3d_card_arc() -> void:
 		glow_mesh.visible = false
 		card_root.add_child(glow_mesh)
 
-		# Card Mesh
 		var mesh_inst := MeshInstance3D.new()
 		mesh_inst.name = "CardMesh"
 		var quad := QuadMesh.new()
 		quad.size = Vector2(0.30, 0.20)
 		mesh_inst.mesh = quad
 		
-		# Material (Unshaded to keep 2D anime art crisp and vivid)
 		var mat := StandardMaterial3D.new()
-		var tex: Texture2D = null
-		if ResourceLoader.exists(slot["tex_path"]):
-			tex = load(slot["tex_path"])
-		if tex == null and FileAccess.file_exists(slot["tex_path"]):
-			var img := Image.load_from_file(ProjectSettings.globalize_path(slot["tex_path"]))
-			if img:
-				tex = ImageTexture.create_from_image(img)
-		if tex:
-			mat.albedo_texture = tex
-		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
-		mat.alpha_scissor_threshold = 0.5
+		if slot["data"] != null:
+			var vp: SubViewport = _create_face_portrait_viewport(slot)
+			add_child(vp)
+			portrait_viewports.append(vp)
+			mat.albedo_texture = vp.get_texture()
+			mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+			mat.transparency = BaseMaterial3D.TRANSPARENCY_DISABLED
+		else:
+			var tex: Texture2D = null
+			if ResourceLoader.exists(slot["tex_path"]):
+				tex = load(slot["tex_path"])
+			elif FileAccess.file_exists(slot["tex_path"]):
+				var img := Image.load_from_file(ProjectSettings.globalize_path(slot["tex_path"]))
+				if img:
+					tex = ImageTexture.create_from_image(img)
+			if tex:
+				mat.albedo_texture = tex
+			mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+			mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
+			mat.alpha_scissor_threshold = 0.5
 		mat.albedo_color = Color(0.85, 0.85, 0.88)
 		mesh_inst.material_override = mat
 		card_root.add_child(mesh_inst)
 		
-		# Name Label in bottom banner
 		var label := Label3D.new()
 		label.text = slot["name"]
 		label.font = font_res
@@ -557,7 +873,6 @@ func _build_3d_card_arc() -> void:
 		
 		card_root.set_meta("base_pos", card_root.position)
 		
-		# Clickable Area3D for Mouse clicks
 		var area := Area3D.new()
 		var col_shape := CollisionShape3D.new()
 		var box := BoxShape3D.new()
@@ -585,47 +900,217 @@ func _unhandled_input(event: InputEvent) -> void:
 		_handle_cancel(1)
 		return
 
-	# Player 1 Inputs
-	if not p1_locked:
-		if event.is_action_pressed("p1_left") or (event is InputEventKey and event.pressed and event.keycode == KEY_A):
-			_navigate_player(1, Vector2i(-1, 0))
-		elif event.is_action_pressed("p1_right") or (event is InputEventKey and event.pressed and event.keycode == KEY_D):
-			_navigate_player(1, Vector2i(1, 0))
-		elif event.is_action_pressed("p1_up") or (event is InputEventKey and event.pressed and event.keycode == KEY_W):
-			_navigate_player(1, Vector2i(0, -1))
-		elif event.is_action_pressed("p1_down") or (event is InputEventKey and event.pressed and event.keycode == KEY_S):
-			_navigate_player(1, Vector2i(0, 1))
-		elif event.is_action_pressed("p1_attack") or event.is_action_pressed("p1_jump") or (event is InputEventKey and event.pressed and event.keycode in [KEY_SPACE, KEY_J, KEY_ENTER]):
-			_lock_player(1)
-	else:
-		if event.is_action_pressed("p1_special") or (event is InputEventKey and event.pressed and event.keycode == KEY_K):
-			_unlock_player(1)
+	# Detección de Entrada / Unirse para Jugadores 3 y 4
+	if not players_state[3]["active"] and _is_join_event_for_player(3, event):
+		_activate_player(3)
+		return
+	if not players_state[4]["active"] and _is_join_event_for_player(4, event):
+		_activate_player(4)
+		return
 
-	# Player 2 Inputs
-	if not p2_locked:
-		if event.is_action_pressed("p2_left") or (event is InputEventKey and event.pressed and event.keycode == KEY_LEFT):
-			_navigate_player(2, Vector2i(-1, 0))
-		elif event.is_action_pressed("p2_right") or (event is InputEventKey and event.pressed and event.keycode == KEY_RIGHT):
-			_navigate_player(2, Vector2i(1, 0))
-		elif event.is_action_pressed("p2_up") or (event is InputEventKey and event.pressed and event.keycode == KEY_UP):
-			_navigate_player(2, Vector2i(0, -1))
-		elif event.is_action_pressed("p2_down") or (event is InputEventKey and event.pressed and event.keycode == KEY_DOWN):
-			_navigate_player(2, Vector2i(0, 1))
-		elif event.is_action_pressed("p2_attack") or event.is_action_pressed("p2_jump") or (event is InputEventKey and event.pressed and event.keycode in [KEY_N, KEY_B, KEY_KP_1, KEY_KP_0]):
-			_lock_player(2)
+	# Procesar Entrada para cada Jugador Activo (1 a 4)
+	for pid in [1, 2, 3, 4]:
+		if not players_state[pid]["active"]:
+			continue
+		_handle_player_input(pid, event)
+
+func _is_join_event_for_player(pid: int, event: InputEvent) -> bool:
+	var prefix = "p%d_" % pid
+	for act in ["attack", "jump", "special", "left", "right", "up", "down", "pause"]:
+		if event.is_action_pressed(prefix + act):
+			return true
+
+	if event is InputEventKey and event.pressed:
+		if pid == 3 and event.keycode in [KEY_U, KEY_I, KEY_O, KEY_P, KEY_J, KEY_K, KEY_L, KEY_SEMICOLON]:
+			return true
+		elif pid == 4 and event.keycode in [KEY_KP_0, KEY_KP_1, KEY_KP_2, KEY_KP_3, KEY_KP_4, KEY_KP_5, KEY_KP_6, KEY_KP_8]:
+			return true
+
+	if event is InputEventJoypadButton and event.pressed:
+		var im = get_node_or_null("/root/InputManager")
+		var target_dev = im.get_device_id_for_player(pid) if (im and im.has_method("get_device_id_for_player")) else (pid - 1)
+		if event.device == target_dev:
+			return true
+
+	return false
+
+func _handle_player_input(pid: int, event: InputEvent) -> void:
+	var state = players_state[pid]
+	var prefix = "p%d_" % pid
+
+	if not state["locked"]:
+		# Navegación
+		var moved := false
+		var dir := Vector2i.ZERO
+
+		match pid:
+			1:
+				if event.is_action_pressed(prefix + "left") or (event is InputEventKey and event.pressed and event.keycode == KEY_A):
+					dir = Vector2i(-1, 0); moved = true
+				elif event.is_action_pressed(prefix + "right") or (event is InputEventKey and event.pressed and event.keycode == KEY_D):
+					dir = Vector2i(1, 0); moved = true
+				elif event.is_action_pressed(prefix + "up") or (event is InputEventKey and event.pressed and event.keycode == KEY_W):
+					dir = Vector2i(0, -1); moved = true
+				elif event.is_action_pressed(prefix + "down") or (event is InputEventKey and event.pressed and event.keycode == KEY_S):
+					dir = Vector2i(0, 1); moved = true
+			2:
+				if event.is_action_pressed(prefix + "left") or (event is InputEventKey and event.pressed and event.keycode == KEY_LEFT):
+					dir = Vector2i(-1, 0); moved = true
+				elif event.is_action_pressed(prefix + "right") or (event is InputEventKey and event.pressed and event.keycode == KEY_RIGHT):
+					dir = Vector2i(1, 0); moved = true
+				elif event.is_action_pressed(prefix + "up") or (event is InputEventKey and event.pressed and event.keycode == KEY_UP):
+					dir = Vector2i(0, -1); moved = true
+				elif event.is_action_pressed(prefix + "down") or (event is InputEventKey and event.pressed and event.keycode == KEY_DOWN):
+					dir = Vector2i(0, 1); moved = true
+			3:
+				if event.is_action_pressed(prefix + "left") or (event is InputEventKey and event.pressed and event.keycode == KEY_J):
+					dir = Vector2i(-1, 0); moved = true
+				elif event.is_action_pressed(prefix + "right") or (event is InputEventKey and event.pressed and event.keycode == KEY_L):
+					dir = Vector2i(1, 0); moved = true
+				elif event.is_action_pressed(prefix + "up") or (event is InputEventKey and event.pressed and event.keycode == KEY_I):
+					dir = Vector2i(0, -1); moved = true
+				elif event.is_action_pressed(prefix + "down") or (event is InputEventKey and event.pressed and event.keycode == KEY_K):
+					dir = Vector2i(0, 1); moved = true
+			4:
+				if event.is_action_pressed(prefix + "left") or (event is InputEventKey and event.pressed and event.keycode == KEY_KP_4):
+					dir = Vector2i(-1, 0); moved = true
+				elif event.is_action_pressed(prefix + "right") or (event is InputEventKey and event.pressed and event.keycode == KEY_KP_6):
+					dir = Vector2i(1, 0); moved = true
+				elif event.is_action_pressed(prefix + "up") or (event is InputEventKey and event.pressed and event.keycode == KEY_KP_8):
+					dir = Vector2i(0, -1); moved = true
+				elif event.is_action_pressed(prefix + "down") or (event is InputEventKey and event.pressed and event.keycode == KEY_KP_5):
+					dir = Vector2i(0, 1); moved = true
+
+		if moved:
+			_navigate_player(pid, dir)
+			return
+
+		# Confirmar / Bloquear Selección
+		var confirm_pressed := false
+		match pid:
+			1:
+				confirm_pressed = event.is_action_pressed(prefix + "attack") or event.is_action_pressed(prefix + "jump") or (event is InputEventKey and event.pressed and event.keycode in [KEY_SPACE, KEY_J, KEY_ENTER])
+			2:
+				confirm_pressed = event.is_action_pressed(prefix + "attack") or event.is_action_pressed(prefix + "jump") or (event is InputEventKey and event.pressed and event.keycode in [KEY_N, KEY_B, KEY_KP_1, KEY_KP_0])
+			3:
+				confirm_pressed = event.is_action_pressed(prefix + "attack") or event.is_action_pressed(prefix + "jump") or (event is InputEventKey and event.pressed and event.keycode in [KEY_U, KEY_O])
+			4:
+				confirm_pressed = event.is_action_pressed(prefix + "attack") or event.is_action_pressed(prefix + "jump") or (event is InputEventKey and event.pressed and event.keycode in [KEY_KP_1, KEY_KP_0])
+
+		if confirm_pressed:
+			_lock_player(pid)
+			return
+
+		# Cancelar / Salir (Para P3/P4 permite desunirse)
+		var cancel_pressed := false
+		match pid:
+			1: cancel_pressed = event.is_action_pressed(prefix + "special")
+			2: cancel_pressed = event.is_action_pressed(prefix + "special")
+			3: cancel_pressed = event.is_action_pressed(prefix + "special") or (event is InputEventKey and event.pressed and event.keycode == KEY_P)
+			4: cancel_pressed = event.is_action_pressed(prefix + "special") or (event is InputEventKey and event.pressed and event.keycode == KEY_KP_2)
+
+		if cancel_pressed:
+			_handle_cancel(pid)
+			return
+
 	else:
-		if event.is_action_pressed("p2_special") or (event is InputEventKey and event.pressed and event.keycode in [KEY_M, KEY_KP_2]):
-			_unlock_player(2)
+		# Jugador bloqueado: tecla de desbloquear
+		var unlock_pressed := false
+		match pid:
+			1: unlock_pressed = event.is_action_pressed(prefix + "special") or (event is InputEventKey and event.pressed and event.keycode == KEY_K)
+			2: unlock_pressed = event.is_action_pressed(prefix + "special") or (event is InputEventKey and event.pressed and event.keycode in [KEY_M, KEY_KP_2])
+			3: unlock_pressed = event.is_action_pressed(prefix + "special") or (event is InputEventKey and event.pressed and event.keycode == KEY_P)
+			4: unlock_pressed = event.is_action_pressed(prefix + "special") or (event is InputEventKey and event.pressed and event.keycode == KEY_KP_2)
+
+		if unlock_pressed:
+			_unlock_player(pid)
+
+func _activate_player(pid: int) -> void:
+	if not players_state.has(pid) or players_state[pid]["active"]:
+		return
+	players_state[pid]["active"] = true
+	players_state[pid]["locked"] = false
+	_play_sfx(sfx_select, 1.0 + pid * 0.1)
+	_update_pedestal_positions()
+	_update_player_selection(pid, players_state[pid]["slot_index"], false)
+	_refresh_all_token_positions(true)
+	_refresh_player_ui(pid)
+	_check_all_ready()
+
+func _deactivate_player(pid: int) -> void:
+	if not players_state.has(pid) or not players_state[pid]["active"]:
+		return
+	if pid <= 2 and _get_active_player_count() <= 2:
+		return
+	players_state[pid]["active"] = false
+	players_state[pid]["locked"] = false
+	players_state[pid]["selected_data"] = null
+	if players_state[pid]["token"]:
+		players_state[pid]["token"].visible = false
+	if players_state[pid]["stage_root"]:
+		players_state[pid]["stage_root"].visible = false
+	if players_state[pid]["stage_light"]:
+		players_state[pid]["stage_light"].visible = false
+	_play_sfx(sfx_cancel, 0.95)
+	_update_pedestal_positions()
+	_refresh_all_token_positions(true)
+	_refresh_player_ui(pid)
+	_refresh_card_highlights()
+	_check_all_ready()
+
+func _get_active_player_count() -> int:
+	var count: int = 0
+	for pid in [1, 2, 3, 4]:
+		if players_state[pid]["active"]:
+			count += 1
+	return count
+
+func _update_pedestal_positions() -> void:
+	var count: int = _get_active_player_count()
+	var crowded: bool = (count > 2)
+
+	if crowded:
+		_set_stage_pos_rot(1, Vector3(-2.6, 0.05, -0.5), deg_to_rad(28.0))
+		_set_stage_pos_rot(3, Vector3(-1.45, 0.05, 0.0), deg_to_rad(15.0))
+		_set_stage_pos_rot(2, Vector3(1.45, 0.05, 0.0), deg_to_rad(-15.0))
+		_set_stage_pos_rot(4, Vector3(2.6, 0.05, -0.5), deg_to_rad(-28.0))
+		if camera:
+			camera.position = Vector3(0.0, 1.25, 4.35)
+	else:
+		_set_stage_pos_rot(1, Vector3(-1.85, 0.05, -0.4), deg_to_rad(22.0))
+		_set_stage_pos_rot(2, Vector3(1.85, 0.05, -0.4), deg_to_rad(-22.0))
+		_set_stage_pos_rot(3, Vector3(-1.45, 0.05, 0.0), deg_to_rad(15.0))
+		_set_stage_pos_rot(4, Vector3(2.6, 0.05, -0.5), deg_to_rad(-28.0))
+		if camera:
+			camera.position = Vector3(0.0, 1.20, 4.0)
+
+	for pid in [1, 2, 3, 4]:
+		var st_root: Node3D = players_state[pid]["stage_root"]
+		var st_light: Light3D = players_state[pid]["stage_light"]
+		var is_act: bool = players_state[pid]["active"]
+		if st_root:
+			st_root.visible = is_act
+		if st_light:
+			st_light.visible = is_act
+
+func _set_stage_pos_rot(pid: int, pos: Vector3, rot_y: float) -> void:
+	var st_root: Node3D = players_state[pid]["stage_root"]
+	if st_root:
+		st_root.position = pos
+		var model_cont: Node3D = players_state[pid]["stage_model"]
+		if model_cont and model_cont.get_child_count() > 0:
+			var c = model_cont.get_child(0)
+			if c is Node3D:
+				c.rotation.y = rot_y
 
 func _navigate_player(player_id: int, dir: Vector2i) -> void:
-	var current_idx = p1_slot_index if player_id == 1 else p2_slot_index
+	if not players_state[player_id]["active"] or players_state[player_id]["locked"]:
+		return
+	var current_idx = players_state[player_id]["slot_index"]
 	var next_idx = _calc_grid_step(current_idx, dir)
 	if next_idx != current_idx:
-		_play_sfx(sfx_move, 1.0 + (0.1 if player_id == 2 else 0.0))
-		if player_id == 1:
-			_update_p1_selection(next_idx)
-		else:
-			_update_p2_selection(next_idx)
+		_play_sfx(sfx_move, 1.0 + (player_id - 1) * 0.08)
+		_update_player_selection(player_id, next_idx)
 
 func _calc_grid_step(curr_idx: int, dir: Vector2i) -> int:
 	match curr_idx:
@@ -662,7 +1147,7 @@ func _calc_grid_step(curr_idx: int, dir: Vector2i) -> int:
 				return 5 # Down to Miyabi
 		5: # Miyabi (row 3, center)
 			if dir.y < 0:
-				return 0 # Up to Random
+				return 3 if dir.x <= 0 else 4 # Up to Gogeta or John
 			elif dir.x < 0:
 				return 3 # Left to Gogeta
 			elif dir.x > 0:
@@ -671,45 +1156,77 @@ func _calc_grid_step(curr_idx: int, dir: Vector2i) -> int:
 
 func _on_card_input_event(_camera: Node, event: InputEvent, _position: Vector3, _normal: Vector3, _shape_idx: int, slot_idx: int) -> void:
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
-		if not p1_locked:
-			_play_sfx(sfx_select, 1.0)
-			_update_p1_selection(slot_idx)
-			_lock_player(1)
-		elif not p2_locked:
-			_play_sfx(sfx_select, 1.1)
-			_update_p2_selection(slot_idx)
-			_lock_player(2)
+		for pid in [1, 2, 3, 4]:
+			if players_state[pid]["active"] and not players_state[pid]["locked"]:
+				_play_sfx(sfx_select, 1.0 + (pid - 1) * 0.1)
+				_update_player_selection(pid, slot_idx)
+				_lock_player(pid)
+				return
 
 # ==============================================================================
 # Player Selection Updates
 # ==============================================================================
-func _update_p1_selection(slot_idx: int, animate_token: bool = true) -> void:
-	p1_slot_index = slot_idx
+func _update_player_selection(player_id: int, slot_idx: int, animate_token: bool = true) -> void:
+	players_state[player_id]["slot_index"] = slot_idx
 	var slot = roster_slots[slot_idx]
-	
-	if p1_name_label:
-		p1_name_label.text = slot["name"]
-	if p1_status_label:
-		p1_status_label.text = "ELIGE LUCHADOR"
-		p1_status_label.modulate = Color(0.3, 0.7, 1.0)
-		
+	_refresh_player_ui(player_id)
 	_refresh_card_highlights()
-	_update_token_position(1, animate_token)
-	_update_stage_preview(1, slot)
+	_refresh_all_token_positions(animate_token)
+	_update_stage_preview(player_id, slot)
+
+func _update_p1_selection(slot_idx: int, animate_token: bool = true) -> void:
+	_update_player_selection(1, slot_idx, animate_token)
 
 func _update_p2_selection(slot_idx: int, animate_token: bool = true) -> void:
-	p2_slot_index = slot_idx
-	var slot = roster_slots[slot_idx]
-	
-	if p2_name_label:
-		p2_name_label.text = slot["name"]
-	if p2_status_label:
-		p2_status_label.text = "ELIGE LUCHADOR"
-		p2_status_label.modulate = Color(1.0, 0.35, 0.3)
-		
-	_refresh_card_highlights()
-	_update_token_position(2, animate_token)
-	_update_stage_preview(2, slot)
+	_update_player_selection(2, slot_idx, animate_token)
+
+func _refresh_player_ui(pid: int) -> void:
+	var state = players_state[pid]
+	var is_act: bool = state["active"]
+	var n_lbl: Label = state["name_label"]
+	var s_lbl: Label = state["status_label"]
+	var b_lbl: Label = state["badge_label"]
+	var p_lbl: Label = state["profile_label"]
+	var p_color: Color = PLAYER_COLORS[pid]
+
+	var prof_name: String = "Default"
+	var im = get_node_or_null("/root/InputManager")
+	if im and im.has_method("get_player_profile_name"):
+		prof_name = im.get_player_profile_name(pid)
+
+	if not is_act:
+		if b_lbl:
+			b_lbl.add_theme_color_override("font_color", Color(0.5, 0.5, 0.5, 0.6))
+		if n_lbl:
+			n_lbl.text = "+ UNIRSE"
+			n_lbl.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6, 0.7))
+		if s_lbl:
+			var join_key: String = "[U / JOYPAD]" if pid == 3 else "[NUMPAD / JOYPAD]"
+			s_lbl.text = join_key + " PARA JUGAR"
+			s_lbl.modulate = Color(0.5, 0.5, 0.5, 0.8)
+		if p_lbl:
+			p_lbl.text = "Perfil: " + prof_name
+			p_lbl.modulate = Color(0.4, 0.4, 0.4, 0.6)
+		return
+
+	if b_lbl:
+		b_lbl.add_theme_color_override("font_color", p_color)
+	if p_lbl:
+		p_lbl.text = "Perfil: " + prof_name
+		p_lbl.modulate = Color(0.85, 0.9, 1.0, 0.8)
+
+	var slot = roster_slots[state["slot_index"]]
+	if n_lbl:
+		n_lbl.text = slot["name"]
+		n_lbl.add_theme_color_override("font_color", Color(1.0, 0.92, 0.5))
+
+	if s_lbl:
+		if state["locked"]:
+			s_lbl.text = "¡LISTO!"
+			s_lbl.modulate = Color(1.0, 0.88, 0.2)
+		else:
+			s_lbl.text = "ELIGE LUCHADOR"
+			s_lbl.modulate = p_color
 
 func _refresh_card_highlights() -> void:
 	for i in card_nodes.keys():
@@ -717,25 +1234,25 @@ func _refresh_card_highlights() -> void:
 		var glow_mesh: MeshInstance3D = node.get_node_or_null("Glow") as MeshInstance3D
 		var mesh_inst: MeshInstance3D = node.get_node_or_null("CardMesh") as MeshInstance3D
 		var base_pos: Vector3 = node.get_meta("base_pos") if node.has_meta("base_pos") else node.position
-		
-		var is_p1 = (i == p1_slot_index)
-		var is_p2 = (i == p2_slot_index)
-		
+
+		var hovering_players: Array[int] = []
+		for pid in [1, 2, 3, 4]:
+			if players_state[pid]["active"] and players_state[pid]["slot_index"] == i:
+				hovering_players.append(pid)
+
 		if mesh_inst and mesh_inst.material_override is StandardMaterial3D:
 			var mat: StandardMaterial3D = mesh_inst.material_override
-			if is_p1 or is_p2:
+			if not hovering_players.is_empty():
 				mat.albedo_color = Color(1.08, 1.08, 1.08)
 				node.scale = Vector3(1.10, 1.10, 1.10)
 				node.position = base_pos + Vector3(0.0, 0.0, 0.02)
 				if glow_mesh and glow_mesh.material_override is StandardMaterial3D:
 					glow_mesh.visible = true
 					var g_mat: StandardMaterial3D = glow_mesh.material_override
-					if is_p1 and is_p2:
-						g_mat.albedo_color = Color(1.0, 0.90, 0.25) # Shared gold
-					elif is_p1:
-						g_mat.albedo_color = Color(0.25, 0.70, 1.0) # Blue
+					if hovering_players.size() > 1:
+						g_mat.albedo_color = Color(1.0, 0.90, 0.25)
 					else:
-						g_mat.albedo_color = Color(1.0, 0.28, 0.20) # Red
+						g_mat.albedo_color = PLAYER_COLORS[hovering_players[0]]
 			else:
 				mat.albedo_color = Color(0.80, 0.80, 0.83)
 				node.scale = Vector3(1.0, 1.0, 1.0)
@@ -743,54 +1260,66 @@ func _refresh_card_highlights() -> void:
 				if glow_mesh:
 					glow_mesh.visible = false
 
+func _refresh_all_token_positions(animate: bool = true) -> void:
+	var slot_to_players: Dictionary = {}
+	for pid in [1, 2, 3, 4]:
+		var state = players_state[pid]
+		var tok: Node3D = state["token"]
+		if not state["active"]:
+			if tok:
+				tok.visible = false
+			continue
+		if tok:
+			tok.visible = true
+		var s_idx: int = state["slot_index"]
+		if not slot_to_players.has(s_idx):
+			slot_to_players[s_idx] = []
+		slot_to_players[s_idx].append(pid)
+
+	for s_idx in slot_to_players.keys():
+		var p_list: Array = slot_to_players[s_idx]
+		var count: int = p_list.size()
+		if not card_nodes.has(s_idx):
+			continue
+		var card_node: Node3D = card_nodes[s_idx]
+		var up_vec: Vector3 = card_node.global_transform.basis.y
+		var right_vec: Vector3 = card_node.global_transform.basis.x
+		var base_pos: Vector3 = card_node.global_position + up_vec * 0.11 + Vector3(0.0, 0.01, 0.01)
+
+		var spacing: float = 0.08 if count <= 2 else 0.065
+		for j in range(count):
+			var pid: int = p_list[j]
+			var tok: Node3D = players_state[pid]["token"]
+			if not tok:
+				continue
+			var offset_x: float = (float(j) - float(count - 1) * 0.5) * spacing
+			var target_pos: Vector3 = base_pos + right_vec * offset_x
+
+			if animate:
+				var tw = create_tween().set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+				tw.tween_property(tok, "global_position", target_pos, 0.12)
+				players_state[pid]["token_tween"] = tw
+			else:
+				tok.global_position = target_pos
+
 func _update_token_position(player_id: int, animate: bool = true) -> void:
-	var slot_idx = p1_slot_index if player_id == 1 else p2_slot_index
-	var token = p1_token if player_id == 1 else p2_token
-	if not token or not card_nodes.has(slot_idx):
-		return
-		
-	var card_node: Node3D = card_nodes[slot_idx]
-	var target_global_pos = card_node.global_position
-	
-	# Offset badge right above the card's top edge
-	var up_vec = card_node.global_transform.basis.y
-	var target_pos = target_global_pos + up_vec * 0.11 + Vector3(0, 0.01, 0.01)
-	
-	# If both on the same card, offset horizontally
-	if p1_slot_index == p2_slot_index:
-		var right_vec = card_node.global_transform.basis.x
-		if player_id == 1:
-			target_pos -= right_vec * 0.10
-		else:
-			target_pos += right_vec * 0.10
-			
-	if animate:
-		var tw = create_tween().set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-		tw.tween_property(token, "global_position", target_pos, 0.12)
-		if player_id == 1:
-			p1_token_tween = tw
-		else:
-			p2_token_tween = tw
-	else:
-		token.global_position = target_pos
+	_refresh_all_token_positions(animate)
 
 # ==============================================================================
 # 3D Stage Character Preview
 # ==============================================================================
 func _update_stage_preview(player_id: int, slot: Dictionary) -> void:
-	var container = p1_stage_model if player_id == 1 else p2_stage_model
+	var container: Node3D = players_state[player_id]["stage_model"]
 	if not container:
 		return
 		
-	# Clear old preview
 	for child in container.get_children():
 		child.queue_free()
 		
-	var facing_yaw = deg_to_rad(22.0) if player_id == 1 else deg_to_rad(-22.0)
+	var facing_yaw = deg_to_rad(22.0) if player_id in [1, 3] else deg_to_rad(-22.0)
 	var data: CharacterData = slot["data"]
 	
 	if slot["id"] == "random":
-		# Golden rotating 3D Hologram question mark
 		var q_root := Node3D.new()
 		var q_mesh := MeshInstance3D.new()
 		var prism := PrismMesh.new()
@@ -814,7 +1343,6 @@ func _update_stage_preview(player_id: int, slot: Dictionary) -> void:
 		return
 		
 	if data.model_scene:
-		# Standard Humanoid / ModelRoot hierarchy so all animation tracks resolve accurately
 		var char_root := Node3D.new()
 		char_root.name = "CharacterRoot"
 		char_root.rotation.y = facing_yaw
@@ -832,7 +1360,6 @@ func _update_stage_preview(player_id: int, slot: Dictionary) -> void:
 		
 		container.add_child(char_root)
 		
-		# 1. First check if model has an internal AnimationPlayer (like Lego Batman with "idle")
 		var played_idle := false
 		var ap: AnimationPlayer = _find_animation_player(model)
 		if ap:
@@ -841,7 +1368,6 @@ func _update_stage_preview(player_id: int, slot: Dictionary) -> void:
 				ap.play(anim_name)
 				played_idle = true
 		
-		# 2. If not played or if character uses external AnimationLibrary (like Sakuya, Gogeta, Sans)
 		if not played_idle and data.animation_library:
 			var new_ap := AnimationPlayer.new()
 			new_ap.name = "AnimationPlayer"
@@ -853,13 +1379,11 @@ func _update_stage_preview(player_id: int, slot: Dictionary) -> void:
 				new_ap.play(anim_name)
 				played_idle = true
 	else:
-		# Procedural stylized fighting dummy for John
 		var dummy := _create_procedural_dummy(data.character_color)
 		dummy.rotation.y = facing_yaw
 		dummy.position = Vector3(0, 0, 0)
 		container.add_child(dummy)
 		
-	# Scale punch transition
 	container.scale = Vector3(0.85, 0.85, 0.85)
 	var tw = create_tween().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	tw.tween_property(container, "scale", Vector3(1.0, 1.0, 1.0), 0.2)
@@ -873,7 +1397,6 @@ func _create_procedural_dummy(color: Color) -> Node3D:
 	mat.emission_enabled = true
 	mat.emission = color * 0.2
 	
-	# Torso
 	var torso := MeshInstance3D.new()
 	var box := BoxMesh.new()
 	box.size = Vector3(0.5, 0.65, 0.28)
@@ -882,7 +1405,6 @@ func _create_procedural_dummy(color: Color) -> Node3D:
 	torso.position = Vector3(0, 0.95, 0)
 	root.add_child(torso)
 	
-	# Head
 	var head := MeshInstance3D.new()
 	var sphere := SphereMesh.new()
 	sphere.radius = 0.22
@@ -892,7 +1414,6 @@ func _create_procedural_dummy(color: Color) -> Node3D:
 	head.position = Vector3(0, 1.45, 0)
 	root.add_child(head)
 	
-	# Legs
 	for side in [-0.15, 0.15]:
 		var leg := MeshInstance3D.new()
 		var cap := CapsuleMesh.new()
@@ -903,7 +1424,6 @@ func _create_procedural_dummy(color: Color) -> Node3D:
 		leg.position = Vector3(side, 0.35, 0)
 		root.add_child(leg)
 		
-	# Arms
 	for side in [-0.35, 0.35]:
 		var arm := MeshInstance3D.new()
 		var cap := CapsuleMesh.new()
@@ -927,11 +1447,9 @@ func _find_animation_player(node: Node) -> AnimationPlayer:
 	return null
 
 func _find_idle_anim(ap: AnimationPlayer) -> String:
-	# First pass: exact "idle" match
 	for a in ap.get_animation_list():
 		if a.to_lower() == "idle":
 			return a
-	# Second pass: contains "idle" 
 	for a in ap.get_animation_list():
 		if "idle" in a.to_lower():
 			return a
@@ -941,55 +1459,45 @@ func _find_idle_anim(ap: AnimationPlayer) -> String:
 # Lock & Ready Flow
 # ==============================================================================
 func _lock_player(player_id: int) -> void:
-	if player_id == 1:
-		p1_locked = true
-		_play_sfx(sfx_select, 1.0)
-		p1_selected = _resolve_slot_selection(p1_slot_index)
-		if p1_status_label:
-			p1_status_label.text = "¡LISTO!"
-			p1_status_label.modulate = Color(1.0, 0.88, 0.2)
-		_punch_token(p1_token)
-	else:
-		p2_locked = true
-		_play_sfx(sfx_select, 1.15)
-		p2_selected = _resolve_slot_selection(p2_slot_index)
-		if p2_status_label:
-			p2_status_label.text = "¡LISTO!"
-			p2_status_label.modulate = Color(1.0, 0.88, 0.2)
-		_punch_token(p2_token)
-		
-	_check_both_ready()
+	if not players_state[player_id]["active"]:
+		return
+	players_state[player_id]["locked"] = true
+	_play_sfx(sfx_select, 1.0 + (player_id - 1) * 0.12)
+	players_state[player_id]["selected_data"] = _resolve_slot_selection(players_state[player_id]["slot_index"])
+	_refresh_player_ui(player_id)
+	_punch_token(players_state[player_id]["token"])
+	_check_all_ready()
 
 func _unlock_player(player_id: int) -> void:
+	if not players_state[player_id]["active"]:
+		return
 	_play_sfx(sfx_cancel, 1.0)
-	if player_id == 1:
-		p1_locked = false
-		p1_selected = null
-		if p1_status_label:
-			p1_status_label.text = "ELIGE LUCHADOR"
-			p1_status_label.modulate = Color(0.3, 0.7, 1.0)
-	else:
-		p2_locked = false
-		p2_selected = null
-		if p2_status_label:
-			p2_status_label.text = "ELIGE LUCHADOR"
-			p2_status_label.modulate = Color(1.0, 0.35, 0.3)
+	players_state[player_id]["locked"] = false
+	players_state[player_id]["selected_data"] = null
+	_refresh_player_ui(player_id)
 			
 	start_countdown_timer = -1.0
 	if countdown_label:
 		countdown_label.visible = false
-	_build_stage_preview()
-	_sync_initial_tokens()
 	if start_battle_button:
 		start_battle_button.visible = false
+	_check_all_ready()
 
 func _handle_cancel(player_id: int) -> void:
-	if player_id == 1 and p1_locked:
-		_unlock_player(1)
-	elif player_id == 2 and p2_locked:
-		_unlock_player(2)
+	if players_state[player_id]["locked"]:
+		_unlock_player(player_id)
+		return
+
+	if player_id in [3, 4]:
+		_deactivate_player(player_id)
 	else:
-		_on_back_pressed()
+		var any_locked = false
+		for p in [1, 2, 3, 4]:
+			if players_state[p]["active"] and players_state[p]["locked"]:
+				any_locked = true
+				break
+		if not any_locked:
+			_on_back_pressed()
 
 func _punch_token(token: Node3D) -> void:
 	if not token:
@@ -1003,7 +1511,6 @@ func _resolve_slot_selection(slot_idx: int) -> CharacterData:
 	if slot["data"] != null:
 		return slot["data"]
 		
-	# Random slot selected: pick a random character from available list
 	var playable: Array[CharacterData] = [
 		lego_batman_data,
 		sakuya_data,
@@ -1014,8 +1521,16 @@ func _resolve_slot_selection(slot_idx: int) -> CharacterData:
 	playable.shuffle()
 	return playable[0]
 
-func _check_both_ready() -> void:
-	if p1_locked and p2_locked:
+func _check_all_ready() -> void:
+	var active_count: int = 0
+	var locked_count: int = 0
+	for pid in [1, 2, 3, 4]:
+		if players_state[pid]["active"]:
+			active_count += 1
+			if players_state[pid]["locked"]:
+				locked_count += 1
+
+	if active_count >= 2 and locked_count == active_count:
 		_play_sfx(sfx_ready, 1.0)
 		if start_battle_button:
 			start_battle_button.visible = true
@@ -1025,17 +1540,41 @@ func _check_both_ready() -> void:
 			countdown_label.visible = true
 		start_countdown_timer = 2.0
 		if bottom_prompt:
-			bottom_prompt.text = "¡AMBOS LISTOS! INICIANDO COMBATE..."
+			bottom_prompt.text = "¡TODOS LISTOS! INICIANDO COMBATE..."
+	else:
+		start_countdown_timer = -1.0
+		if countdown_label:
+			countdown_label.visible = false
+		if start_battle_button:
+			start_battle_button.visible = false
+		if bottom_prompt:
+			bottom_prompt.text = "P1: [W/A/S/D / Joy1] • P2: [Flechas / Joy2] • P3: [I/J/K/L / Joy3] • P4: [NumPad / Joy4] • [Esc] Salir"
+
+func _check_both_ready() -> void:
+	_check_all_ready()
 
 func _launch_battle() -> void:
-	if p1_selected == null:
-		p1_selected = _resolve_slot_selection(p1_slot_index)
-	if p2_selected == null:
-		p2_selected = _resolve_slot_selection(p2_slot_index)
+	var p_data_dict: Dictionary = {}
+	var p_profiles_dict: Dictionary = {}
+	var im = get_node_or_null("/root/InputManager")
+
+	for pid in [1, 2, 3, 4]:
+		if not players_state[pid]["active"]:
+			continue
+		var sel_data: CharacterData = players_state[pid]["selected_data"]
+		if sel_data == null:
+			sel_data = _resolve_slot_selection(players_state[pid]["slot_index"])
+			players_state[pid]["selected_data"] = sel_data
+		p_data_dict[pid] = sel_data
+
+		var prof: String = "Default"
+		if im and im.has_method("get_player_profile_name"):
+			prof = im.get_player_profile_name(pid)
+		p_profiles_dict[pid] = prof
 		
 	var gm = get_node_or_null("/root/GameManager")
 	if gm:
-		gm.start_match(p1_selected, p2_selected)
+		gm.start_match_multi(p_data_dict, 3, 480.0, p_profiles_dict)
 	get_tree().change_scene_to_file("res://battle/battle.tscn")
 
 func _on_start_battle_pressed() -> void:
@@ -1118,10 +1657,204 @@ func _synth_chord(freqs: Array, duration: float, volume: float) -> AudioStreamWA
 	for i in range(samples):
 		var t = float(i) / 22050.0
 		var env = 1.0 - (float(i) / float(samples))
-		var acc = 0.0
-		for f in freqs:
-			acc += sin(t * f * TAU)
-		var v = (acc / float(freqs.size())) * env * volume
+		var v = (sin(t * freqs[0] * TAU) + sin(t * freqs[1] * TAU) + sin(t * freqs[2] * TAU)) * 0.33 * env * volume
 		data.encode_s16(i * 2, int(clamp(v, -1.0, 1.0) * 32767.0))
 	wav.data = data
 	return wav
+
+# ==============================================================================
+# Live 3D Character Face Portrait Viewports
+# ==============================================================================
+func _create_face_portrait_viewport(slot: Dictionary) -> SubViewport:
+	var data: CharacterData = slot["data"]
+	var accent: Color = slot.get("color", Color(0.35, 0.7, 1.0))
+
+	var vp := SubViewport.new()
+	vp.name = "PortraitVP_" + str(slot["id"])
+	vp.size = Vector2i(256, 170)
+	vp.own_world_3d = true
+	vp.transparent_bg = false
+	vp.msaa_3d = Viewport.MSAA_2X
+	vp.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+
+	var env := Environment.new()
+	env.background_mode = Environment.BG_COLOR
+	env.background_color = Color(
+		clampf(accent.r * 0.18 + 0.05, 0.0, 1.0),
+		clampf(accent.g * 0.18 + 0.06, 0.0, 1.0),
+		clampf(accent.b * 0.22 + 0.10, 0.0, 1.0),
+		1.0
+	)
+	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+	env.ambient_light_color = Color(0.88, 0.90, 0.96, 1.0)
+	env.ambient_light_energy = 0.85
+	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
+
+	var world_env := WorldEnvironment.new()
+	world_env.environment = env
+	vp.add_child(world_env)
+
+	var key_light := DirectionalLight3D.new()
+	key_light.light_color = Color(1.0, 0.97, 0.92)
+	key_light.light_energy = 1.15
+	key_light.rotation_degrees = Vector3(-20.0, 24.0, 0.0)
+	vp.add_child(key_light)
+
+	var fill_light := DirectionalLight3D.new()
+	fill_light.light_color = Color(0.65, 0.78, 1.0)
+	fill_light.light_energy = 0.55
+	fill_light.rotation_degrees = Vector3(-10.0, -38.0, 0.0)
+	vp.add_child(fill_light)
+
+	var holder := Node3D.new()
+	holder.name = "PortraitModelHolder"
+	vp.add_child(holder)
+
+	var model: Node3D = null
+	if data != null and data.model_scene != null:
+		var wrapper := Node3D.new()
+		wrapper.rotation.y = deg_to_rad(10.0)
+		var humanoid := Node3D.new()
+		humanoid.name = "Humanoid"
+		wrapper.add_child(humanoid)
+		
+		var m: Node3D = data.model_scene.instantiate()
+		m.name = "ModelRoot"
+		m.position = Vector3(data.model_offset.x, 0.0, data.model_offset.z)
+		var s: float = data.model_scale if data.model_scale > 0.0 else 1.0
+		m.scale = Vector3(s, s, s)
+		humanoid.add_child(m)
+		model = wrapper
+		
+		var ap: AnimationPlayer = _find_animation_player(m)
+		if ap:
+			var anim_name: String = _find_idle_anim(ap)
+			if anim_name != "":
+				ap.play(anim_name)
+		elif data.animation_library:
+			var new_ap := AnimationPlayer.new()
+			new_ap.name = "AnimationPlayer"
+			new_ap.root_node = NodePath("..")
+			new_ap.add_animation_library("", data.animation_library)
+			wrapper.add_child(new_ap)
+			var anim_name: String = _find_idle_anim(new_ap)
+			if anim_name != "":
+				new_ap.play(anim_name)
+	else:
+		var color: Color = data.character_color if data != null else Color(0.4, 0.85, 0.95)
+		model = _create_procedural_dummy(color)
+		model.rotation.y = deg_to_rad(10.0)
+
+	holder.add_child(model)
+
+	var bg_plate := MeshInstance3D.new()
+	var bg_quad := QuadMesh.new()
+	bg_quad.size = Vector2(0.55, 0.55)
+	bg_plate.mesh = bg_quad
+	var bg_mat := StandardMaterial3D.new()
+	bg_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	bg_mat.albedo_color = accent.lightened(0.15)
+	bg_plate.material_override = bg_mat
+	bg_plate.rotation.z = deg_to_rad(45.0)
+	vp.add_child(bg_plate)
+
+	var cam := Camera3D.new()
+	cam.name = "PortraitCamera"
+	cam.fov = 30.0
+	cam.near = 0.05
+	cam.far = 20.0
+	vp.add_child(cam)
+
+	call_deferred("_frame_portrait_camera", holder, cam, bg_plate, data)
+	return vp
+
+func _frame_portrait_camera(holder: Node3D, cam: Camera3D, bg_plate: MeshInstance3D, data: CharacterData) -> void:
+	if not is_instance_valid(holder) or not is_instance_valid(cam):
+		return
+	var aabb: AABB = _compute_visual_aabb(holder)
+	var head_bone: Vector3 = _find_head_bone_pos(holder)
+
+	var focus_pt := Vector3(0.0, 1.45, 0.0)
+	var cam_dist: float = 1.05
+	var cname: String = data.character_name.to_lower() if data != null else ""
+
+	if head_bone != Vector3.ZERO:
+		var span_above: float = clampf((aabb.end.y - head_bone.y) * 0.32, 0.11, 0.21)
+		if cname.contains("sans"):
+			span_above = 0.14; cam_dist = 0.92
+		elif cname.contains("batman"):
+			span_above = 0.18; cam_dist = 1.02
+		elif cname.contains("sakuya"):
+			span_above = 0.10; cam_dist = 0.88
+		elif cname.contains("gogeta"):
+			span_above = 0.13; cam_dist = 0.98
+		elif cname.contains("miyabi"):
+			span_above = 0.12; cam_dist = 0.95
+		focus_pt = Vector3(head_bone.x, head_bone.y + span_above, head_bone.z)
+	elif aabb.size.y > 0.05:
+		focus_pt = Vector3(
+			aabb.position.x + aabb.size.x * 0.5,
+			aabb.position.y + aabb.size.y * 0.83,
+			aabb.position.z + aabb.size.z * 0.5
+		)
+		cam_dist = clampf(aabb.size.y * 0.58, 0.75, 1.35)
+
+	if is_instance_valid(bg_plate):
+		bg_plate.position = focus_pt + Vector3(0.0, 0.0, -0.45)
+
+	cam.position = focus_pt + Vector3(0.0, 0.02, cam_dist)
+	cam.look_at(focus_pt, Vector3.UP)
+
+func _compute_visual_aabb(root: Node3D) -> AABB:
+	var meshes: Array[MeshInstance3D] = []
+	_collect_visible_meshes(root, meshes)
+	var first := true
+	var merged := AABB()
+	var inv_root: Transform3D = root.global_transform.affine_inverse()
+	for m in meshes:
+		if m.mesh == null:
+			continue
+		var maabb: AABB = m.get_aabb()
+		var rel_xf: Transform3D = inv_root * m.global_transform
+		for ix in [0, 1]:
+			for iy in [0, 1]:
+				for iz in [0, 1]:
+					var pt: Vector3 = rel_xf * Vector3(
+						maabb.position.x if ix == 0 else maabb.end.x,
+						maabb.position.y if iy == 0 else maabb.end.y,
+						maabb.position.z if iz == 0 else maabb.end.z
+					)
+					merged = AABB(pt, Vector3.ZERO) if first else merged.expand(pt)
+					first = false
+	return merged
+
+func _collect_visible_meshes(n: Node, out: Array[MeshInstance3D]) -> void:
+	if n is Node3D and not (n as Node3D).visible:
+		return
+	if n is MeshInstance3D:
+		out.append(n as MeshInstance3D)
+	for c in n.get_children():
+		_collect_visible_meshes(c, out)
+
+func _find_head_bone_pos(root: Node3D) -> Vector3:
+	var skels: Array[Skeleton3D] = []
+	_collect_skeletons(root, skels)
+	var inv_root: Transform3D = root.global_transform.affine_inverse()
+	for sk in skels:
+		if not sk.is_visible_in_tree():
+			continue
+		for bname in ["Head", "head", "Bip01_Head", "mixamorig:Head", "head.x"]:
+			var idx: int = sk.find_bone(bname)
+			if idx != -1:
+				return (inv_root * sk.global_transform) * sk.get_bone_global_pose(idx).origin
+		for idx in range(sk.get_bone_count()):
+			if "head" in sk.get_bone_name(idx).to_lower():
+				return (inv_root * sk.global_transform) * sk.get_bone_global_pose(idx).origin
+	var head_node: Node3D = root.find_child("Head", true, false) as Node3D
+	return (inv_root * head_node.global_transform).origin if head_node != null else Vector3.ZERO
+
+func _collect_skeletons(n: Node, out: Array[Skeleton3D]) -> void:
+	if n is Skeleton3D:
+		out.append(n as Skeleton3D)
+	for c in n.get_children():
+		_collect_skeletons(c, out)

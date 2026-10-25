@@ -3,10 +3,14 @@ extends Camera3D
 
 @export var player_1: Node
 @export var player_2: Node
+@export var player_3: Node
+@export var player_4: Node
+
+var players: Array[Node] = []
 
 @export var min_distance: float = 11.5
-@export var max_distance: float = 24.0
-@export var margin: float = 4.2
+@export var max_distance: float = 26.0
+@export var margin: float = 4.8
 @export var smooth_speed_x: float = 10.5
 @export var smooth_speed_y: float = 7.5
 @export var smooth_speed_z: float = 8.0
@@ -31,19 +35,45 @@ func _on_camera_shake_requested(intensity: float) -> void:
 	_shake_intensity = maxf(_shake_intensity, clampf(intensity * 0.022, 0.03, 0.28))
 
 func _physics_process(delta: float) -> void:
-	if not player_1 or not player_2:
+	var active_targets: Array[Node] = _get_active_players()
+	if active_targets.is_empty():
 		return
 
-	var p1_pos := _get_player_3d_position(player_1)
-	var p2_pos := _get_player_3d_position(player_2)
-	var lead := _get_velocity_lead(player_1, player_2)
+	if active_targets.size() == 1:
+		var p_pos := _get_player_3d_position(active_targets[0])
+		global_position.x = lerpf(global_position.x, p_pos.x, minf(1.0, smooth_speed_x * delta))
+		global_position.y = lerpf(global_position.y, p_pos.y + 1.8, minf(1.0, smooth_speed_y * delta))
+		global_position.z = lerpf(global_position.z, min_distance, minf(1.0, smooth_speed_z * delta))
+		_apply_shake(delta)
+		return
 
-	var center_x: float = clampf((p1_pos.x + p2_pos.x) * 0.5 + lead.x, -16.0, 16.0)
-	var avg_y: float = (p1_pos.y + p2_pos.y) * 0.5 + lead.y
-	var target_y: float = clampf(avg_y * 0.72 + 1.6, -2.5, 11.5)
+	var min_x: float = INF
+	var max_x: float = -INF
+	var min_y: float = INF
+	var max_y: float = -INF
+	var avg_lead := Vector2.ZERO
 
-	var dist_x: float = absf(p1_pos.x - p2_pos.x)
-	var dist_y: float = absf(p1_pos.y - p2_pos.y)
+	for p in active_targets:
+		var pos_3d := _get_player_3d_position(p)
+		min_x = minf(min_x, pos_3d.x)
+		max_x = maxf(max_x, pos_3d.x)
+		min_y = minf(min_y, pos_3d.y)
+		max_y = maxf(max_y, pos_3d.y)
+
+		if "velocity" in p and p.velocity is Vector2:
+			avg_lead += Vector2(
+				clampf(p.velocity.x * velocity_lead_factor, -1.8, 1.8),
+				clampf(-p.velocity.y * velocity_lead_factor * 0.6, -1.2, 1.2)
+			)
+
+	avg_lead /= float(active_targets.size())
+
+	var center_x: float = clampf((min_x + max_x) * 0.5 + avg_lead.x, -18.0, 18.0)
+	var avg_y: float = (min_y + max_y) * 0.5 + avg_lead.y
+	var target_y: float = clampf(avg_y * 0.72 + 1.6, -2.5, 12.0)
+
+	var dist_x: float = max_x - min_x
+	var dist_y: float = max_y - min_y
 	var view_distance: float = maxf(dist_x * 0.82, dist_y * 1.30)
 	var target_z: float = clampf(view_distance + margin, min_distance, max_distance)
 
@@ -51,6 +81,9 @@ func _physics_process(delta: float) -> void:
 	global_position.y = lerpf(global_position.y, target_y, minf(1.0, smooth_speed_y * delta))
 	global_position.z = lerpf(global_position.z, target_z, minf(1.0, smooth_speed_z * delta))
 
+	_apply_shake(delta)
+
+func _apply_shake(delta: float) -> void:
 	if _shake_intensity > 0.001 and shake_enabled:
 		h_offset = randf_range(-_shake_intensity, _shake_intensity)
 		v_offset = randf_range(-_shake_intensity, _shake_intensity)
@@ -60,18 +93,23 @@ func _physics_process(delta: float) -> void:
 		h_offset = 0.0
 		v_offset = 0.0
 
-func _get_velocity_lead(p1: Node, p2: Node) -> Vector2:
-	var v1 := Vector2.ZERO
-	var v2 := Vector2.ZERO
-	if "velocity" in p1 and p1.velocity is Vector2:
-		v1 = p1.velocity
-	if "velocity" in p2 and p2.velocity is Vector2:
-		v2 = p2.velocity
-	var avg_vel := (v1 + v2) * 0.5
-	return Vector2(
-		clampf(avg_vel.x * velocity_lead_factor, -1.8, 1.8),
-		clampf(-avg_vel.y * velocity_lead_factor * 0.6, -1.2, 1.2)
-	)
+func _get_active_players() -> Array[Node]:
+	var list: Array[Node] = []
+	var pool: Array[Node] = []
+	if not players.is_empty():
+		pool.append_array(players)
+	else:
+		for p in [player_1, player_2, player_3, player_4]:
+			if p != null:
+				pool.append(p)
+
+	for p in pool:
+		if is_instance_valid(p) and p.is_inside_tree() and p.visible:
+			if "state_machine" in p and p.state_machine and p.state_machine.current_state:
+				if p.state_machine.current_state.name.to_lower() == "death":
+					continue
+			list.append(p)
+	return list
 
 func _get_player_3d_position(p: Node) -> Vector3:
 	if p is Character:

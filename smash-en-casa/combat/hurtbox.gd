@@ -12,7 +12,7 @@ signal impact_received(impact: ImpactData)
 
 @export var owner_character: Node2D
 @export var current_state: HurtboxState = HurtboxState.NORMAL
-@export var debug_draw_hurtbox: bool = true
+@export var debug_draw_hurtbox: bool = false
 
 ## IDs de swing ya recibidos para prevenir multi-hit accidental del mismo swing.
 var _received_swing_ids: Array[int] = []

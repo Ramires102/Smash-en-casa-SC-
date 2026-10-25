@@ -5,7 +5,7 @@ signal hit_confirmed(impact: ImpactData)
 signal hitbox_clanked(other_hitbox: Hitbox)
 
 @export var attack_data: AttackData
-@export var debug_draw_hitbox: bool = true
+@export var debug_draw_hitbox: bool = false
 
 var owner_character: Node2D = null
 var hit_hurtboxes: Array[Hurtbox] = []

@@ -1,0 +1,270 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://ui/leaderboard.gd" id="1_lead_script"]
+[ext_resource type="FontVariation" path="res://ui/Fondos de texto/kamikaze_condensed.tres" id="2_font"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_modal"]
+bg_color = Color(0.04, 0.05, 0.08, 0.96)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(1, 0.85, 0.25, 0.95)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+shadow_color = Color(0, 0, 0, 0.8)
+shadow_size = 24
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_card"]
+bg_color = Color(0.08, 0.10, 0.15, 0.9)
+border_width_left = 2
+border_color = Color(0.25, 0.65, 1, 0.8)
+corner_radius_top_left = 4
+corner_radius_bottom_right = 6
+content_margin_left = 12.0
+content_margin_top = 8.0
+content_margin_right = 12.0
+content_margin_bottom = 8.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn"]
+bg_color = Color(0.12, 0.16, 0.25, 0.9)
+border_width_left = 4
+border_color = Color(1, 0.85, 0.25, 0.8)
+corner_radius_top_left = 4
+corner_radius_bottom_right = 6
+content_margin_left = 16.0
+content_margin_top = 6.0
+content_margin_right = 16.0
+content_margin_bottom = 6.0
+
+[node name="Leaderboard" type="Control"]
+process_mode = 2
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_lead_script")
+
+[node name="DarkBackdrop" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.02, 0.03, 0.05, 0.85)
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 18
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 18
+
+[node name="PanelContainer" type="PanelContainer" parent="MarginContainer"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_modal")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/PanelContainer"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="HeaderMargin" type="MarginContainer" parent="MarginContainer/PanelContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 20
+
+[node name="VBox" type="VBoxContainer" parent="MarginContainer/PanelContainer/VBoxContainer/HeaderMargin"]
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="Title" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/HeaderMargin/VBox"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 32
+theme_override_colors/font_color = Color(1, 0.86, 0.25, 1)
+theme_override_colors/font_shadow_color = Color(0.85, 0.15, 0.25, 0.75)
+theme_override_constants/shadow_offset_x = 2
+theme_override_constants/shadow_offset_y = 2
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 6
+text = "🏆 TABLA DE LIDERES // HALL OF FAME"
+
+[node name="Subtitle" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/HeaderMargin/VBox"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 13
+theme_override_colors/font_color = Color(0.5, 0.75, 1, 0.85)
+text = "HISTORIAL Y CLASIFICACION GENERAL DE JUGADORES"
+
+[node name="SummaryRow" type="HBoxContainer" parent="MarginContainer/PanelContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="ChampCard" type="PanelContainer" parent="MarginContainer/PanelContainer/VBoxContainer/SummaryRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_card")
+
+[node name="VBox" type="VBoxContainer" parent="MarginContainer/PanelContainer/VBoxContainer/SummaryRow/ChampCard"]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/SummaryRow/ChampCard/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+theme_override_colors/font_color = Color(1, 0.85, 0.3, 0.9)
+text = "👑 CAMPEON ACTUAL"
+
+[node name="ValueLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/SummaryRow/ChampCard/VBox"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+text = "-"
+
+[node name="MatchesCard" type="PanelContainer" parent="MarginContainer/PanelContainer/VBoxContainer/SummaryRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_card")
+
+[node name="VBox" type="VBoxContainer" parent="MarginContainer/PanelContainer/VBoxContainer/SummaryRow/MatchesCard"]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/SummaryRow/MatchesCard/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+theme_override_colors/font_color = Color(0.35, 0.8, 1, 0.9)
+text = "⚔ TOTAL COMBATES"
+
+[node name="ValueLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/SummaryRow/MatchesCard/VBox"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+text = "0"
+
+[node name="ProfilesCard" type="PanelContainer" parent="MarginContainer/PanelContainer/VBoxContainer/SummaryRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_card")
+
+[node name="VBox" type="VBoxContainer" parent="MarginContainer/PanelContainer/VBoxContainer/SummaryRow/ProfilesCard"]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/SummaryRow/ProfilesCard/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+theme_override_colors/font_color = Color(0.35, 0.9, 0.45, 0.9)
+text = "👥 PERFILES REGISTRADOS"
+
+[node name="ValueLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/SummaryRow/ProfilesCard/VBox"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+text = "0"
+
+[node name="TableHeader" type="PanelContainer" parent="MarginContainer/PanelContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="HBox" type="HBoxContainer" parent="MarginContainer/PanelContainer/VBoxContainer/TableHeader"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="ColPos" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/TableHeader/HBox"]
+custom_minimum_size = Vector2(45, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+theme_override_colors/font_color = Color(0.65, 0.7, 0.8, 0.8)
+text = "POS"
+
+[node name="ColName" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/TableHeader/HBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 11
+theme_override_colors/font_color = Color(0.65, 0.7, 0.8, 0.8)
+text = "PERFIL"
+
+[node name="ColWins" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/TableHeader/HBox"]
+custom_minimum_size = Vector2(75, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+theme_override_colors/font_color = Color(0.65, 0.7, 0.8, 0.8)
+text = "VICTORIAS"
+horizontal_alignment = 1
+
+[node name="ColLoss" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/TableHeader/HBox"]
+custom_minimum_size = Vector2(65, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+theme_override_colors/font_color = Color(0.65, 0.7, 0.8, 0.8)
+text = "DERROTAS"
+horizontal_alignment = 1
+
+[node name="ColTotal" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/TableHeader/HBox"]
+custom_minimum_size = Vector2(70, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+theme_override_colors/font_color = Color(0.65, 0.7, 0.8, 0.8)
+text = "TOTAL"
+horizontal_alignment = 1
+
+[node name="ColWR" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/TableHeader/HBox"]
+custom_minimum_size = Vector2(85, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+theme_override_colors/font_color = Color(0.65, 0.7, 0.8, 0.8)
+text = "WIN RATE"
+horizontal_alignment = 1
+
+[node name="ColFav" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/TableHeader/HBox"]
+custom_minimum_size = Vector2(130, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+theme_override_colors/font_color = Color(0.65, 0.7, 0.8, 0.8)
+text = "FAVORITO"
+horizontal_alignment = 2
+
+[node name="ScrollContainer" type="ScrollContainer" parent="MarginContainer/PanelContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="RankVBox" type="VBoxContainer" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 6
+
+[node name="BottomRow" type="HBoxContainer" parent="MarginContainer/PanelContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="ResetButton" type="Button" parent="MarginContainer/PanelContainer/VBoxContainer/BottomRow"]
+custom_minimum_size = Vector2(160, 36)
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 14
+theme_override_styles/normal = SubResource("StyleBoxFlat_btn")
+text = "REINICIAR DATOS"
+
+[node name="Spacer" type="Control" parent="MarginContainer/PanelContainer/VBoxContainer/BottomRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="BackButton" type="Button" parent="MarginContainer/PanelContainer/VBoxContainer/BottomRow"]
+custom_minimum_size = Vector2(180, 36)
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 16
+theme_override_styles/normal = SubResource("StyleBoxFlat_btn")
+text = "◄ VOLVER AL MENU"

@@ -31,11 +31,14 @@ var showcase_model: Node3D = null
 var press_start_visible: bool = true
 var menu_selected_index: int = 0
 var menu_animation_phase: float = 0.0
+var _controls_config_instance: Control = null
+var _leaderboard_instance: Control = null
 
 # Menu options (DBFZ / Fighting Arena style)
 var menu_options: Array[Dictionary] = [
-	{ "id": "vs_mode", "text": "BATALLA VS", "sub": "1 VS 1  •  LOCAL MULTIPLAYER", "icon": "⚔", "action": "_on_vs_mode" },
+	{ "id": "vs_mode", "text": "BATALLA VS", "sub": "HASTA 4 JUGADORES  •  MULTIPLAYER", "icon": "⚔", "action": "_on_vs_mode" },
 	{ "id": "training", "text": "ENTRENAMIENTO", "sub": "PRÁCTICA LIBRE Y COMBOS", "icon": "🥋", "action": "_on_training" },
+	{ "id": "leaderboard", "text": "CLASIFICACIÓN", "sub": "TABLA DE LÍDERES Y VICTORIAS", "icon": "🏆", "action": "_on_leaderboard" },
 	{ "id": "options", "text": "OPCIONES", "sub": "SONIDO, PANTALLA Y CONTROLES", "icon": "⚙", "action": "_on_options" },
 	{ "id": "quit", "text": "SALIR AL ESCRITORIO", "sub": "CERRAR JUEGO", "icon": "✕", "action": "_on_quit" }
 ]
@@ -46,6 +49,10 @@ var _showcase_timer: float = 0.0
 var _bg_rotation: float = 0.0
 
 func _ready() -> void:
+	var am = get_node_or_null("/root/AudioManager")
+	if am and am.has_method("play_menu_theme"):
+		am.play_menu_theme()
+
 	_init_roster_data()
 	_setup_3d_background()
 	_setup_character_showcase()
@@ -60,6 +67,9 @@ func _init_roster_data() -> void:
 			"name": "LEGO BATMAN",
 			"sub": "EL CABALLERO DE LA NOCHE",
 			"model_path": "res://characters/lego_batman/lego_batman.glb",
+			"scale": 0.98,
+			"offset": Vector3(0.0, -0.1008, 0.0),
+			"anim_lib": "",
 			"color": Color(0.95, 0.82, 0.15),
 			"logo": "res://assets/logos/logo_batman.png"
 		},
@@ -68,6 +78,9 @@ func _init_roster_data() -> void:
 			"name": "MIYABI HOSHIMI",
 			"sub": "MAESTRA DE LA HOJA HELADA",
 			"model_path": "res://characters/miyabi/miyabi.glb",
+			"scale": 0.88,
+			"offset": Vector3(0.0, -0.1001, 0.08),
+			"anim_lib": "",
 			"color": Color(0.95, 0.25, 0.45),
 			"logo": "res://assets/logos/logo_miyabi.png"
 		},
@@ -76,6 +89,9 @@ func _init_roster_data() -> void:
 			"name": "GOGETA SSJ",
 			"sub": "GUERRERO DE LA FUSIÓN SUPREMA",
 			"model_path": "res://characters/gogeta_ssj/gogeta_ssj.glb",
+			"scale": 1.09,
+			"offset": Vector3(0.0, -0.1206, 0.03),
+			"anim_lib": "res://resources/instances/gogeta_ssj_anim_lib.tres",
 			"color": Color(0.25, 0.65, 1.0),
 			"logo": "res://assets/logos/logo_gogeta.png"
 		},
@@ -84,6 +100,9 @@ func _init_roster_data() -> void:
 			"name": "SAKUYA IZAYOI",
 			"sub": "DONCELLA MANIPULADORA DEL TIEMPO",
 			"model_path": "res://characters/sakuya/sakuya.glb",
+			"scale": 0.097,
+			"offset": Vector3(0.0, -0.1013, 0.0),
+			"anim_lib": "res://resources/instances/sakuya_anim_lib.tres",
 			"color": Color(0.45, 0.75, 1.0),
 			"logo": "res://assets/logos/logo_sakuya.png"
 		},
@@ -92,6 +111,9 @@ func _init_roster_data() -> void:
 			"name": "SANS",
 			"sub": "EL JUEZ DEL SUBSUELO",
 			"model_path": "res://characters/sans/sans.glb",
+			"scale": 0.0000069,
+			"offset": Vector3(0.0, 0.7184, 1.8),
+			"anim_lib": "res://characters/sans/sans_anim_lib.tres",
 			"color": Color(0.55, 0.9, 0.4),
 			"logo": "res://assets/logos/logo_sans.png"
 		}
@@ -195,6 +217,10 @@ func _load_showcase_character(index: int) -> void:
 	if character_sub_label:
 		character_sub_label.text = data["sub"]
 	
+	# Update logo if available
+	if logo_texture_rect and ResourceLoader.exists(data.get("logo", "")):
+		logo_texture_rect.texture = load(data["logo"])
+		
 	# Instantiate model
 	if ResourceLoader.exists(data["model_path"]):
 		var model_scene = load(data["model_path"])
@@ -204,39 +230,57 @@ func _load_showcase_character(index: int) -> void:
 			
 			var char_root = Node3D.new()
 			char_root.name = "CharacterRoot"
+			char_root.position = data.get("offset", Vector3(0.0, -0.10, 0.0))
+			char_root.rotation.y = deg_to_rad(-25.0)
+			
 			var humanoid = Node3D.new()
 			humanoid.name = "Humanoid"
 			char_root.add_child(humanoid)
+			
+			var s: float = data.get("scale", 1.0)
+			model.scale = Vector3(s, s, s)
 			humanoid.add_child(model)
 			
 			character_showcase.add_child(char_root)
 			showcase_model = char_root
-			showcase_model.rotation.y = deg_to_rad(-25.0)
 			
 			# Play idle animation if available
-			_play_showcase_idle(model)
+			_play_showcase_idle(char_root, model, data)
 			
-			# Pop-in entrance tween
+			# Pop-in entrance tween from floor level
 			showcase_model.scale = Vector3(0.01, 0.01, 0.01)
 			var tw = create_tween().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-			tw.tween_property(showcase_model, "scale", Vector3(1.15, 1.15, 1.15), 0.55)
+			tw.tween_property(showcase_model, "scale", Vector3.ONE, 0.45)
 
-func _play_showcase_idle(model: Node3D) -> void:
+func _play_showcase_idle(char_root: Node3D, model: Node3D, data: Dictionary) -> void:
+	# 1. Try finding internal AnimationPlayer
 	var ap: AnimationPlayer = _find_animation_player(model)
 	if ap:
-		for anim in ["idle", "Idle", "wait", "Wait", "RIG - MiyabiAction-idle", "Attack"]:
+		for anim in ["idle", "Idle", "wait", "Wait", "RIG - MiyabiAction-idle"]:
 			if ap.has_animation(anim):
 				ap.play(anim)
 				return
-	
-	# Procedural breathing
-	_apply_showcase_breathing(model)
 
-func _apply_showcase_breathing(node: Node3D) -> void:
-	var base_y = node.position.y
+	# 2. Try loading external AnimationLibrary
+	var anim_lib_path: String = data.get("anim_lib", "")
+	if anim_lib_path != "" and ResourceLoader.exists(anim_lib_path):
+		var lib: AnimationLibrary = load(anim_lib_path)
+		if lib:
+			var new_ap = AnimationPlayer.new()
+			new_ap.name = "ShowcaseAnimPlayer"
+			new_ap.root_node = NodePath("..")
+			new_ap.add_animation_library("", lib)
+			char_root.add_child(new_ap)
+			for anim in ["idle", "Idle", "wait", "Wait", "RIG - MiyabiAction-idle"]:
+				if new_ap.has_animation(anim):
+					new_ap.play(anim)
+					return
+
+	# 3. Subtle breathing scale pulse if no animation track found
+	var base_scale = model.scale
 	var tw = create_tween().set_loops()
-	tw.tween_property(node, "position:y", base_y + 0.04, 1.8).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	tw.tween_property(node, "position:y", base_y, 1.8).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	tw.tween_property(model, "scale", base_scale * Vector3(1.015, 1.02, 1.015), 1.6).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	tw.tween_property(model, "scale", base_scale, 1.6).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 
 func _find_animation_player(node: Node) -> AnimationPlayer:
 	if node is AnimationPlayer:
@@ -373,6 +417,8 @@ func _on_menu_select(index: int) -> void:
 		call(opt["action"])
 
 func _unhandled_input(event: InputEvent) -> void:
+	if (_controls_config_instance and is_instance_valid(_controls_config_instance)) or (_leaderboard_instance and is_instance_valid(_leaderboard_instance)):
+		return
 	if press_start_visible:
 		if event is InputEventKey and event.pressed:
 			_hide_press_start_screen()
@@ -394,6 +440,16 @@ func _unhandled_input(event: InputEvent) -> void:
 					_on_menu_select(menu_selected_index)
 				KEY_ESCAPE:
 					_on_quit()
+		if event is InputEventJoypadMotion:
+			if event.axis == JOY_AXIS_LEFT_Y:
+				if event.axis_value > 0.5 and _last_stick_dir != 1:
+					_last_stick_dir = 1
+					_navigate_menu(1)
+				elif event.axis_value < -0.5 and _last_stick_dir != -1:
+					_last_stick_dir = -1
+					_navigate_menu(-1)
+				elif abs(event.axis_value) < 0.25:
+					_last_stick_dir = 0
 		if event is InputEventJoypadButton and event.pressed:
 			match event.button_index:
 				JOY_BUTTON_DPAD_UP:
@@ -443,23 +499,63 @@ func _play_sfx_select() -> void:
 	if sfx_player:
 		_play_procedural_sfx(1050.0, 0.12, 0.4)
 
+var _sfx_cache: Dictionary = {}
+var _last_stick_dir: int = 0
+
 func _play_procedural_sfx(freq: float, duration: float, volume: float) -> void:
-	# Clean non-blocking sound feedback
-	pass
+	if not is_inside_tree() or not sfx_player:
+		return
+	var key = str(freq) + "_" + str(duration)
+	if not _sfx_cache.has(key):
+		var wav := AudioStreamWAV.new()
+		wav.format = AudioStreamWAV.FORMAT_16_BITS
+		wav.mix_rate = 22050
+		var samples = int(22050.0 * duration)
+		var data := PackedByteArray()
+		data.resize(samples * 2)
+		for i in range(samples):
+			var t = float(i) / 22050.0
+			var env = 1.0 - (float(i) / float(samples))
+			var v = sin(t * freq * TAU) * env * volume
+			data.encode_s16(i * 2, int(clamp(v, -1.0, 1.0) * 32767.0))
+		wav.data = data
+		_sfx_cache[key] = wav
+	sfx_player.stream = _sfx_cache[key]
+	sfx_player.play()
 
 # ==============================================================================
 # Menu Actions
 # ==============================================================================
 
 func _on_vs_mode() -> void:
+	GameManager.training_mode = false
 	get_tree().change_scene_to_file("res://ui/character_select.tscn")
 
 func _on_training() -> void:
 	GameManager.training_mode = true
 	get_tree().change_scene_to_file("res://ui/character_select.tscn")
 
+func _on_leaderboard() -> void:
+	if _leaderboard_instance and is_instance_valid(_leaderboard_instance):
+		return
+	var lead_scene := preload("res://ui/leaderboard.tscn")
+	_leaderboard_instance = lead_scene.instantiate()
+	_leaderboard_instance.closed.connect(func():
+		_leaderboard_instance = null
+		_update_menu_selection()
+	)
+	$UILayer.add_child(_leaderboard_instance)
+
 func _on_options() -> void:
-	_show_toast("OPCIONES — PRÓXIMAMENTE")
+	if _controls_config_instance and is_instance_valid(_controls_config_instance):
+		return
+	var cfg_scene := preload("res://ui/controls_config.tscn")
+	_controls_config_instance = cfg_scene.instantiate()
+	_controls_config_instance.closed.connect(func():
+		_controls_config_instance = null
+		_update_menu_selection()
+	)
+	$UILayer.add_child(_controls_config_instance)
 
 func _on_quit() -> void:
 	get_tree().quit()
@@ -475,8 +571,9 @@ func _show_toast(text: String) -> void:
 	notif.add_theme_color_override("font_outline_color", Color(0, 0, 0, 1))
 	notif.add_theme_constant_override("outline_size", 4)
 	notif.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	notif.anchors_preset = Control.PRESET_CENTER
-	notif.position = Vector2(460 - 150, 310)
+	notif.set_anchors_preset(Control.PRESET_CENTER)
+	notif.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	notif.grow_vertical = Control.GROW_DIRECTION_BOTH
 	$UILayer.add_child(notif)
 	
 	var tw = create_tween()

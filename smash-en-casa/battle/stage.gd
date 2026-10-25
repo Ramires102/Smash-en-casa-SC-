@@ -43,8 +43,13 @@ func is_position_out_of_bounds(pos: Vector2) -> bool:
 	return pos.y > blast_bottom or pos.y < blast_top or pos.x < blast_left or pos.x > blast_right
 
 func get_spawn_position(player_id: int) -> Vector2:
-	if player_id == 1:
-		return Vector2(-140.0, -80.0)
-	elif player_id == 2:
-		return Vector2(140.0, -80.0)
+	match player_id:
+		1:
+			return Vector2(-170.0, -80.0)
+		2:
+			return Vector2(170.0, -80.0)
+		3:
+			return Vector2(-65.0, -80.0)
+		4:
+			return Vector2(65.0, -80.0)
 	return Vector2(0.0, -80.0)

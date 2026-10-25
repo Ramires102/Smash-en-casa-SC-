@@ -8,21 +8,51 @@ signal match_finished(winner_id: int)
 @export var stage: Stage
 @export var spawn_manager: SpawnManager
 
-var p1_lives: int = 3
-var p2_lives: int = 3
+var player_lives: Dictionary = {} # pid -> int
+var characters: Dictionary = {}   # pid -> Character
 var current_time: float = 480.0
 var is_active: bool = false
 
-var player_1: Character
-var player_2: Character
+# Compatibilidad con accesos directos
+var player_1: Character:
+	get:
+		return characters.get(1, null)
+	set(val):
+		if val: characters[1] = val
+
+var player_2: Character:
+	get:
+		return characters.get(2, null)
+	set(val):
+		if val: characters[2] = val
+
+var p1_lives: int:
+	get:
+		return player_lives.get(1, 3)
+	set(val):
+		player_lives[1] = val
+
+var p2_lives: int:
+	get:
+		return player_lives.get(2, 3)
+	set(val):
+		player_lives[2] = val
 
 func setup_match(p1: Character, p2: Character, initial_lives: int = 3, time_limit: float = 480.0) -> void:
-	player_1 = p1
-	player_2 = p2
-	p1_lives = initial_lives
-	p2_lives = initial_lives
+	setup_match_multi({1: p1, 2: p2}, initial_lives, time_limit)
+
+func setup_match_multi(chars_dict: Dictionary, initial_lives: int = 3, time_limit: float = 480.0) -> void:
+	characters.clear()
+	player_lives.clear()
+	is_ko_processing.clear()
 	current_time = time_limit
 	is_active = false
+
+	for pid in chars_dict.keys():
+		var ch: Character = chars_dict[pid]
+		if ch:
+			characters[pid] = ch
+			player_lives[pid] = initial_lives
 
 	if stage and not stage.blast_zone_entered.is_connected(_on_player_ko):
 		stage.blast_zone_entered.connect(_on_player_ko)
@@ -30,8 +60,8 @@ func setup_match(p1: Character, p2: Character, initial_lives: int = 3, time_limi
 	if not Events.time_freeze_requested.is_connected(_on_time_freeze_requested):
 		Events.time_freeze_requested.connect(_on_time_freeze_requested)
 
-	lives_updated.emit(1, p1_lives)
-	lives_updated.emit(2, p2_lives)
+	for pid in player_lives.keys():
+		lives_updated.emit(pid, player_lives[pid])
 	timer_updated.emit(current_time)
 
 var time_freeze_timer: float = 0.0
@@ -87,52 +117,58 @@ func _on_player_ko(character: Character) -> void:
 		parent_node.add_child(streak)
 		streak.setup(death_pos_3d, stage_center)
 
-	if pid == 1:
-		p1_lives -= 1
-		lives_updated.emit(1, p1_lives)
-		Events.player_ko_event.emit(1, death_pos_3d, p1_lives, p2_lives)
-		if p1_lives <= 0:
-			get_tree().create_timer(0.2).timeout.connect(func():
-				_finish_game(2) # P2 gana
-				is_ko_processing[1] = false
-			)
-		else:
-			get_tree().create_timer(0.35).timeout.connect(func():
-				if is_instance_valid(character):
-					spawn_manager.respawn_player(character)
-				is_ko_processing[1] = false
-			)
-	elif pid == 2:
-		p2_lives -= 1
-		lives_updated.emit(2, p2_lives)
-		Events.player_ko_event.emit(2, death_pos_3d, p1_lives, p2_lives)
-		if p2_lives <= 0:
-			get_tree().create_timer(0.2).timeout.connect(func():
-				_finish_game(1) # P1 gana
-				is_ko_processing[2] = false
-			)
-		else:
-			get_tree().create_timer(0.35).timeout.connect(func():
-				if is_instance_valid(character):
-					spawn_manager.respawn_player(character)
-				is_ko_processing[2] = false
-			)
+	var remaining: int = player_lives.get(pid, 1) - 1
+	player_lives[pid] = remaining
+	lives_updated.emit(pid, remaining)
+
+	var p1_l: int = player_lives.get(1, 0)
+	var p2_l: int = player_lives.get(2, 0)
+	Events.player_ko_event.emit(pid, death_pos_3d, p1_l, p2_l)
+
+	if remaining <= 0:
+		get_tree().create_timer(0.25).timeout.connect(func():
+			_check_elimination_status()
+			is_ko_processing[pid] = false
+		)
+	else:
+		get_tree().create_timer(0.35).timeout.connect(func():
+			if is_instance_valid(character) and is_active:
+				spawn_manager.respawn_player(character)
+			is_ko_processing[pid] = false
+		)
+
+func _check_elimination_status() -> void:
+	if not is_active:
+		return
+	var alive_pids: Array[int] = []
+	for pid in player_lives.keys():
+		if player_lives[pid] > 0:
+			alive_pids.append(pid)
+
+	if alive_pids.size() == 1:
+		_finish_game(alive_pids[0])
+	elif alive_pids.is_empty():
+		_finish_game(0) # Empate general
 
 func _end_match_by_time() -> void:
 	is_active = false
-	if p1_lives > p2_lives:
-		_finish_game(1)
-	elif p2_lives > p1_lives:
-		_finish_game(2)
-	else:
-		# Empate por muerte súbita / menor porcentaje
-		if player_1 and player_2:
-			if player_1.damage_percentage <= player_2.damage_percentage:
-				_finish_game(1)
-			else:
-				_finish_game(2)
-		else:
-			_finish_game(0)
+	var best_pid: int = -1
+	var max_l: int = -1
+	var min_dmg: float = INF
+
+	for pid in player_lives.keys():
+		var l: int = player_lives[pid]
+		var ch: Character = characters.get(pid, null)
+		var dmg: float = ch.damage_percentage if ch else 999.0
+		if l > max_l:
+			max_l = l
+			min_dmg = dmg
+			best_pid = pid
+		elif l == max_l and dmg < min_dmg:
+			min_dmg = dmg
+			best_pid = pid
+
+	_finish_game(best_pid if best_pid > 0 else 0)
 
 func _finish_game(winner_id: int) -> void:
 	is_active = false

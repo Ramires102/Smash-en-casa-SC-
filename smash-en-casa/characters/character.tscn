@@ -324,6 +324,7 @@ mesh = SubResource("SphereMesh_shield")
 surface_material_override/0 = SubResource("StandardMaterial3D_shield")
 
 [node name="DebugHurtboxMesh" type="MeshInstance3D" parent="Humanoid"]
+visible = false
 material_override = SubResource("StandardMaterial3D_debug_hurtbox")
 mesh = SubResource("CapsuleMesh_debug_hurtbox")
 

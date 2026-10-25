@@ -7,33 +7,47 @@ extends Control
 @onready var card_panel: PanelContainer = get_node_or_null("CenterContainer/CardPanel")
 
 func _ready() -> void:
+	var am = get_node_or_null("/root/AudioManager")
+	if am and am.has_method("play_menu_theme"):
+		am.play_menu_theme()
+
 	if retry_btn:
 		retry_btn.grab_focus()
 
 	# Configurar ganador
 	if winner_label:
-		if GameManager.winner_player_id == 1:
-			var name_str = GameManager.player_1_data.character_name if GameManager.player_1_data else "JUGADOR 1"
-			winner_label.text = "¡%s ES EL CAMPEÓN!" % name_str.to_upper()
-			winner_label.add_theme_color_override("font_color", Color(0.35, 0.8, 1.0))
-			if winner_logo and GameManager.player_1_data and "logo_texture" in GameManager.player_1_data and GameManager.player_1_data.logo_texture:
-				winner_logo.texture = GameManager.player_1_data.logo_texture
-		elif GameManager.winner_player_id == 2:
-			var name_str = GameManager.player_2_data.character_name if GameManager.player_2_data else "JUGADOR 2"
-			winner_label.text = "¡%s ES EL CAMPEÓN!" % name_str.to_upper()
-			winner_label.add_theme_color_override("font_color", Color(1.0, 0.35, 0.45))
-			if winner_logo and GameManager.player_2_data and "logo_texture" in GameManager.player_2_data and GameManager.player_2_data.logo_texture:
-				winner_logo.texture = GameManager.player_2_data.logo_texture
+		var wid: int = GameManager.winner_player_id
+		if wid > 0:
+			var p_data = GameManager.get_player_data(wid)
+			var p_prof: String = GameManager.get_player_profile(wid)
+			var char_name: String = p_data.character_name if p_data else "LUCHADOR"
+			
+			if p_prof != "" and p_prof != "Default":
+				winner_label.text = "¡JUGADOR %d (%s) ES EL CAMPEÓN!\n[%s]" % [wid, p_prof.to_upper(), char_name.to_upper()]
+			else:
+				winner_label.text = "¡JUGADOR %d (%s) ES EL CAMPEÓN!" % [wid, char_name.to_upper()]
+
+			match wid:
+				1: winner_label.add_theme_color_override("font_color", Color(0.35, 0.8, 1.0))
+				2: winner_label.add_theme_color_override("font_color", Color(1.0, 0.35, 0.45))
+				3: winner_label.add_theme_color_override("font_color", Color(0.25, 0.90, 0.45))
+				4: winner_label.add_theme_color_override("font_color", Color(1.0, 0.85, 0.25))
+				_: winner_label.add_theme_color_override("font_color", Color(1.0, 0.85, 0.25))
+
+			if winner_logo and p_data and "logo_texture" in p_data and p_data.logo_texture:
+				winner_logo.texture = p_data.logo_texture
+				winner_logo.visible = true
 		else:
 			winner_label.text = "¡EMPATE DE TITANES!"
 			winner_label.add_theme_color_override("font_color", Color(1.0, 0.85, 0.25))
 			if winner_logo:
 				winner_logo.visible = false
 
-	# Animación pop-in estilo fighting game
+	# Animación pop-in estilo fighting game con pivote centrado
 	if card_panel:
+		card_panel.custom_minimum_size = Vector2(480, 420)
+		card_panel.pivot_offset = Vector2(240, 210)
 		card_panel.scale = Vector2(0.8, 0.8)
-		card_panel.pivot_offset = card_panel.size * 0.5
 		var tw = create_tween().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 		tw.tween_property(card_panel, "scale", Vector2.ONE, 0.4)
 

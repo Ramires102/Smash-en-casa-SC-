@@ -7,7 +7,7 @@ extends Area2D
 @export var owner_character: Character
 @export var push_radius: float = 14.5  ## Radio de empuje en px (≈ 0.52m * 28px)
 @export var push_force: float = 14.0   ## Velocidad de separación suave
-@export var debug_draw_pushbox: bool = true
+@export var debug_draw_pushbox: bool = false
 
 @onready var collision_shape: CollisionShape2D = get_node_or_null("CollisionShape2D")
 

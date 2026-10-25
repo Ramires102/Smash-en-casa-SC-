@@ -141,6 +141,11 @@ func configure(data: CharacterData) -> void:
 	character_data = data
 	if not data:
 		return
+	if is_sakuya():
+		special_down_charge = 0.0
+		Events.special_meter_changed.emit(player_id, special_down_charge, SPECIAL_DOWN_MAX_CHARGE)
+	else:
+		special_down_charge = SPECIAL_DOWN_MAX_CHARGE
 	if controller:
 		controller.setup(data)
 	if stats:
@@ -332,32 +337,39 @@ func _update_button_input_edges() -> void:
 	_shield_just_pressed = (not _previous_shield_pressed) and current_shield
 	_previous_shield_pressed = current_shield
 
+func is_sakuya() -> bool:
+	if character_data == null:
+		return false
+	return character_data.character_name.to_lower().contains("sakuya")
+
 func is_special_move(atk: AttackData) -> bool:
 	if atk == null:
 		return false
 	return atk.is_special_attack or atk.animation_name.begins_with("Special") or atk.is_time_stop
 
 func on_non_special_hit_connected(atk: AttackData) -> void:
+	if not is_sakuya():
+		return
 	if is_special_move(atk) or Events.is_time_stopped:
 		return
 	var gain: float = clampf(atk.damage * 2.5, 16.0, 28.0) if atk else 20.0
 	add_special_down_charge(gain)
 
 func add_special_down_charge(amount: float) -> void:
+	if not is_sakuya():
+		return
 	special_down_charge = clampf(special_down_charge + amount, 0.0, SPECIAL_DOWN_MAX_CHARGE)
 	Events.special_meter_changed.emit(player_id, special_down_charge, SPECIAL_DOWN_MAX_CHARGE)
 
 func can_use_special_down() -> bool:
-	# Si el Down Special es Time Stop (ej. Sakuya), pide carga; para Gogeta y Sans está siempre disponible (como en TypeScript)
-	if attack_controller and attack_controller.current_moveset and attack_controller.current_moveset.special_down:
-		if not attack_controller.current_moveset.special_down.is_time_stop:
-			return true
+	# Solo Sakuya requiere barra cargada (100%) para ejecutar su Down Special (Time Stop)
+	if not is_sakuya():
+		return true
 	return special_down_charge >= SPECIAL_DOWN_MAX_CHARGE
 
 func consume_special_down_charge() -> void:
-	if attack_controller and attack_controller.current_moveset and attack_controller.current_moveset.special_down:
-		if not attack_controller.current_moveset.special_down.is_time_stop:
-			return
+	if not is_sakuya():
+		return
 	special_down_charge = 0.0
 	Events.special_meter_changed.emit(player_id, special_down_charge, SPECIAL_DOWN_MAX_CHARGE)
 

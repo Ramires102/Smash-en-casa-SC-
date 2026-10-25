@@ -1001,6 +1001,9 @@ func _update_combat_vfx(elapsed: float) -> void:
 	if active_state_name != "Attack" or active_attack == null:
 		return
 
+	if active_attack.vfx_type == "" or active_attack.vfx_type == "none":
+		return
+
 	var off_x: float = active_attack.hitbox_offset.x
 	var off_y: float = active_attack.hitbox_offset.y
 	var rad: float = active_attack.hitbox_radius if active_attack.hitbox_radius > 0.0 else 0.75
@@ -1122,11 +1125,11 @@ func _inject_gogeta_moveset() -> void:
 	dair.sliding_knockdown = true
 
 	var neutral_sp := _make_atk("gogeta_neutral_special", "Big Bang Kamehameha", "SpecialNeutral", "beam_charge_thrust", "ki_beam", 16.5, 9.0, 0.18, 30.0, 12, 10, 16, Vector2(1.95, 1.25), 1.15, Vector2.ZERO, 0)
-	var rekka3 := _make_atk("gogeta_side_special_3", "Rekka 3: Patada de Hacha (3/3)", "SpecialSide3", "rekka_axe_kick", "axe_crescent_blue", 13.5, 8.8, 0.16, 285.0, 7, 7, 15, Vector2(1.08, 1.15), 0.92, Vector2(2.2, -8.5), 7)
+	var rekka3 := _make_atk("gogeta_side_special_3", "Rekka 3: Patada de Hacha (3/3)", "SpecialSide3", "rekka_axe_kick", "", 13.5, 8.8, 0.16, 285.0, 7, 7, 15, Vector2(1.08, 1.15), 0.92, Vector2(2.2, -8.5), 7)
 	rekka3.snap_in_front_of_opponent = true
-	var rekka2 := _make_atk("gogeta_side_special_2", "Rekka 2: Rodillazo en Salto (2/3)", "SpecialSide2", "rekka_knee_rising", "ki_knee_rising", 8.5, 5.2, 0.06, 76.0, 5, 9, 13, Vector2(0.95, 1.48), 0.84, Vector2(4.8, 11.2), 2)
+	var rekka2 := _make_atk("gogeta_side_special_2", "Rekka 2: Rodillazo en Salto (2/3)", "SpecialSide2", "rekka_knee_rising", "", 8.5, 5.2, 0.06, 76.0, 5, 9, 13, Vector2(0.95, 1.48), 0.84, Vector2(4.8, 11.2), 2)
 	rekka2.combo_next = rekka3
-	var rekka1 := _make_atk("gogeta_side_special_1", "Rekka 1: Rodillazo Volador (1/3)", "SpecialSide", "rekka_knee_dash", "ki_knee_cone", 7.5, 3.6, 0.04, 38.0, 6, 9, 13, Vector2(1.18, 1.12), 0.86, Vector2(11.4, 1.2), 2)
+	var rekka1 := _make_atk("gogeta_side_special_1", "Rekka 1: Rodillazo Volador (1/3)", "SpecialSide", "rekka_knee_dash", "", 7.5, 3.6, 0.04, 38.0, 6, 9, 13, Vector2(1.18, 1.12), 0.86, Vector2(11.4, 1.2), 2)
 	rekka1.combo_next = rekka2
 
 	var up_sp_punch := _make_atk("gogeta_up_special_punch", "Up Special: Piña Explosiva (Remate)", "SpecialUp2", "up_special_followup_punch", "slash_gold", 10.5, 9.2, 0.17, 36.0, 5, 6, 14, Vector2(1.05, 1.25), 0.96, Vector2(2.6, 2.4), 1)
@@ -1135,9 +1138,9 @@ func _inject_gogeta_moveset() -> void:
 	up_sp.drag_defender_on_hit = true
 	up_sp.auto_followup_on_hit = up_sp_punch
 
-	var down_sp_kick := _make_atk("gogeta_down_special_kick", "Down Special (2/2): Giro y Patada", "SpecialDown2", "down_special_turn_kick", "crescent_kick_arc_blue", 11.5, 9.8, 0.19, 28.0, 13, 16, 18, Vector2(1.25, 1.22), 1.12, Vector2(2.4, 2.2), 4)
+	var down_sp_kick := _make_atk("gogeta_down_special_kick", "Down Special (2/2): Giro y Patada", "SpecialDown2", "down_special_turn_kick", "", 11.5, 9.8, 0.19, 28.0, 13, 16, 18, Vector2(1.25, 1.22), 1.12, Vector2(2.4, 2.2), 4)
 	down_sp_kick.flip_facing_on_start = true
-	var down_sp_elbow := _make_atk("gogeta_down_special", "Down Special (1/2): Codazo Cambia-Lado", "SpecialDown", "down_special_elbow_lift", "diagonal_elbow_slash_blue", 6.0, 3.2, 0.02, 115.0, 9, 18, 12, Vector2(1.08, 1.15), 1.05, Vector2(7.8, 0.0), 2)
+	var down_sp_elbow := _make_atk("gogeta_down_special", "Down Special (1/2): Codazo Cambia-Lado", "SpecialDown", "down_special_elbow_lift", "", 6.0, 3.2, 0.02, 115.0, 9, 18, 12, Vector2(1.08, 1.15), 1.05, Vector2(7.8, 0.0), 2)
 	down_sp_elbow.toss_behind_on_hit = true
 	down_sp_elbow.auto_followup_on_hit = down_sp_kick
 	down_sp_elbow.auto_followup_always = true
