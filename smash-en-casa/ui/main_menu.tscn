@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://dd4gdn4k3of27" path="res://ui/main_menu.gd" id="1_menu"]
 
+
 [node name="MainMenu" type="Control" unique_id=1284944876]
 layout_mode = 3
 anchors_preset = 15
@@ -11,60 +12,175 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_menu")
 
-[node name="ColorRect" type="ColorRect" parent="." unique_id=530548694]
-layout_mode = 1
+# 3D Background Stage
+[node name="BackgroundStage" type="Node3D" parent="." unique_id=1001]
+position = Vector3(0, 0, 0)
+
+[node name="Camera3D" type="Camera3D" parent="BackgroundStage" unique_id=1002]
+position = Vector3(0, 2.5, 6.0)
+rotation = Vector3(0, 0, 0)
+fov = 55.0
+near = 0.1
+far = 100.0
+environment = null
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="BackgroundStage" unique_id=1003]
+
+# Character Showcase Container
+[node name="CharacterShowcase" type="Node3D" parent="BackgroundStage" unique_id=1004]
+position = Vector3(0, 0.5, 0)
+
+[node name="CharacterNameLabel" type="Label" parent="CharacterShowcase" unique_id=1005]
+layout_mode = 2
+anchors_preset = 9
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -250.0
+offset_top = -180.0
+offset_right = 250.0
+offset_bottom = -130.0
+grow_horizontal = 2
+grow_vertical = 2
+horizontal_alignment = 1
+text = ""
+
+[node name="CharacterSubLabel" type="Label" parent="CharacterShowcase" unique_id=1006]
+layout_mode = 2
+anchors_preset = 9
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -250.0
+offset_top = -130.0
+offset_right = 250.0
+offset_bottom = -100.0
+grow_horizontal = 2
+grow_vertical = 2
+horizontal_alignment = 1
+text = ""
+
+# Press Start Overlay
+[node name="PressStartOverlay" type="ColorRect" parent="." unique_id=2001]
+color = Color(0, 0, 0, 0.7)
+layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.1, 0.12, 0.18, 1)
+mouse_filter = 0
 
-[node name="TitleLabel" type="Label" parent="." unique_id=1439471546]
-layout_mode = 1
-anchors_preset = 5
-anchor_left = 0.5
-anchor_right = 0.5
-offset_left = -188.0
-offset_top = 100.0
-offset_right = 188.0
-offset_bottom = 139.0
-grow_horizontal = 2
-theme_override_font_sizes/font_size = 42
-text = "SMASH EN CASA"
-horizontal_alignment = 1
-
-[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=955710590]
-layout_mode = 1
+[node name="PressStartLabel" type="Label" parent="PressStartOverlay" unique_id=2002]
+layout_mode = 2
 anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.75
+anchor_right = 0.5
+anchor_bottom = 0.75
+offset_left = -300.0
+offset_top = -40.0
+offset_right = 300.0
+offset_bottom = 40.0
+grow_horizontal = 2
+grow_vertical = 2
+horizontal_alignment = 1
+text = "PRESIONA CUALQUIER BOTÓN"
+mouse_filter = 0
+
+[node name="PressStartHint" type="Label" parent="PressStartOverlay" unique_id=2003]
+layout_mode = 2
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.75
+anchor_right = 0.5
+anchor_bottom = 0.75
+offset_left = -300.0
+offset_top = 50.0
+offset_right = 300.0
+offset_bottom = 110.0
+grow_horizontal = 2
+grow_vertical = 2
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.7, 0.75, 0.85, 0.7)
+text = "Teclado / Mando / Ratón / Tactil"
+mouse_filter = 0
+
+# Main Menu Container
+[node name="MainMenuContainer" type="Control" parent="." unique_id=3001]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+visible = false
+modulate = Color(1, 1, 1, 0)
+mouse_filter = 0
+
+# Left side - Logo
+[node name="LogoRect" type="TextureRect" parent="MainMenuContainer" unique_id=3002]
+layout_mode = 2
+anchors_preset = 1
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 0.0
+anchor_bottom = 0.0
+offset_left = 60.0
+offset_top = 60.0
+offset_right = 360.0
+offset_bottom = 360.0
+grow_horizontal = 2
+grow_vertical = 2
+expand_mode = 2
+stretch_mode = 2
+mouse_filter = 0
+
+# Right side - Menu Buttons
+[node name="MenuButtons" type="VBoxContainer" parent="MainMenuContainer" unique_id=3003]
+layout_mode = 2
+anchors_preset = 9
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -150.0
-offset_top = -120.0
-offset_right = 150.0
-offset_bottom = 120.0
+offset_left = 200.0
+offset_top = -200.0
+offset_right = 700.0
+offset_bottom = 200.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/separation = 15
 alignment = 1
+theme_override_constants/separation = 12
+mouse_filter = 0
 
-[node name="HSeparator" type="HSeparator" parent="VBoxContainer" unique_id=251726419]
+# Version Label (bottom right)
+[node name="VersionLabel" type="Label" parent="MainMenuContainer" unique_id=3004]
 layout_mode = 2
+anchors_preset = 12
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -300.0
+offset_top = -40.0
+offset_right = -20.0
+offset_bottom = -10.0
+grow_horizontal = 2
+grow_vertical = 2
+horizontal_alignment = 2
+text = "v1.0.0"
+mouse_filter = 0
 
-[node name="StartButton" type="Button" parent="VBoxContainer" unique_id=1574340673]
-layout_mode = 2
-theme_override_font_sizes/font_size = 20
-text = "Batalla"
+# SFX Player
+[node name="SFXPlayer" type="AudioStreamPlayer" parent="." unique_id=4001]
+bus = "Master"
+volume_db = 0.0
+pitch_scale = 1.0
 
-layout_mode = 2
-theme_override_font_sizes/font_size = 20
-
-[node name="QuitButton" type="Button" parent="VBoxContainer" unique_id=1378407416]
-layout_mode = 2
-theme_override_font_sizes/font_size = 20
-text = "Salir"
-
-[connection signal="pressed" from="VBoxContainer/StartButton" to="." method="_on_start_button_pressed"]
-[connection signal="pressed" from="VBoxContainer/QuitButton" to="." method="_on_quit_button_pressed"]
+# Connections
+[connection signal="pressed" from="MainMenuContainer/MenuButtons/StartButton" to="." method="_on_start_button_pressed"]
+[connection signal="pressed" from="MainMenuContainer/MenuButtons/QuitButton" to="." method="_on_quit_button_pressed"]

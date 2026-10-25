@@ -15,6 +15,7 @@ extends Node3D
 @export var sakuya_data: CharacterData = preload("res://resources/instances/sakuya_data.tres")
 @export var gogeta_data: CharacterData = preload("res://resources/instances/gogeta_data.tres")
 @export var john_data: CharacterData = preload("res://resources/instances/john_placeholder_data.tres")
+@export var miyabi_data: CharacterData = preload("res://resources/instances/miyabi_data.tres")
 
 # Roster definition
 var roster_slots: Array[Dictionary] = []
@@ -54,6 +55,13 @@ var p1_token_tween: Tween = null
 var p2_token_tween: Tween = null
 var start_countdown_timer: float = -1.0
 
+# 3D Stage Background and Selector
+var stage_bg_deco: Node3D = null
+var stage_preview_rect: TextureRect = null
+var stage_name_label: Label = null
+@onready var world_environment: WorldEnvironment = get_node_or_null("WorldEnvironment") as WorldEnvironment
+var _preview_time: float = 0.0
+
 # Procedural SFX cache
 var sfx_move: AudioStreamWAV
 var sfx_select: AudioStreamWAV
@@ -64,6 +72,7 @@ func _ready() -> void:
 	_init_sfx()
 	_init_roster()
 	_build_3d_card_arc()
+	_setup_3d_stage_background()
 	_update_p1_selection(p1_slot_index, false)
 	_update_p2_selection(p2_slot_index, false)
 	
@@ -81,71 +90,267 @@ func _sync_initial_tokens() -> void:
 	_update_token_position(1, false)
 	_update_token_position(2, false)
 
-func _build_stage_preview() -> void:
-	var preview_path := "res://ui/character_select/stage_preview.png"
-	var tex: Texture2D = null
-	if ResourceLoader.exists(preview_path):
-		tex = load(preview_path)
-	elif FileAccess.file_exists(preview_path):
-		var img := Image.load_from_file(ProjectSettings.globalize_path(preview_path))
-		if img:
-			tex = ImageTexture.create_from_image(img)
-	if tex == null:
+func _setup_3d_stage_background() -> void:
+	if stage_bg_deco != null:
 		return
+	stage_bg_deco = Node3D.new()
+	stage_bg_deco.name = "StageBackgroundDeco"
+	stage_bg_deco.position = Vector3(0, 0, -3.2)
+	add_child(stage_bg_deco)
+	_update_3d_stage_background()
+
+func _update_3d_stage_background() -> void:
+	if stage_bg_deco == null:
+		return
+		
+	for c in stage_bg_deco.get_children():
+		c.queue_free()
+		
+	var stage_data = GameManager.get_selected_stage()
+	var stage_id: String = stage_data.get("id", "astral")
 	
+	# Update Sky Environment
+	if world_environment and world_environment.environment:
+		var env = world_environment.environment
+		env.background_mode = Environment.BG_SKY
+		var sky_mat = ProceduralSkyMaterial.new()
+		sky_mat.sky_top_color = stage_data.get("sky_top_color", Color(0.14, 0.18, 0.38))
+		sky_mat.sky_horizon_color = stage_data.get("sky_horizon_color", Color(0.88, 0.58, 0.65))
+		sky_mat.sky_curve = 0.15
+		sky_mat.ground_bottom_color = stage_data.get("ground_bottom_color", Color(0.08, 0.10, 0.18))
+		sky_mat.ground_horizon_color = stage_data.get("ground_horizon_color", Color(0.88, 0.58, 0.65))
+		sky_mat.ground_curve = 0.15
+		sky_mat.sun_angle_max = 35.0
+		sky_mat.use_debanding = true
+		
+		var new_sky = Sky.new()
+		new_sky.sky_material = sky_mat
+		env.sky = new_sky
+		env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
+		env.ambient_light_energy = 0.75
+		
+	# 3D Decorative visual elements matching each stage
+	match stage_id:
+		"astral":
+			# Giant golden celestial ring
+			var ring_mesh = MeshInstance3D.new()
+			var torus = TorusMesh.new()
+			torus.inner_radius = 2.4
+			torus.outer_radius = 2.8
+			ring_mesh.mesh = torus
+			var r_mat = StandardMaterial3D.new()
+			r_mat.albedo_color = Color(1.0, 0.85, 0.3)
+			r_mat.metallic = 0.95
+			r_mat.roughness = 0.15
+			r_mat.emission_enabled = true
+			r_mat.emission = Color(1.0, 0.8, 0.25)
+			r_mat.emission_energy_multiplier = 1.2
+			ring_mesh.material_override = r_mat
+			ring_mesh.position = Vector3(0, 2.5, -2.0)
+			ring_mesh.rotation.x = deg_to_rad(15.0)
+			ring_mesh.name = "CelestialRing"
+			stage_bg_deco.add_child(ring_mesh)
+			
+			# Astral pillars on sides
+			for side in [-4.5, 4.5]:
+				var pil = MeshInstance3D.new()
+				var cyl = CylinderMesh.new()
+				cyl.top_radius = 0.35
+				cyl.bottom_radius = 0.45
+				cyl.height = 6.0
+				pil.mesh = cyl
+				var p_mat = StandardMaterial3D.new()
+				p_mat.albedo_color = Color(0.18, 0.22, 0.35)
+				p_mat.metallic = 0.4
+				pil.material_override = p_mat
+				pil.position = Vector3(side, 1.0, -1.5)
+				stage_bg_deco.add_child(pil)
+				
+		"cyber":
+			# Neon Cyber Rings (Cyan & Magenta)
+			var c_ring1 = MeshInstance3D.new()
+			var torus1 = TorusMesh.new()
+			torus1.inner_radius = 2.0
+			torus1.outer_radius = 2.2
+			c_ring1.mesh = torus1
+			var cr_mat1 = StandardMaterial3D.new()
+			cr_mat1.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+			cr_mat1.albedo_color = Color(0.1, 0.85, 1.0)
+			c_ring1.material_override = cr_mat1
+			c_ring1.position = Vector3(-1.5, 2.2, -1.8)
+			c_ring1.name = "CyberRing1"
+			stage_bg_deco.add_child(c_ring1)
+			
+			var c_ring2 = MeshInstance3D.new()
+			var torus2 = TorusMesh.new()
+			torus2.inner_radius = 1.5
+			torus2.outer_radius = 1.68
+			c_ring2.mesh = torus2
+			var cr_mat2 = StandardMaterial3D.new()
+			cr_mat2.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+			cr_mat2.albedo_color = Color(1.0, 0.15, 0.85)
+			c_ring2.material_override = cr_mat2
+			c_ring2.position = Vector3(1.5, 2.0, -1.5)
+			c_ring2.rotation.y = deg_to_rad(30.0)
+			c_ring2.name = "CyberRing2"
+			stage_bg_deco.add_child(c_ring2)
+			
+			# Vertical cyber light columns
+			for side in [-3.5, -1.8, 1.8, 3.5]:
+				var beam = MeshInstance3D.new()
+				var box = BoxMesh.new()
+				box.size = Vector3(0.08, 7.0, 0.08)
+				beam.mesh = box
+				var b_mat = StandardMaterial3D.new()
+				b_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+				b_mat.albedo_color = Color(0.2, 0.8, 1.0, 0.6)
+				beam.material_override = b_mat
+				beam.position = Vector3(side, 1.5, -2.0)
+				stage_bg_deco.add_child(beam)
+				
+		"volcano":
+			# Jagged obsidian basalt pillars
+			for side in [-4.2, -2.2, 2.2, 4.2]:
+				var pil = MeshInstance3D.new()
+				var cyl = CylinderMesh.new()
+				cyl.top_radius = 0.4
+				cyl.bottom_radius = 0.6
+				cyl.height = 5.5
+				pil.mesh = cyl
+				var p_mat = StandardMaterial3D.new()
+				p_mat.albedo_color = Color(0.1, 0.08, 0.09)
+				p_mat.roughness = 0.9
+				p_mat.emission_enabled = true
+				p_mat.emission = Color(1.0, 0.35, 0.05)
+				p_mat.emission_energy_multiplier = 0.4
+				pil.material_override = p_mat
+				pil.position = Vector3(side, 1.0, -1.8)
+				stage_bg_deco.add_child(pil)
+				
+			# Molten lava core glow strip
+			var lava = MeshInstance3D.new()
+			var l_mesh = BoxMesh.new()
+			l_mesh.size = Vector3(12.0, 0.3, 2.0)
+			lava.mesh = l_mesh
+			var l_mat = StandardMaterial3D.new()
+			l_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+			l_mat.albedo_color = Color(1.0, 0.4, 0.05)
+			lava.material_override = l_mat
+			lava.position = Vector3(0, -0.2, -2.0)
+			stage_bg_deco.add_child(lava)
+
+func _build_stage_preview() -> void:
 	var ui_root: Control = get_node_or_null("CanvasLayer/UI")
 	if not ui_root:
 		return
 	
-	# Compact frame under title banner
+	# Interactive Stage Selection frame under title banner
 	var panel := PanelContainer.new()
 	panel.name = "StagePreviewPanel"
 	panel.set_anchors_preset(Control.PRESET_CENTER_TOP)
-	panel.offset_left = -75
-	panel.offset_right = 75
-	panel.offset_top = 54
-	panel.offset_bottom = 138
-	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	panel.offset_left = -110
+	panel.offset_right = 110
+	panel.offset_top = 46
+	panel.offset_bottom = 142
 	
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.05, 0.06, 0.1, 0.85)
+	style.bg_color = Color(0.04, 0.06, 0.1, 0.88)
 	style.border_width_left = 2
 	style.border_width_top = 2
 	style.border_width_right = 2
 	style.border_width_bottom = 2
 	style.border_color = Color(0.85, 0.68, 0.22, 0.9)
-	style.corner_radius_top_left = 4
-	style.corner_radius_top_right = 4
-	style.corner_radius_bottom_left = 4
-	style.corner_radius_bottom_right = 4
+	style.corner_radius_top_left = 6
+	style.corner_radius_top_right = 6
+	style.corner_radius_bottom_left = 6
+	style.corner_radius_bottom_right = 6
+	style.shadow_color = Color(0, 0, 0, 0.5)
+	style.shadow_size = 8
 	panel.add_theme_stylebox_override("panel", style)
 	
 	var vbox := VBoxContainer.new()
-	vbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	vbox.add_theme_constant_override("separation", 3)
 	
-	var tex_rect := TextureRect.new()
-	tex_rect.texture = tex
-	tex_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	tex_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
-	tex_rect.custom_minimum_size = Vector2(146, 62)
-	tex_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	vbox.add_child(tex_rect)
+	# Header title
+	var header_label := Label.new()
+	header_label.text = "ESCENARIO [Q / E]"
+	var font_res = preload("res://ui/Fondos de texto/kamikaze_condensed.tres") if ResourceLoader.exists("res://ui/Fondos de texto/kamikaze_condensed.tres") else null
+	if font_res:
+		header_label.add_theme_font_override("font", font_res)
+	header_label.add_theme_font_size_override("font_size", 9)
+	header_label.add_theme_color_override("font_color", Color(0.7, 0.8, 0.9, 0.85))
+	header_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vbox.add_child(header_label)
 	
-	var stage_name := Label.new()
-	stage_name.text = "MAPA: SANTUARIO ASTRAL"
-	var font_res = preload("res://ui/Fondos de texto/kamikaze_condensed.tres")
-	stage_name.add_theme_font_override("font", font_res)
-	stage_name.add_theme_font_size_override("font_size", 10)
-	stage_name.add_theme_color_override("font_color", Color(1.0, 0.9, 0.4, 1.0))
-	stage_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	stage_name.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	vbox.add_child(stage_name)
+	# Middle row with Arrow Left, Thumbnail, Arrow Right
+	var row := HBoxContainer.new()
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	row.add_theme_constant_override("separation", 6)
+	
+	var btn_left := Button.new()
+	btn_left.text = "◄"
+	btn_left.custom_minimum_size = Vector2(24, 52)
+	btn_left.focus_mode = Control.FOCUS_NONE
+	btn_left.pressed.connect(func(): _cycle_stage(-1))
+	row.add_child(btn_left)
+	
+	stage_preview_rect = TextureRect.new()
+	stage_preview_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	stage_preview_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	stage_preview_rect.custom_minimum_size = Vector2(136, 56)
+	stage_preview_rect.mouse_filter = Control.MOUSE_FILTER_STOP
+	stage_preview_rect.gui_input.connect(func(event: InputEvent):
+		if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+			_cycle_stage(1)
+	)
+	row.add_child(stage_preview_rect)
+	
+	var btn_right := Button.new()
+	btn_right.text = "►"
+	btn_right.custom_minimum_size = Vector2(24, 52)
+	btn_right.focus_mode = Control.FOCUS_NONE
+	btn_right.pressed.connect(func(): _cycle_stage(1))
+	row.add_child(btn_right)
+	
+	vbox.add_child(row)
+	
+	# Stage name label
+	stage_name_label = Label.new()
+	if font_res:
+		stage_name_label.add_theme_font_override("font", font_res)
+	stage_name_label.add_theme_font_size_override("font_size", 11)
+	stage_name_label.add_theme_color_override("font_color", Color(1.0, 0.9, 0.35, 1.0))
+	stage_name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vbox.add_child(stage_name_label)
 	
 	panel.add_child(vbox)
 	ui_root.add_child(panel)
+	
+	_update_stage_display()
+
+func _cycle_stage(direction: int) -> void:
+	GameManager.set_selected_stage_index(GameManager.selected_stage_index + direction)
+	_update_stage_display()
+	_update_3d_stage_background()
+	_play_sfx(sfx_move, 1.25)
+	
+func _update_stage_display() -> void:
+	var stage_data = GameManager.get_selected_stage()
+	if stage_name_label:
+		stage_name_label.text = stage_data.get("name", "ESCENARIO").to_upper()
+		stage_name_label.add_theme_color_override("font_color", stage_data.get("theme_color", Color(1.0, 0.9, 0.4)))
+	if stage_preview_rect:
+		var preview_path = stage_data.get("preview_path", "")
+		if ResourceLoader.exists(preview_path):
+			stage_preview_rect.texture = load(preview_path)
+		elif FileAccess.file_exists(preview_path):
+			var img = Image.load_from_file(ProjectSettings.globalize_path(preview_path))
+			if img:
+				stage_preview_rect.texture = ImageTexture.create_from_image(img)
 
 func _process(delta: float) -> void:
-	var now = Time.get_ticks_msec() / 1000.0
+	_preview_time += delta
+	var now = _preview_time
 	
 	# Continuous subtle floating bob on tokens
 	if p1_token:
@@ -153,13 +358,27 @@ func _process(delta: float) -> void:
 	if p2_token:
 		p2_token.position.y += cos(now * 5.0) * (0.015 * delta)
 		
-	# Continuous 360-degree rotation of preview models as requested
+	# Subtle living breathing bob on preview model pedestals (NO TWEENS)
+	var bob1 = sin(now * 2.2) * 0.015
+	var bob2 = cos(now * 2.2) * 0.015
+	if p1_stage_model:
+		p1_stage_model.position.y = 0.08 + bob1
+	if p2_stage_model:
+		p2_stage_model.position.y = 0.08 + bob2
+		
+	# Subtle idle sway for models facing center
 	if p1_stage_model and p1_stage_model.get_child_count() > 0:
 		var c1 = p1_stage_model.get_child(0)
-		c1.rotation.y += delta * 0.85
+		c1.rotation.y = deg_to_rad(22.0) + sin(now * 1.5) * 0.03
 	if p2_stage_model and p2_stage_model.get_child_count() > 0:
 		var c2 = p2_stage_model.get_child(0)
-		c2.rotation.y += delta * 0.85
+		c2.rotation.y = deg_to_rad(-22.0) - sin(now * 1.5) * 0.03
+		
+	# Slow background deco rotation
+	if stage_bg_deco:
+		for child in stage_bg_deco.get_children():
+			if "Ring" in child.name:
+				child.rotation.z += delta * 0.15
 		
 	# Auto-start countdown when both locked
 	if start_countdown_timer > 0.0:
@@ -225,6 +444,17 @@ func _init_roster() -> void:
 			"col": 1,
 			"tex_path": "res://ui/character_select/portraits/john.png",
 			"color": Color(0.4, 0.85, 0.95)
+		},
+		# Slot 5: Row 3 Center - Miyabi
+		{
+			"id": "miyabi",
+			"name": "MIYABI\nHOSHIMI",
+			"sub": "MAESTRA DE LA ESPADA",
+			"data": miyabi_data,
+			"row": 3,
+			"col": 1,
+			"tex_path": "res://ui/character_select/portraits/miyabi.png",
+			"color": Color(0.85, 0.2, 0.35)
 		}
 	]
 
@@ -257,10 +487,16 @@ func _build_3d_card_arc() -> void:
 			yaw = 0.0
 		else:
 			# 2 columns: col 0 is left (-1), col 1 is right (+1)
-			var side: float = -1.0 if col == 0 else 1.0
-			px = side * (col_spacing * 0.5)
-			yaw = -side * 0.035
-			pz -= 0.008
+			if row == 3:
+				# Solo center card (Miyabi)
+				px = 0.0
+				yaw = 0.0
+				pz -= 0.016
+			else:
+				var side: float = -1.0 if col == 0 else 1.0
+				px = side * (col_spacing * 0.5)
+				yaw = -side * 0.035
+				pz -= 0.008
 			
 		card_root.position = Vector3(px, py, pz)
 		card_root.rotation.y = yaw
@@ -335,6 +571,15 @@ func _build_3d_card_arc() -> void:
 		card_nodes[i] = card_root
 
 func _unhandled_input(event: InputEvent) -> void:
+	# Stage cycle hotkeys (Q / E)
+	if event is InputEventKey and event.pressed:
+		if event.keycode in [KEY_Q, KEY_BRACKETLEFT]:
+			_cycle_stage(-1)
+			return
+		elif event.keycode in [KEY_E, KEY_BRACKETRIGHT]:
+			_cycle_stage(1)
+			return
+
 	# Global Back / Cancel
 	if event.is_action_pressed("ui_cancel") or (event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE):
 		_handle_cancel(1)
@@ -406,11 +651,22 @@ func _calc_grid_step(curr_idx: int, dir: Vector2i) -> int:
 				return 4 # Right to John
 			elif dir.y < 0:
 				return 1 # Up to Lego Batman
+			elif dir.y > 0:
+				return 5 # Down to Miyabi
 		4: # John (row 2, right)
 			if dir.x < 0:
 				return 3 # Left to Gogeta
 			elif dir.y < 0:
 				return 2 # Up to Sakuya
+			elif dir.y > 0:
+				return 5 # Down to Miyabi
+		5: # Miyabi (row 3, center)
+			if dir.y < 0:
+				return 0 # Up to Random
+			elif dir.x < 0:
+				return 3 # Left to Gogeta
+			elif dir.x > 0:
+				return 4 # Right to John
 	return curr_idx
 
 func _on_card_input_event(_camera: Node, event: InputEvent, _position: Vector3, _normal: Vector3, _shape_idx: int, slot_idx: int) -> void:
@@ -558,14 +814,25 @@ func _update_stage_preview(player_id: int, slot: Dictionary) -> void:
 		return
 		
 	if data.model_scene:
-		var model = data.model_scene.instantiate()
-		model.position = Vector3(data.model_offset.x, 0.0, data.model_offset.z)
-		var s = data.model_scale
-		model.scale = Vector3(s, s, s)
-		model.rotation.y = facing_yaw
-		container.add_child(model)
+		# Standard Humanoid / ModelRoot hierarchy so all animation tracks resolve accurately
+		var char_root := Node3D.new()
+		char_root.name = "CharacterRoot"
+		char_root.rotation.y = facing_yaw
 		
-		# Try to play built-in Idle animation
+		var humanoid := Node3D.new()
+		humanoid.name = "Humanoid"
+		char_root.add_child(humanoid)
+		
+		var model = data.model_scene.instantiate()
+		model.name = "ModelRoot"
+		model.position = Vector3(data.model_offset.x, 0.0, data.model_offset.z)
+		var s = data.model_scale if data.model_scale > 0.0 else 1.0
+		model.scale = Vector3(s, s, s)
+		humanoid.add_child(model)
+		
+		container.add_child(char_root)
+		
+		# 1. First check if model has an internal AnimationPlayer (like Lego Batman with "idle")
 		var played_idle := false
 		var ap: AnimationPlayer = _find_animation_player(model)
 		if ap:
@@ -574,49 +841,28 @@ func _update_stage_preview(player_id: int, slot: Dictionary) -> void:
 				ap.play(anim_name)
 				played_idle = true
 		
+		# 2. If not played or if character uses external AnimationLibrary (like Sakuya, Gogeta, Sans)
 		if not played_idle and data.animation_library:
 			var new_ap := AnimationPlayer.new()
+			new_ap.name = "AnimationPlayer"
+			new_ap.root_node = NodePath("..")
 			new_ap.add_animation_library("", data.animation_library)
-			model.add_child(new_ap)
+			char_root.add_child(new_ap)
 			var anim_name = _find_idle_anim(new_ap)
 			if anim_name != "":
 				new_ap.play(anim_name)
 				played_idle = true
-		
-		# If no idle animation found, create a procedural breathing idle
-		if not played_idle:
-			_apply_procedural_idle(model)
 	else:
-		# Procedural stylized fighting dummy for Gogeta / John
+		# Procedural stylized fighting dummy for John
 		var dummy := _create_procedural_dummy(data.character_color)
 		dummy.rotation.y = facing_yaw
 		dummy.position = Vector3(0, 0, 0)
 		container.add_child(dummy)
-		_apply_procedural_idle(dummy)
 		
 	# Scale punch transition
 	container.scale = Vector3(0.85, 0.85, 0.85)
 	var tw = create_tween().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	tw.tween_property(container, "scale", Vector3(1.0, 1.0, 1.0), 0.2)
-
-## Creates a subtle breathing/bobbing idle animation using tweens
-func _apply_procedural_idle(node: Node3D) -> void:
-	# Subtle vertical bob (breathing)
-	var base_y = node.position.y
-	var breath_tween = create_tween().set_loops()
-	breath_tween.tween_property(node, "position:y", base_y + 0.025, 1.2) \
-		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	breath_tween.tween_property(node, "position:y", base_y, 1.2) \
-		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	
-	# Subtle scale pulse (chest expanding with breath)
-	var base_scale = node.scale
-	var expand = base_scale * 1.008
-	var scale_tween = create_tween().set_loops()
-	scale_tween.tween_property(node, "scale", expand, 1.4) \
-		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	scale_tween.tween_property(node, "scale", base_scale, 1.4) \
-		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 
 func _create_procedural_dummy(color: Color) -> Node3D:
 	var root := Node3D.new()
@@ -762,7 +1008,8 @@ func _resolve_slot_selection(slot_idx: int) -> CharacterData:
 		lego_batman_data,
 		sakuya_data,
 		gogeta_data,
-		john_data
+		john_data,
+		miyabi_data
 	]
 	playable.shuffle()
 	return playable[0]

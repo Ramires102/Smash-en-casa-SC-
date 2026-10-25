@@ -220,8 +220,13 @@ func _sync_frame_phase() -> void:
 	if current_attack_data == null or character == null:
 		return
 
-	# Impulso propio (selfImpulse)
-	var imp: Vector2 = current_attack_data.self_impulse
+	# Impulso propio (selfImpulse) — tolera Vector2 o Vector3 en los .tres (ej: Sans)
+	var raw_imp: Variant = current_attack_data.self_impulse
+	var imp := Vector2.ZERO
+	if raw_imp is Vector2:
+		imp = raw_imp
+	elif raw_imp is Vector3:
+		imp = Vector2(raw_imp.x, raw_imp.y)
 	var imp_frame: int = maxi(1, current_attack_data.self_impulse_frame) if current_attack_data.self_impulse_frame > 0 else startup_end_frame
 	if not _impulse_applied and (imp.x != 0.0 or imp.y != 0.0) and frame_cursor >= imp_frame:
 		_impulse_applied = true
