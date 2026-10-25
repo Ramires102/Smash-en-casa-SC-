@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="MoveSet" load_steps=10 format=3 uid="uid://miyabi_moveset"]
+
+[ext_resource type="Script" path="res://resources/moveset.gd" id="1_mset"]
+[ext_resource type="Resource" uid="uid://miyabi_jab" path="res://characters/miyabi/attacks/miyabi_jab.tres" id="2_jab"]
+[ext_resource type="Resource" uid="uid://miyabi_stilt" path="res://characters/miyabi/attacks/miyabi_stilt.tres" id="3_stilt"]
+[ext_resource type="Resource" uid="uid://miyabi_utilt" path="res://characters/miyabi/attacks/miyabi_utilt.tres" id="4_utilt"]
+[ext_resource type="Resource" uid="uid://miyabi_dtilt" path="res://characters/miyabi/attacks/miyabi_dtilt.tres" id="5_dtilt"]
+[ext_resource type="Resource" uid="uid://miyabi_nair" path="res://characters/miyabi/attacks/miyabi_nair.tres" id="6_nair"]
+[ext_resource type="Resource" uid="uid://miyabi_uair" path="res://characters/miyabi/attacks/miyabi_uair.tres" id="7_uair"]
+[ext_resource type="Resource" uid="uid://miyabi_dair" path="res://characters/miyabi/attacks/miyabi_dair.tres" id="8_dair"]
+[ext_resource type="Resource" uid="uid://miyabi_special_n" path="res://characters/miyabi/attacks/miyabi_special_neutral.tres" id="9_spn"]
+[ext_resource type="Resource" uid="uid://miyabi_special_u" path="res://characters/miyabi/attacks/miyabi_special_up.tres" id="10_spu"]
+[ext_resource type="Resource" uid="uid://miyabi_special_d" path="res://characters/miyabi/attacks/miyabi_special_down.tres" id="11_spd"]
+
+[resource]
+script = ExtResource("1_mset")
+neutral_attack = ExtResource("2_jab")
+side_tilt = ExtResource("3_stilt")
+up_tilt = ExtResource("4_utilt")
+down_tilt = ExtResource("5_dtilt")
+neutral_air = ExtResource("6_nair")
+up_air = ExtResource("7_uair")
+down_air = ExtResource("8_dair")
+special_neutral = ExtResource("9_spn")
+special_up = ExtResource("10_spu")
+special_down = ExtResource("11_spd")

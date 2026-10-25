@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="AttackData" load_steps=2 format=3 uid="uid://miyabi_jab3"]
+
+[ext_resource type="Script" path="res://resources/attack_data.gd" id="1_atk"]
+
+[resource]
+script = ExtResource("1_atk")
+attack_name = "Miyabi Slash Finisher"
+damage = 6.0
+base_knockback = 35.0
+knockback_scaling = 130.0
+angle_degrees = 42.0
+startup_frames = 5
+active_frames = 8
+recovery_frames = 16
+animation_name = "Attack"
+hitbox_offset = Vector3(1.1, 0.0, 0.0)
+hitbox_radius = 0.75
+combo_next = null
+combo_window_frames = 0
