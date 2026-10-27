@@ -17,6 +17,6 @@ vfx_type = "silk_buzzsaw"
 is_aerial = false
 is_special_attack = false
 silk_cost = 0
-hitbox_offset = Vector3(0.0, 1.45, 0.0)
-hitbox_radius = 1.1
+hitbox_offset = Vector3(0.0, 0.85, 0.0)
+hitbox_radius = 0.95
 

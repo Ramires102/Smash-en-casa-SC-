@@ -17,6 +17,6 @@ vfx_type = "silk_slash_up"
 is_aerial = true
 is_special_attack = false
 silk_cost = 0
-hitbox_offset = Vector3(0.0, 1.4, 0.0)
+hitbox_offset = Vector3(0.0, 1.1, 0.0)
 hitbox_radius = 0.7
 

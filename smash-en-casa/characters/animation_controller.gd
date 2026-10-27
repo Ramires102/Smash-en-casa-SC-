@@ -1118,29 +1118,29 @@ func _update_combat_vfx(elapsed: float) -> void:
 			_silk_thrust_starburst_group.scale = Vector3(p, p, 1.0)
 		"silk_buzzsaw":
 			_silk_buzzsaw_group.visible = true
-			_silk_buzzsaw_group.position = Vector3(0.0, 1.55, 0.05)
+			_silk_buzzsaw_group.position = Vector3(0.0, 0.75, 0.05)
 			_silk_buzzsaw_group.rotation.z = elapsed * 42.0
 			var p: float = 1.0 + sin(elapsed * 35.0) * 0.08
 			_silk_buzzsaw_group.scale = Vector3(p, p, 1.0)
 		"silk_dair_drill":
 			_silk_dair_drill_group.visible = true
-			_silk_dair_drill_group.position = Vector3(0.35, -0.15, 0.05)
-			_silk_dair_drill_group.rotation = Vector3(0.0, 0.0, -PI * 0.25)
+			_silk_dair_drill_group.position = Vector3(off_x, off_y, 0.05)
+			_silk_dair_drill_group.rotation = Vector3(0.0, 0.0, -PI * 0.35)
 			var p: float = 1.0 + sin(elapsed * 40.0) * 0.10
 			_silk_dair_drill_group.scale = Vector3(p, p, 1.15)
 		"silk_spear_beam":
 			_silk_spear_beam_group.visible = true
-			_silk_spear_beam_group.position = Vector3(0.2, 0.65, 0.05)
+			_silk_spear_beam_group.position = Vector3(0.2, off_y, 0.05)
 			var p: float = 1.0 + sin(elapsed * 30.0) * 0.05
 			_silk_spear_beam_group.scale = Vector3(1.0, p, p)
 		"silk_dome_eruption":
 			_silk_dome_eruption_group.visible = true
-			_silk_dome_eruption_group.position = Vector3(0.0, 0.02, 0.05)
+			_silk_dome_eruption_group.position = Vector3(0.0, -0.80, 0.05)
 			var p: float = clampf(elapsed * 12.0, 0.2, 1.25)
 			_silk_dome_eruption_group.scale = Vector3(p, p, p)
 		"silk_nair_surround":
 			_silk_nair_surround_group.visible = true
-			_silk_nair_surround_group.position = Vector3(0.0, 0.85, 0.05)
+			_silk_nair_surround_group.position = Vector3(0.0, 0.0, 0.05)
 			_silk_nair_surround_group.rotation = Vector3(elapsed * 25.0, elapsed * 32.0, elapsed * 18.0)
 		"silk_slash_whip", "silk_slash_up", "silk_slash_low", "silk_bair_whip", "silk_fsmash", "silk_needle_lunge":
 			_slash_arc_mesh.visible = true
