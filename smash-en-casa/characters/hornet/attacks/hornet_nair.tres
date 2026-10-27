@@ -1,4 +1,4 @@
-﻿[gd_resource type="Resource" script_class="AttackData" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="AttackData" load_steps=2 format=3]
 
 [ext_resource type="Script" path="res://resources/attack_data.gd" id="1_atk"]
 
@@ -12,7 +12,8 @@ angle_degrees = 45
 startup_frames = 5
 active_frames = 10
 recovery_frames = 12
-animation_name = "buzzsaw"
+animation_name = "nair"
+vfx_type = "silk_nair_surround"
 is_aerial = true
 is_special_attack = false
 silk_cost = 4

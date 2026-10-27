@@ -39,11 +39,30 @@ func setup(char_node: Character, data: CharacterData) -> void:
 		var s: float = data.model_scale if data.model_scale > 0.0 else 1.0
 		model_instance.scale = Vector3(s, s, s)
 		visual_root_3d.add_child(model_instance)
+		if (data and ("use_mirror_facing" in data) and data.use_mirror_facing) or (character and character.has_method("is_hornet") and character.is_hornet()):
+			_ensure_double_sided_materials(model_instance)
 	else:
 		_apply_color_recursive(visual_root_3d, data.character_color)
 
 	var initial_dir: float = character.get_facing_direction() if character else 1.0
 	update_rotation(initial_dir, false)
+
+func _ensure_double_sided_materials(node: Node) -> void:
+	if node is MeshInstance3D:
+		var mi: MeshInstance3D = node as MeshInstance3D
+		if mi.material_override is BaseMaterial3D:
+			mi.material_override.cull_mode = BaseMaterial3D.CULL_DISABLED
+		for s_idx in range(mi.get_surface_override_material_count()):
+			var s_mat = mi.get_surface_override_material(s_idx)
+			if s_mat is BaseMaterial3D:
+				s_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+		if mi.mesh:
+			for s_idx in range(mi.mesh.get_surface_count()):
+				var m = mi.mesh.surface_get_material(s_idx)
+				if m is BaseMaterial3D:
+					m.cull_mode = BaseMaterial3D.CULL_DISABLED
+	for child in node.get_children():
+		_ensure_double_sided_materials(child)
 
 func _apply_color_recursive(node: Node, color: Color) -> void:
 	for child in node.get_children():
@@ -77,13 +96,44 @@ func sync_3d_visuals(delta: float) -> void:
 
 func update_rotation(dir: float, smooth_turn: bool = false) -> void:
 	var sign_dir: float = 1.0 if dir >= 0.0 else -1.0
-	var angle_rad: float = PI * 0.42
-	if character and character.character_data and character.character_data.facing_angle_degrees > 0.0:
-		angle_rad = deg_to_rad(character.character_data.facing_angle_degrees)
-	target_rotation_y = sign_dir * angle_rad
-	smooth_turn_active = smooth_turn
-	if not smooth_turn and visual_root_3d != null:
-		visual_root_3d.rotation.y = target_rotation_y
+	var is_mirror: bool = false
+	if character and character.character_data and ("use_mirror_facing" in character.character_data) and character.character_data.use_mirror_facing:
+		is_mirror = true
+	elif character and character.has_method("is_hornet") and character.is_hornet():
+		is_mirror = true
+
+	if is_mirror:
+		# Modo espejo horizontal estilo 2.5D:
+		# Se invierte la escala en X para cambiar de lado sin dar la espalda a la cámara
+		var base_s: float = 1.0
+		if character and character.character_data and character.character_data.model_scale > 0.0:
+			base_s = character.character_data.model_scale
+		
+		var model_inst: Node3D = visual_root_3d.get_node_or_null("ModelRoot") as Node3D
+		if model_inst:
+			model_inst.scale.x = sign_dir * base_s
+		elif visual_root_3d != null:
+			visual_root_3d.scale.x = sign_dir * absf(visual_root_3d.scale.x)
+
+		var vfx_node: Node3D = visual_root_3d.get_node_or_null("CombatVfxGroup") as Node3D
+		if vfx_node:
+			vfx_node.scale.x = sign_dir
+
+		# El ángulo se mantiene constante con el frente mirando siempre hacia el jugador/cámara
+		var angle_rad: float = deg_to_rad(character.character_data.facing_angle_degrees) if (character and character.character_data and character.character_data.facing_angle_degrees > 0.0) else 0.26
+		target_rotation_y = angle_rad
+		smooth_turn_active = false
+		if visual_root_3d != null:
+			visual_root_3d.rotation.y = target_rotation_y
+	else:
+		var angle_rad: float = PI * 0.42
+		if character and character.character_data and character.character_data.facing_angle_degrees > 0.0:
+			angle_rad = deg_to_rad(character.character_data.facing_angle_degrees)
+		target_rotation_y = sign_dir * angle_rad
+		smooth_turn_active = smooth_turn
+		if not smooth_turn and visual_root_3d != null:
+			visual_root_3d.rotation.y = target_rotation_y
+
 	if character and character.anim_controller and character.anim_controller.has_method("on_facing_direction_changed"):
 		character.anim_controller.on_facing_direction_changed(sign_dir)
 

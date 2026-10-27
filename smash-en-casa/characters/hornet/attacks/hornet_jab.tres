@@ -1,4 +1,4 @@
-﻿[gd_resource type="Resource" script_class="AttackData" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="AttackData" load_steps=2 format=3]
 
 [ext_resource type="Script" path="res://resources/attack_data.gd" id="1_atk"]
 
@@ -13,9 +13,10 @@ startup_frames = 3
 active_frames = 12
 recovery_frames = 8
 animation_name = "attack"
+vfx_type = "silk_slash_whip"
 is_aerial = false
 is_special_attack = false
-silk_cost = 1
+silk_cost = 0
 hitbox_offset = Vector3(1.1, 0.0, 0.0)
 hitbox_radius = 0.75
 

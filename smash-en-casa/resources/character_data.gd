@@ -18,6 +18,7 @@ extends Resource
 @export var fast_fall_speed: float = 2.56  # Terminal velocity (caída rápida)
 @export var pushbox_radius: float = 0.5
 @export var facing_angle_degrees: float = 75.6
+@export var use_mirror_facing: bool = false
 @export var jumpsquat_frames: int = 3
 @export var instant_run: bool = false
 @export var icon: Texture2D

@@ -14,6 +14,7 @@ startup_frames = 6
 active_frames = 12
 recovery_frames = 12
 animation_name = "dair"
+vfx_type = "silk_dair_drill"
 is_aerial = true
 is_special_attack = false
 silk_cost = 0
