@@ -14,6 +14,7 @@ var _impulse_applied: bool = false
 var _is_vaulting_behind: bool = false
 var has_hit_target: bool = false
 var hit_defender: Node2D = null
+var _silk_spear_pending_cost: bool = false
 
 func enter(msg: Dictionary = {}) -> void:
 	if msg.has("attack_data") and msg["attack_data"] != null:
@@ -25,12 +26,24 @@ func enter(msg: Dictionary = {}) -> void:
 		state_machine.transition_to("Idle" if character.is_on_floor() else "Fall")
 		return
 
+	# Control de costo de seda para Hornet
+	if character and character.has_method("is_hornet") and character.is_hornet():
+		if not character.can_afford_silk(current_attack_data):
+			state_machine.transition_to("Idle" if character.is_on_floor() else "Fall")
+			return
+		if current_attack_data.id == "hornet_special_side":
+			character.consume_silk(1)
+			_silk_spear_pending_cost = true
+		elif current_attack_data.silk_cost > 0:
+			character.consume_silk(current_attack_data.silk_cost)
+
 	frame_cursor = 1
 	hitbox_is_active = false
 	_combo_buffered = false
 	_second_hit_triggered = false
 	_impulse_applied = false
 	_is_vaulting_behind = false
+	_silk_spear_pending_cost = false if current_attack_data.id != "hornet_special_side" else true
 	has_hit_target = false
 	hit_defender = null
 	_started_in_air = character != null and not character.is_on_floor()
@@ -114,6 +127,9 @@ func enter(msg: Dictionary = {}) -> void:
 
 func _on_hitbox_hit_confirmed(impact: ImpactData) -> void:
 	has_hit_target = true
+	if _silk_spear_pending_cost and character:
+		_silk_spear_pending_cost = false
+		character.consume_silk(1) # Total 2 de seda al conectar Silk Spear
 	if impact == null or not is_instance_valid(impact.target) or not (impact.target is Node2D):
 		return
 	hit_defender = impact.target as Node2D
@@ -331,6 +347,10 @@ func _find_opponent() -> Node2D:
 	return null
 
 func exit() -> void:
+	if _silk_spear_pending_cost and character:
+		# Falló Silk Spear sin conectar: consume 1 adicional al final (total 2)
+		_silk_spear_pending_cost = false
+		character.consume_silk(1)
 	if character and character.hitbox and character.hitbox.hit_confirmed.is_connected(_on_hitbox_hit_confirmed):
 		character.hitbox.hit_confirmed.disconnect(_on_hitbox_hit_confirmed)
 	if hitbox_is_active:

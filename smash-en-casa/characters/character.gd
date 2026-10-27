@@ -86,6 +86,12 @@ var can_up_special: bool = true
 const SPECIAL_DOWN_MAX_CHARGE: float = 100.0
 var special_down_charge: float = 100.0
 
+# ── Sistema de Seda (Silk) — exclusivo de Hornet ──
+const SILK_MAX: int = 5
+const SILK_HITS_PER_CHARGE: int = 3
+var silk_count: int = 5
+var silk_hit_counter: int = 0
+
 var damage_percentage: float:
 	get:
 		return stats.damage_percentage if stats else 0.0
@@ -348,12 +354,17 @@ func is_special_move(atk: AttackData) -> bool:
 	return atk.is_special_attack or atk.animation_name.begins_with("Special") or atk.is_time_stop
 
 func on_non_special_hit_connected(atk: AttackData) -> void:
-	if not is_sakuya():
-		return
-	if is_special_move(atk) or Events.is_time_stopped:
-		return
-	var gain: float = clampf(atk.damage * 2.5, 16.0, 28.0) if atk else 20.0
-	add_special_down_charge(gain)
+	# Sakuya: carga especial al conectar golpes normales
+	if is_sakuya():
+		if not is_special_move(atk) and not Events.is_time_stopped:
+			var gain: float = clampf(atk.damage * 2.5, 16.0, 28.0) if atk else 20.0
+			add_special_down_charge(gain)
+	# Hornet: carga seda cada 3 golpes conectados
+	if is_hornet():
+		silk_hit_counter += 1
+		if silk_hit_counter >= SILK_HITS_PER_CHARGE:
+			silk_hit_counter = 0
+			add_silk(1)
 
 func add_special_down_charge(amount: float) -> void:
 	if not is_sakuya():
@@ -372,6 +383,32 @@ func consume_special_down_charge() -> void:
 		return
 	special_down_charge = 0.0
 	Events.special_meter_changed.emit(player_id, special_down_charge, SPECIAL_DOWN_MAX_CHARGE)
+
+# ── Hornet: Sistema de Seda ──
+func is_hornet() -> bool:
+	if character_data == null:
+		return false
+	return character_data.character_name.to_lower().contains("hornet")
+
+func add_silk(amount: int) -> void:
+	if not is_hornet():
+		return
+	silk_count = clampi(silk_count + amount, 0, SILK_MAX)
+	Events.special_meter_changed.emit(player_id, float(silk_count), float(SILK_MAX))
+
+func consume_silk(amount: int) -> bool:
+	if not is_hornet():
+		return true  # No-Hornet siempre puede atacar
+	if silk_count < amount:
+		return false
+	silk_count -= amount
+	Events.special_meter_changed.emit(player_id, float(silk_count), float(SILK_MAX))
+	return true
+
+func can_afford_silk(atk: AttackData) -> bool:
+	if not is_hornet() or atk == null:
+		return true
+	return silk_count >= atk.silk_cost
 
 func update_facing_direction(input_x: float) -> void:
 	if controller and can_act:

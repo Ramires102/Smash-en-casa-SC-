@@ -1,0 +1,28 @@
+[gd_scene load_steps=5 format=3 uid="uid://c_hornet_weaverling"]
+
+[ext_resource type="Script" path="res://characters/hornet/weaverling_projectile.gd" id="1_weav"]
+[ext_resource type="PackedScene" path="res://characters/hornet/weaverling.glb" id="2_model"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_weav"]
+radius = 16.0
+
+[node name="WeaverlingProjectile" type="Area2D"]
+collision_layer = 8
+collision_mask = 4
+monitoring = true
+script = ExtResource("1_weav")
+speed = 700.0
+lifetime = 1.2
+is_silver_knife = false
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_weav")
+
+[node name="Visual3D" type="Node3D" parent="."]
+
+[node name="Model" parent="Visual3D" instance=ExtResource("2_model")]
+transform = Transform3D(0.35, 0, 0, 0, 0.35, 0, 0, 0, 0.35, 0, 0, 0)
+
+[node name="SilkLine" type="Line2D" parent="."]
+width = 2.5
+default_color = Color(1, 1, 1, 0.85)

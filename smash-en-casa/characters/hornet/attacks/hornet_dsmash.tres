@@ -1,0 +1,21 @@
+﻿[gd_resource type="Resource" script_class="AttackData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/attack_data.gd" id="1_atk"]
+
+[resource]
+script = ExtResource("1_atk")
+attack_name = "RÃ¡faga Masiva de Seda"
+damage = 19
+base_knockback = 18
+knockback_scaling = 90
+angle_degrees = 35
+startup_frames = 8
+active_frames = 8
+recovery_frames = 22
+animation_name = "buzzsaw"
+is_aerial = false
+is_special_attack = false
+silk_cost = 4
+hitbox_offset = Vector3(0.0, -0.2, 0.0)
+hitbox_radius = 1.6
+

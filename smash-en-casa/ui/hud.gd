@@ -101,18 +101,28 @@ func _is_player_sakuya(player_id: int) -> bool:
 		return false
 	return data.character_name.to_lower().contains("sakuya")
 
+func _is_player_hornet(player_id: int) -> bool:
+	var data = GameManager.get_player_data(player_id)
+	if data == null:
+		return false
+	return data.character_name.to_lower().contains("hornet")
+
 func _setup_character_visuals() -> void:
 	for pid in player_hud_data.keys():
 		var data = GameManager.get_player_data(pid)
 		var hdata: Dictionary = player_hud_data[pid]
 		var is_sakuya: bool = _is_player_sakuya(pid)
+		var is_hornet: bool = _is_player_hornet(pid)
+		var has_meter: bool = is_sakuya or is_hornet
 
 		if hdata["special_bar"]:
-			hdata["special_bar"].visible = is_sakuya
+			hdata["special_bar"].visible = has_meter
 		if hdata["special_label"]:
-			hdata["special_label"].visible = is_sakuya
+			hdata["special_label"].visible = has_meter
 		if is_sakuya:
 			update_special_meter(pid, 0.0, 100.0)
+		elif is_hornet:
+			update_special_meter(pid, 5.0, 5.0)
 
 		if data:
 			if hdata["name"]:
@@ -139,15 +149,26 @@ func _on_special_meter_changed(player_id: int, current_charge: float, max_charge
 
 func update_special_meter(player_id: int, current_charge: float, max_charge: float = 100.0) -> void:
 	var hdata: Dictionary = player_hud_data.get(player_id, {})
-	if not _is_player_sakuya(player_id):
+	var is_sakuya: bool = _is_player_sakuya(player_id)
+	var is_hornet: bool = _is_player_hornet(player_id)
+
+	if not is_sakuya and not is_hornet:
 		if hdata.get("special_bar"): hdata["special_bar"].visible = false
 		if hdata.get("special_label"): hdata["special_label"].visible = false
 		return
 
-	var pct: int = int(round((current_charge / maxf(1.0, max_charge)) * 100.0))
-	var is_ready: bool = pct >= 100
-	var label_text: String = "¡ESPECIAL LISTO!" if is_ready else ("ESPECIAL ↓: %d%%" % pct)
-	var bar_color: Color = Color(1.0, 0.88, 0.25) if is_ready else Color(0.3, 0.75, 1.0)
+	var label_text: String = ""
+	var bar_color: Color = Color.WHITE
+
+	if is_sakuya:
+		var pct: int = int(round((current_charge / maxf(1.0, max_charge)) * 100.0))
+		var is_ready: bool = pct >= 100
+		label_text = "¡ESPECIAL LISTO!" if is_ready else ("ESPECIAL ↓: %d%%" % pct)
+		bar_color = Color(1.0, 0.88, 0.25) if is_ready else Color(0.3, 0.75, 1.0)
+	elif is_hornet:
+		var silk_int: int = int(current_charge)
+		label_text = "¡SEDA MÁXIMA (5/5)!" if silk_int >= 5 else ("SEDA: %d / 5" % silk_int)
+		bar_color = Color(1.0, 0.95, 0.95) if silk_int >= 5 else Color(0.9, 0.25, 0.35)
 
 	if hdata.get("special_bar"):
 		hdata["special_bar"].visible = true

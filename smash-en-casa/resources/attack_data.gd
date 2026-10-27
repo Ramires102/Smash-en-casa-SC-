@@ -9,6 +9,7 @@ extends Resource
 @export var vfx_type: String = "slash_gold"
 @export var attack_type: String = "normal"
 @export var is_special_attack: bool = false
+@export var silk_cost: int = 0
 
 @export_group("Frame Data (60 FPS)")
 @export var startup_frames: int = 5

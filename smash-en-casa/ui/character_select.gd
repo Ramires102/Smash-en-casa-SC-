@@ -18,6 +18,7 @@ extends Node3D
 @export var gogeta_data: CharacterData = preload("res://resources/instances/gogeta_data.tres")
 @export var john_data: CharacterData = preload("res://resources/instances/john_placeholder_data.tres")
 @export var miyabi_data: CharacterData = preload("res://resources/instances/miyabi_data.tres")
+@export var hornet_data: CharacterData = preload("res://resources/instances/hornet_data.tres")
 
 const MAX_PLAYERS: int = 4
 const PLAYER_COLORS: Dictionary = {
@@ -756,7 +757,7 @@ func _init_roster() -> void:
 			"tex_path": "res://ui/character_select/portraits/john.png",
 			"color": Color(0.4, 0.85, 0.95)
 		},
-		# Slot 5: Row 3 Center - Miyabi
+		# Slot 5: Row 3 Right - Miyabi
 		{
 			"id": "miyabi",
 			"name": "MIYABI\nHOSHIMI",
@@ -766,6 +767,17 @@ func _init_roster() -> void:
 			"col": 1,
 			"tex_path": "res://ui/character_select/portraits/miyabi.png",
 			"color": Color(0.85, 0.2, 0.35)
+		},
+		# Slot 6: Row 3 Left - Hornet
+		{
+			"id": "hornet",
+			"name": "HORNET",
+			"sub": "PROTECTORA DE HALLOWNEST",
+			"data": hornet_data,
+			"row": 3,
+			"col": 0,
+			"tex_path": "res://ui/character_select/portraits/hornet.png",
+			"color": Color(0.9, 0.15, 0.22)
 		}
 	]
 
@@ -1137,7 +1149,7 @@ func _calc_grid_step(curr_idx: int, dir: Vector2i) -> int:
 			elif dir.y < 0:
 				return 1 # Up to Lego Batman
 			elif dir.y > 0:
-				return 5 # Down to Miyabi
+				return 6 # Down to Hornet
 		4: # John (row 2, right)
 			if dir.x < 0:
 				return 3 # Left to Gogeta
@@ -1145,13 +1157,16 @@ func _calc_grid_step(curr_idx: int, dir: Vector2i) -> int:
 				return 2 # Up to Sakuya
 			elif dir.y > 0:
 				return 5 # Down to Miyabi
-		5: # Miyabi (row 3, center)
+		5: # Miyabi (row 3, right)
 			if dir.y < 0:
-				return 3 if dir.x <= 0 else 4 # Up to Gogeta or John
+				return 4 # Up to John
 			elif dir.x < 0:
-				return 3 # Left to Gogeta
+				return 6 # Left to Hornet
+		6: # Hornet (row 3, left)
+			if dir.y < 0:
+				return 3 # Up to Gogeta
 			elif dir.x > 0:
-				return 4 # Right to John
+				return 5 # Right to Miyabi
 	return curr_idx
 
 func _on_card_input_event(_camera: Node, event: InputEvent, _position: Vector3, _normal: Vector3, _shape_idx: int, slot_idx: int) -> void:

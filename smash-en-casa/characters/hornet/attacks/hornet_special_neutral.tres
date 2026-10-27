@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="AttackData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://resources/attack_data.gd" id="1_atk"]
+[ext_resource type="PackedScene" path="res://characters/hornet/spike_ball_projectile.tscn" id="2_proj"]
+
+[resource]
+script = ExtResource("1_atk")
+attack_name = "Bola de Pinchos (Shot Put)"
+damage = 11.0
+base_knockback = 12.0
+knockback_scaling = 55.0
+angle_degrees = 45.0
+startup_frames = 8
+active_frames = 4
+recovery_frames = 18
+animation_name = "attack"
+is_aerial = false
+is_special_attack = true
+silk_cost = 0
+hitbox_offset = Vector3(1.0, 0.2, 0.0)
+hitbox_radius = 0.70
+spawns_projectile = true
+projectile_scene = ExtResource("2_proj")
+projectile_spawn_frame = 6
+projectile_speed = 480.0
+projectile_lifetime = 2.0

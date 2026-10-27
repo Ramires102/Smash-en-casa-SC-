@@ -107,6 +107,17 @@ func _init_roster_data() -> void:
 			"logo": "res://assets/logos/logo_sakuya.png"
 		},
 		{
+			"id": "hornet",
+			"name": "HORNET",
+			"sub": "PROTECTORA DE HALLOWNEST",
+			"model_path": "res://characters/hornet/hornet.glb",
+			"scale": 0.95,
+			"offset": Vector3(0.0, -0.10, 0.0),
+			"anim_lib": "",
+			"color": Color(0.9, 0.15, 0.22),
+			"logo": "res://assets/logos/logo_hornet.png"
+		},
+		{
 			"id": "sans",
 			"name": "SANS",
 			"sub": "EL JUEZ DEL SUBSUELO",

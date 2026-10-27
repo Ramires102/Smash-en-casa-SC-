@@ -1,0 +1,38 @@
+[gd_resource type="Resource" script_class="MoveSet" load_steps=17 format=3 uid="uid://hornet_moveset"]
+
+[ext_resource type="Script" path="res://resources/moveset.gd" id="1_ms"]
+[ext_resource type="Resource" path="res://characters/hornet/attacks/hornet_jab.tres" id="jab"]
+[ext_resource type="Resource" path="res://characters/hornet/attacks/hornet_stilt.tres" id="stilt"]
+[ext_resource type="Resource" path="res://characters/hornet/attacks/hornet_utilt.tres" id="utilt"]
+[ext_resource type="Resource" path="res://characters/hornet/attacks/hornet_dtilt.tres" id="dtilt"]
+[ext_resource type="Resource" path="res://characters/hornet/attacks/hornet_fsmash.tres" id="fsmash"]
+[ext_resource type="Resource" path="res://characters/hornet/attacks/hornet_usmash.tres" id="usmash"]
+[ext_resource type="Resource" path="res://characters/hornet/attacks/hornet_dsmash.tres" id="dsmash"]
+[ext_resource type="Resource" path="res://characters/hornet/attacks/hornet_nair.tres" id="nair"]
+[ext_resource type="Resource" path="res://characters/hornet/attacks/hornet_fair.tres" id="fair"]
+[ext_resource type="Resource" path="res://characters/hornet/attacks/hornet_bair.tres" id="bair"]
+[ext_resource type="Resource" path="res://characters/hornet/attacks/hornet_uair.tres" id="uair"]
+[ext_resource type="Resource" path="res://characters/hornet/attacks/hornet_dair.tres" id="dair"]
+[ext_resource type="Resource" path="res://characters/hornet/attacks/hornet_special_neutral.tres" id="spec_n"]
+[ext_resource type="Resource" path="res://characters/hornet/attacks/hornet_special_side.tres" id="spec_s"]
+[ext_resource type="Resource" path="res://characters/hornet/attacks/hornet_special_up.tres" id="spec_u"]
+[ext_resource type="Resource" path="res://characters/hornet/attacks/hornet_special_down.tres" id="spec_d"]
+
+[resource]
+script = ExtResource("1_ms")
+neutral_attack = ExtResource("jab")
+side_tilt = ExtResource("stilt")
+up_tilt = ExtResource("utilt")
+down_tilt = ExtResource("dtilt")
+forward_smash = ExtResource("fsmash")
+up_smash = ExtResource("usmash")
+down_smash = ExtResource("dsmash")
+neutral_air = ExtResource("nair")
+forward_air = ExtResource("fair")
+back_air = ExtResource("bair")
+up_air = ExtResource("uair")
+down_air = ExtResource("dair")
+special_neutral = ExtResource("spec_n")
+special_side = ExtResource("spec_s")
+special_up = ExtResource("spec_u")
+special_down = ExtResource("spec_d")

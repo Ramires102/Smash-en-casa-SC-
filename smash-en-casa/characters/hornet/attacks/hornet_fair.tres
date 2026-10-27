@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="AttackData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://resources/attack_data.gd" id="1_atk"]
+[ext_resource type="PackedScene" path="res://characters/hornet/weaverling_projectile.tscn" id="2_proj"]
+
+[resource]
+script = ExtResource("1_atk")
+attack_name = "Canto de las Tejedoras (Weaversong)"
+damage = 5.0
+base_knockback = 6.0
+knockback_scaling = 30.0
+angle_degrees = 45.0
+startup_frames = 6
+active_frames = 4
+recovery_frames = 14
+animation_name = "attack"
+is_aerial = true
+is_special_attack = false
+silk_cost = 3
+hitbox_offset = Vector3(1.2, 0.0, 0.0)
+hitbox_radius = 0.6
+spawns_projectile = true
+projectile_scene = ExtResource("2_proj")
+projectile_spawn_frame = 3
+projectile_speed = 700.0
+projectile_lifetime = 1.2
+projectile_spread_angles = [-15.0, 0.0, 15.0]

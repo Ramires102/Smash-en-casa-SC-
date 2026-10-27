@@ -1,0 +1,23 @@
+﻿[gd_resource type="Resource" script_class="AttackData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/attack_data.gd" id="1_atk"]
+
+[resource]
+script = ExtResource("1_atk")
+attack_name = "Picada Shaw!"
+damage = 12
+base_knockback = 10
+knockback_scaling = 65
+angle_degrees = 270
+startup_frames = 6
+active_frames = 20
+recovery_frames = 16
+animation_name = "dair"
+is_aerial = true
+is_special_attack = false
+silk_cost = 0
+hitbox_offset = Vector3(0.6, -0.8, 0.0)
+hitbox_radius = 0.75
+is_divekick = true
+divekick_speed = Vector2(240.0, 720.0)
+

@@ -1,0 +1,23 @@
+﻿[gd_resource type="Resource" script_class="AttackData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/attack_data.gd" id="1_atk"]
+
+[resource]
+script = ExtResource("1_atk")
+attack_name = "Estocada Adeeno!"
+damage = 14
+base_knockback = 15
+knockback_scaling = 75
+angle_degrees = 40
+startup_frames = 6
+active_frames = 10
+recovery_frames = 18
+animation_name = "special_down"
+is_aerial = false
+is_special_attack = true
+silk_cost = 0
+hitbox_offset = Vector3(1.5, -0.1, 0.0)
+hitbox_radius = 0.8
+self_impulse = Vector2(580.0, 0.0)
+self_impulse_frame = 5
+
