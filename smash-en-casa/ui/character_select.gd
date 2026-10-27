@@ -812,15 +812,10 @@ func _build_3d_card_arc() -> void:
 			pz -= 0.02
 			yaw = 0.0
 		else:
-			if row == 3:
-				px = 0.0
-				yaw = 0.0
-				pz -= 0.016
-			else:
-				var side: float = -1.0 if col == 0 else 1.0
-				px = side * (col_spacing * 0.5)
-				yaw = -side * 0.035
-				pz -= 0.008
+			var side: float = -1.0 if col == 0 else 1.0
+			px = side * (col_spacing * 0.5)
+			yaw = -side * 0.035
+			pz -= 0.008
 			
 		card_root.position = Vector3(px, py, pz)
 		card_root.rotation.y = yaw
@@ -1805,6 +1800,8 @@ func _frame_portrait_camera(holder: Node3D, cam: Camera3D, bg_plate: MeshInstanc
 			span_above = 0.13; cam_dist = 0.98
 		elif cname.contains("miyabi"):
 			span_above = 0.12; cam_dist = 0.95
+		elif cname.contains("hornet"):
+			span_above = 0.12; cam_dist = 0.98
 		focus_pt = Vector3(head_bone.x, head_bone.y + span_above, head_bone.z)
 	elif aabb.size.y > 0.05:
 		focus_pt = Vector3(

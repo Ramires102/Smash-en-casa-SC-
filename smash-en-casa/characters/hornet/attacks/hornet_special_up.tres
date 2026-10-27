@@ -1,14 +1,15 @@
-﻿[gd_resource type="Resource" script_class="AttackData" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="AttackData" load_steps=2 format=3]
 
 [ext_resource type="Script" path="res://resources/attack_data.gd" id="1_atk"]
 
 [resource]
 script = ExtResource("1_atk")
+id = "hornet_special_up"
 attack_name = "Garra de Seda"
-damage = 12
-base_knockback = 15
-knockback_scaling = 65
-angle_degrees = 75
+damage = 12.0
+base_knockback = 15.0
+knockback_scaling = 65.0
+angle_degrees = 75.0
 startup_frames = 5
 active_frames = 8
 recovery_frames = 18
@@ -17,7 +18,6 @@ is_aerial = false
 is_special_attack = true
 silk_cost = 2
 hitbox_offset = Vector3(0.8, 1.8, 0.0)
-hitbox_radius = 1
-self_impulse = Vector2(180.0, -580.0)
+hitbox_radius = 1.0
+self_impulse = Vector2(2.5, 9.5)
 self_impulse_frame = 3
-

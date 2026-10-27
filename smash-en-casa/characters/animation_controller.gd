@@ -263,6 +263,12 @@ func play_animation(anim_name: String, custom_speed: float = 1.0, blend_time: fl
 				animation_player.play(root_clip, blend_time, custom_speed)
 				return
 		if clip_to_play != "":
+			var low_clip: String = clip_to_play.to_lower()
+			if _active_player.has_animation(clip_to_play):
+				var a_res: Animation = _active_player.get_animation(clip_to_play)
+				if a_res and a_res.loop_mode == Animation.LOOP_NONE:
+					if low_clip.contains("idle") or low_clip.contains("walk") or low_clip.contains("run") or low_clip.contains("buzzsaw"):
+						a_res.loop_mode = Animation.LOOP_LINEAR
 			_active_player.play(clip_to_play, blend_time, custom_speed)
 
 func play_attack_animation(anim_name: String, target_duration: float = 0.0, atk_data: AttackData = null) -> void:
