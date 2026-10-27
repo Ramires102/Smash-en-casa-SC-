@@ -3,6 +3,9 @@ extends Control
 
 signal countdown_finished
 
+const SILK_SPOOL_PROGRESS: Texture2D = preload("res://assets/images/silk_spool_progress.png")
+const SILK_SPOOL_SILHOUETTE: Texture2D = preload("res://assets/images/silk_spool_silhouette.png")
+
 # Referencias a paneles por jugador (1 a 4)
 var player_hud_data: Dictionary = {}
 
@@ -76,7 +79,9 @@ func _extract_panel_nodes(panel: Node) -> Dictionary:
 		"name": null,
 		"logo": null,
 		"special_bar": null,
-		"special_label": null
+		"special_label": null,
+		"silk_spools": null,
+		"silk_container": null
 	}
 	_find_hud_children(panel, dict)
 	return dict
@@ -113,16 +118,22 @@ func _setup_character_visuals() -> void:
 		var hdata: Dictionary = player_hud_data[pid]
 		var is_sakuya: bool = _is_player_sakuya(pid)
 		var is_hornet: bool = _is_player_hornet(pid)
-		var has_meter: bool = is_sakuya or is_hornet
 
-		if hdata["special_bar"]:
-			hdata["special_bar"].visible = has_meter
-		if hdata["special_label"]:
-			hdata["special_label"].visible = has_meter
-		if is_sakuya:
-			update_special_meter(pid, 0.0, 100.0)
-		elif is_hornet:
+		if is_hornet:
+			if hdata.get("special_bar"):
+				hdata["special_bar"].visible = false
+			_ensure_hornet_silk_ui(hdata)
 			update_special_meter(pid, 5.0, 5.0)
+		elif is_sakuya:
+			if hdata.get("silk_container"):
+				hdata["silk_container"].visible = false
+			if hdata.get("special_bar"):
+				hdata["special_bar"].visible = true
+			update_special_meter(pid, 0.0, 100.0)
+		else:
+			if hdata.get("special_bar"): hdata["special_bar"].visible = false
+			if hdata.get("special_label"): hdata["special_label"].visible = false
+			if hdata.get("silk_container"): hdata["silk_container"].visible = false
 
 		if data:
 			if hdata["name"]:
@@ -132,6 +143,47 @@ func _setup_character_visuals() -> void:
 					hdata["name"].text = "%s (%s)" % [data.character_name.to_upper(), prof]
 			if hdata["logo"] and "logo_texture" in data and data.logo_texture:
 				hdata["logo"].texture = data.logo_texture
+
+func _ensure_hornet_silk_ui(hdata: Dictionary) -> void:
+	if hdata.has("silk_spools") and hdata["silk_spools"] != null:
+		if hdata.has("silk_container") and hdata["silk_container"] != null:
+			hdata["silk_container"].visible = true
+		return
+
+	var spools: Array[TextureProgressBar] = []
+	var silk_box := HBoxContainer.new()
+	silk_box.name = "SilkSpoolsContainer"
+	silk_box.alignment = BoxContainer.ALIGNMENT_BEGIN
+	silk_box.add_theme_constant_override("separation", 6)
+
+	for i in range(5):
+		var tpb := TextureProgressBar.new()
+		tpb.name = "SilkSpool_%d" % i
+		tpb.texture_under = SILK_SPOOL_SILHOUETTE
+		tpb.texture_progress = SILK_SPOOL_PROGRESS
+		tpb.fill_mode = TextureProgressBar.FILL_BOTTOM_TO_TOP
+		tpb.min_value = 0.0
+		tpb.max_value = 1.0
+		tpb.step = 0.005
+		tpb.value = 1.0
+		tpb.custom_minimum_size = Vector2(26, 36)
+		tpb.nine_patch_stretch = true
+		silk_box.add_child(tpb)
+		spools.append(tpb)
+
+	var parent_box: Node = null
+	if hdata.get("special_bar"):
+		parent_box = hdata["special_bar"].get_parent()
+	elif hdata.get("panel"):
+		parent_box = hdata["panel"]
+
+	if parent_box:
+		parent_box.add_child(silk_box)
+		if hdata.get("special_bar"):
+			parent_box.move_child(silk_box, hdata["special_bar"].get_index())
+
+	hdata["silk_spools"] = spools
+	hdata["silk_container"] = silk_box
 
 func _on_player_ko_event(player_id: int, _death_pos: Vector3, p1_lives: int, p2_lives: int) -> void:
 	# Feedback visual cuando un jugador es noqueado
@@ -155,6 +207,7 @@ func update_special_meter(player_id: int, current_charge: float, max_charge: flo
 	if not is_sakuya and not is_hornet:
 		if hdata.get("special_bar"): hdata["special_bar"].visible = false
 		if hdata.get("special_label"): hdata["special_label"].visible = false
+		if hdata.get("silk_container"): hdata["silk_container"].visible = false
 		return
 
 	var label_text: String = ""
@@ -165,16 +218,53 @@ func update_special_meter(player_id: int, current_charge: float, max_charge: flo
 		var is_ready: bool = pct >= 100
 		label_text = "¡ESPECIAL LISTO!" if is_ready else ("ESPECIAL ↓: %d%%" % pct)
 		bar_color = Color(1.0, 0.88, 0.25) if is_ready else Color(0.3, 0.75, 1.0)
+		if hdata.get("special_bar"):
+			hdata["special_bar"].visible = true
+			hdata["special_bar"].max_value = max_charge
+			hdata["special_bar"].value = current_charge
+			hdata["special_bar"].modulate = bar_color
+		if hdata.get("silk_container"):
+			hdata["silk_container"].visible = false
 	elif is_hornet:
-		var silk_int: int = int(current_charge)
-		label_text = "¡SEDA MÁXIMA (5/5)!" if silk_int >= 5 else ("SEDA: %d / 5" % silk_int)
-		bar_color = Color(1.0, 0.95, 0.95) if silk_int >= 5 else Color(0.9, 0.25, 0.35)
+		if hdata.get("special_bar"):
+			hdata["special_bar"].visible = false
+		if not hdata.has("silk_spools") or hdata["silk_spools"] == null:
+			_ensure_hornet_silk_ui(hdata)
+		if hdata.get("silk_container"):
+			hdata["silk_container"].visible = true
 
-	if hdata.get("special_bar"):
-		hdata["special_bar"].visible = true
-		hdata["special_bar"].max_value = max_charge
-		hdata["special_bar"].value = current_charge
-		hdata["special_bar"].modulate = bar_color
+		var silk_int: int = int(floor(current_charge))
+		var partial_fill: float = fmod(current_charge, 1.0)
+		var hits_charged: int = int(round(partial_fill * 3.0))
+
+		if silk_int >= 5:
+			label_text = "¡SEDA COMPLETA (5/5)!"
+			bar_color = Color(1.0, 1.0, 1.0)
+		elif hits_charged > 0:
+			label_text = "SEDA: %d / 5   [CARGA: %d/3]" % [silk_int, hits_charged]
+			bar_color = Color(1.0, 0.90, 0.95)
+		else:
+			label_text = "SEDA: %d / 5" % silk_int
+			bar_color = Color(0.95, 0.50, 0.60)
+
+		# Actualizar los 5 carretes de seda individuales
+		if hdata.has("silk_spools") and hdata["silk_spools"] != null:
+			var spools: Array = hdata["silk_spools"]
+			for i in range(spools.size()):
+				var tpb: TextureProgressBar = spools[i] as TextureProgressBar
+				if i < silk_int:
+					# Carrete lleno: 100% visible con la imagen original iluminada
+					tpb.value = 1.0
+					tpb.modulate = Color(1.0, 1.0, 1.0, 1.0)
+				elif i == silk_int and silk_int < 5:
+					# Carrete cargándose: se va llenando de abajo hacia arriba con la imagen original
+					tpb.value = partial_fill
+					tpb.modulate = Color(1.0, 1.0, 1.0, 1.0)
+				else:
+					# Carrete vacío: valor 0.0, mostrando únicamente la silueta negra del hilo
+					tpb.value = 0.0
+					tpb.modulate = Color(0.9, 0.9, 0.95, 0.88)
+
 	if hdata.get("special_label"):
 		hdata["special_label"].visible = true
 		hdata["special_label"].text = label_text

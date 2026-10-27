@@ -150,6 +150,10 @@ func configure(data: CharacterData) -> void:
 	if is_sakuya():
 		special_down_charge = 0.0
 		Events.special_meter_changed.emit(player_id, special_down_charge, SPECIAL_DOWN_MAX_CHARGE)
+	elif is_hornet():
+		silk_count = 5
+		silk_hit_counter = 0
+		_emit_silk_meter_changed()
 	else:
 		special_down_charge = SPECIAL_DOWN_MAX_CHARGE
 	if controller:
@@ -361,10 +365,12 @@ func on_non_special_hit_connected(atk: AttackData) -> void:
 			add_special_down_charge(gain)
 	# Hornet: carga seda cada 3 golpes conectados
 	if is_hornet():
-		silk_hit_counter += 1
-		if silk_hit_counter >= SILK_HITS_PER_CHARGE:
-			silk_hit_counter = 0
-			add_silk(1)
+		if silk_count < SILK_MAX:
+			silk_hit_counter += 1
+			if silk_hit_counter >= SILK_HITS_PER_CHARGE:
+				silk_hit_counter = 0
+				silk_count = mini(silk_count + 1, SILK_MAX)
+			_emit_silk_meter_changed()
 
 func add_special_down_charge(amount: float) -> void:
 	if not is_sakuya():
@@ -394,7 +400,9 @@ func add_silk(amount: int) -> void:
 	if not is_hornet():
 		return
 	silk_count = clampi(silk_count + amount, 0, SILK_MAX)
-	Events.special_meter_changed.emit(player_id, float(silk_count), float(SILK_MAX))
+	if silk_count >= SILK_MAX:
+		silk_hit_counter = 0
+	_emit_silk_meter_changed()
 
 func consume_silk(amount: int) -> bool:
 	if not is_hornet():
@@ -402,8 +410,16 @@ func consume_silk(amount: int) -> bool:
 	if silk_count < amount:
 		return false
 	silk_count -= amount
-	Events.special_meter_changed.emit(player_id, float(silk_count), float(SILK_MAX))
+	_emit_silk_meter_changed()
 	return true
+
+func _emit_silk_meter_changed() -> void:
+	if not is_hornet():
+		return
+	var total_charge: float = float(silk_count)
+	if silk_count < SILK_MAX:
+		total_charge += float(silk_hit_counter) / float(SILK_HITS_PER_CHARGE)
+	Events.special_meter_changed.emit(player_id, total_charge, float(SILK_MAX))
 
 func can_afford_silk(atk: AttackData) -> bool:
 	if not is_hornet() or atk == null:
@@ -605,6 +621,10 @@ func reset_player(spawn_position: Vector2) -> void:
 	if hurtbox:
 		hurtbox.clear_received_swings()
 		hurtbox.set_state(Hurtbox.HurtboxState.NORMAL)
+	if is_hornet():
+		silk_count = 5
+		silk_hit_counter = 0
+		_emit_silk_meter_changed()
 	percentage_changed.emit(0.0)
 	visible = true
 	state_machine.transition_to("Idle")

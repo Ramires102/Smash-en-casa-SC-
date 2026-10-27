@@ -39,30 +39,11 @@ func setup(char_node: Character, data: CharacterData) -> void:
 		var s: float = data.model_scale if data.model_scale > 0.0 else 1.0
 		model_instance.scale = Vector3(s, s, s)
 		visual_root_3d.add_child(model_instance)
-		if (data and ("use_mirror_facing" in data) and data.use_mirror_facing) or (character and character.has_method("is_hornet") and character.is_hornet()):
-			_ensure_double_sided_materials(model_instance)
 	else:
 		_apply_color_recursive(visual_root_3d, data.character_color)
 
 	var initial_dir: float = character.get_facing_direction() if character else 1.0
 	update_rotation(initial_dir, false)
-
-func _ensure_double_sided_materials(node: Node) -> void:
-	if node is MeshInstance3D:
-		var mi: MeshInstance3D = node as MeshInstance3D
-		if mi.material_override is BaseMaterial3D:
-			mi.material_override.cull_mode = BaseMaterial3D.CULL_DISABLED
-		for s_idx in range(mi.get_surface_override_material_count()):
-			var s_mat = mi.get_surface_override_material(s_idx)
-			if s_mat is BaseMaterial3D:
-				s_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
-		if mi.mesh:
-			for s_idx in range(mi.mesh.get_surface_count()):
-				var m = mi.mesh.surface_get_material(s_idx)
-				if m is BaseMaterial3D:
-					m.cull_mode = BaseMaterial3D.CULL_DISABLED
-	for child in node.get_children():
-		_ensure_double_sided_materials(child)
 
 func _apply_color_recursive(node: Node, color: Color) -> void:
 	for child in node.get_children():
