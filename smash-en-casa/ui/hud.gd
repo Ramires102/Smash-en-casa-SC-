@@ -15,7 +15,16 @@ var player_hud_data: Dictionary = {}
 @onready var countdown_label: Label = get_node_or_null("CountdownContainer/CountdownLabel")
 @onready var top_row: HBoxContainer = get_node_or_null("MarginContainer/VBoxContainer/TopRow")
 
+# Hold R para salir a selección de personajes
+const HOLD_R_DURATION: float = 1.6
+var _hold_r_timer: float = 0.0
+var _hold_r_container: PanelContainer = null
+var _hold_r_bar: ProgressBar = null
+var _hold_r_percent_lbl: Label = null
+var _hold_r_fill_sb: StyleBoxFlat = null
+
 func _ready() -> void:
+	process_mode = Node.PROCESS_MODE_ALWAYS
 	# EventBus connections
 	Events.player_damaged.connect(_on_player_damaged)
 	Events.special_meter_changed.connect(_on_special_meter_changed)
@@ -26,6 +35,132 @@ func _ready() -> void:
 
 	_init_player_panels()
 	_setup_character_visuals()
+	_build_hold_r_ui()
+
+func _process(delta: float) -> void:
+	_handle_hold_r_exit(delta)
+
+func _build_hold_r_ui() -> void:
+	if _hold_r_container:
+		return
+	
+	_hold_r_container = PanelContainer.new()
+	_hold_r_container.name = "HoldRExitOverlay"
+	_hold_r_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_hold_r_container.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
+	_hold_r_container.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	_hold_r_container.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	_hold_r_container.offset_left = -170
+	_hold_r_container.offset_right = 170
+	_hold_r_container.offset_top = -80
+	_hold_r_container.offset_bottom = -20
+	_hold_r_container.custom_minimum_size = Vector2(340, 56)
+	
+	var box_sb := StyleBoxFlat.new()
+	box_sb.bg_color = Color(0.04, 0.06, 0.10, 0.92)
+	box_sb.border_color = Color(0.95, 0.35, 0.20, 0.85)
+	box_sb.set_border_width_all(2)
+	box_sb.set_corner_radius_all(6)
+	box_sb.shadow_color = Color(0, 0, 0, 0.7)
+	box_sb.shadow_size = 10
+	box_sb.content_margin_left = 14
+	box_sb.content_margin_right = 14
+	box_sb.content_margin_top = 8
+	box_sb.content_margin_bottom = 8
+	_hold_r_container.add_theme_stylebox_override("panel", box_sb)
+	
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 5)
+	_hold_r_container.add_child(vbox)
+	
+	var top_h := HBoxContainer.new()
+	top_h.add_theme_constant_override("separation", 8)
+	vbox.add_child(top_h)
+	
+	var badge_panel := PanelContainer.new()
+	var badge_sb := StyleBoxFlat.new()
+	badge_sb.bg_color = Color(0.95, 0.35, 0.20, 1.0)
+	badge_sb.set_corner_radius_all(4)
+	badge_sb.content_margin_left = 6
+	badge_sb.content_margin_right = 6
+	badge_sb.content_margin_top = 1
+	badge_sb.content_margin_bottom = 1
+	badge_panel.add_theme_stylebox_override("panel", badge_sb)
+	top_h.add_child(badge_panel)
+	
+	var badge_lbl := Label.new()
+	badge_lbl.text = "R"
+	badge_lbl.add_theme_font_size_override("font_size", 12)
+	badge_lbl.add_theme_color_override("font_color", Color.WHITE)
+	badge_panel.add_child(badge_lbl)
+	
+	var msg_lbl := Label.new()
+	msg_lbl.text = "MANTÉN [R] PARA VOLVER A SELECCIÓN"
+	msg_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	msg_lbl.add_theme_font_size_override("font_size", 12)
+	msg_lbl.add_theme_color_override("font_color", Color(0.92, 0.94, 0.96))
+	top_h.add_child(msg_lbl)
+	
+	_hold_r_percent_lbl = Label.new()
+	_hold_r_percent_lbl.text = "0%"
+	_hold_r_percent_lbl.add_theme_font_size_override("font_size", 12)
+	_hold_r_percent_lbl.add_theme_color_override("font_color", Color(1.0, 0.85, 0.3))
+	top_h.add_child(_hold_r_percent_lbl)
+	
+	_hold_r_bar = ProgressBar.new()
+	_hold_r_bar.custom_minimum_size = Vector2(0, 10)
+	_hold_r_bar.min_value = 0.0
+	_hold_r_bar.max_value = 1.0
+	_hold_r_bar.value = 0.0
+	_hold_r_bar.show_percentage = false
+	
+	var bar_bg := StyleBoxFlat.new()
+	bar_bg.bg_color = Color(0.08, 0.10, 0.14, 0.9)
+	bar_bg.set_corner_radius_all(3)
+	_hold_r_bar.add_theme_stylebox_override("background", bar_bg)
+	
+	_hold_r_fill_sb = StyleBoxFlat.new()
+	_hold_r_fill_sb.bg_color = Color(0.95, 0.35, 0.20, 1.0)
+	_hold_r_fill_sb.set_corner_radius_all(3)
+	_hold_r_bar.add_theme_stylebox_override("fill", _hold_r_fill_sb)
+	vbox.add_child(_hold_r_bar)
+	
+	_hold_r_container.visible = false
+	_hold_r_container.modulate.a = 0.0
+	add_child(_hold_r_container)
+
+func _handle_hold_r_exit(delta: float) -> void:
+	if _hold_r_container == null:
+		return
+	
+	var is_r_down: bool = Input.is_key_pressed(KEY_R)
+	if is_r_down:
+		_hold_r_timer += delta
+		_hold_r_container.visible = true
+		_hold_r_container.modulate.a = move_toward(_hold_r_container.modulate.a, 1.0, delta * 8.0)
+		
+		var progress: float = clampf(_hold_r_timer / HOLD_R_DURATION, 0.0, 1.0)
+		_hold_r_bar.value = progress
+		_hold_r_percent_lbl.text = "%d%%" % int(progress * 100.0)
+		_hold_r_fill_sb.bg_color = Color(0.95, 0.35, 0.20).lerp(Color(0.20, 0.95, 0.45), progress)
+		
+		if _hold_r_timer >= HOLD_R_DURATION:
+			_hold_r_timer = 0.0
+			_hold_r_container.visible = false
+			if GameManager.is_paused:
+				GameManager.toggle_pause()
+			get_tree().change_scene_to_file("res://ui/character_select.tscn")
+	else:
+		if _hold_r_timer > 0.0:
+			_hold_r_timer = maxf(0.0, _hold_r_timer - delta * 3.5)
+			var progress: float = clampf(_hold_r_timer / HOLD_R_DURATION, 0.0, 1.0)
+			_hold_r_bar.value = progress
+			_hold_r_percent_lbl.text = "%d%%" % int(progress * 100.0)
+			_hold_r_container.modulate.a = move_toward(_hold_r_container.modulate.a, 0.0, delta * 6.0)
+			if _hold_r_container.modulate.a <= 0.02:
+				_hold_r_container.visible = false
+		else:
+			_hold_r_container.visible = false
 
 func _init_player_panels() -> void:
 	player_hud_data.clear()

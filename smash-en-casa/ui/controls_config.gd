@@ -33,6 +33,27 @@ var _connected_leds: Dictionary = {}
 var _xbox_view: Control = null
 var _status_toast_label: Label = null
 
+# Secciones de Navegacion (Controls, Sonido, Creditos)
+var _current_section: String = "controls"
+var _window_title_label: Label = null
+var _sidebar_buttons: Dictionary = {}
+var _controls_view: Control = null
+var _audio_view: Control = null
+var _credits_view: Control = null
+
+# Estilos de botones de la sidebar
+var _style_sidebar_active: StyleBoxFlat
+var _style_sidebar_inactive: StyleBoxFlat
+var _style_sidebar_hover: StyleBoxFlat
+
+# Controles de audio
+var _audio_sliders: Dictionary = {}
+var _audio_labels: Dictionary = {}
+var _audio_mutes: Dictionary = {}
+
+# Controles de creditos
+var _credits_rich_label: RichTextLabel = null
+
 # Popups modales (Nuevo Perfil y Configurar Vibracion)
 var _new_profile_modal: Control = null
 var _new_profile_input: LineEdit = null
@@ -59,6 +80,7 @@ func _ready() -> void:
 	_refresh_device_dropdown()
 	_refresh_profile_dropdown()
 	_select_player_tab(1)
+	_select_section("controls")
 	InputManager.controller_connection_changed.connect(_on_controller_connection_changed)
 
 func _exit_tree() -> void:
@@ -123,6 +145,29 @@ func _init_styles() -> void:
 	_style_action_btn_hover.bg_color = Color(0.26, 0.29, 0.33, 1.0)
 	_style_action_btn_hover.border_color = Color(0.24, 0.68, 0.91, 1.0)
 
+	_style_sidebar_active = StyleBoxFlat.new()
+	_style_sidebar_active.bg_color = Color(0.26, 0.53, 0.74, 1.0)
+	_style_sidebar_active.content_margin_left = 12
+	_style_sidebar_active.content_margin_right = 8
+	_style_sidebar_active.content_margin_top = 8
+	_style_sidebar_active.content_margin_bottom = 8
+
+	_style_sidebar_inactive = StyleBoxFlat.new()
+	_style_sidebar_inactive.bg_color = Color(0.08, 0.10, 0.13, 1.0)
+	_style_sidebar_inactive.content_margin_left = 12
+	_style_sidebar_inactive.content_margin_right = 8
+	_style_sidebar_inactive.content_margin_top = 8
+	_style_sidebar_inactive.content_margin_bottom = 8
+
+	_style_sidebar_hover = StyleBoxFlat.new()
+	_style_sidebar_hover.bg_color = Color(0.16, 0.20, 0.26, 1.0)
+	_style_sidebar_hover.border_color = Color(0.24, 0.68, 0.91, 0.6)
+	_style_sidebar_hover.border_width_left = 2
+	_style_sidebar_hover.content_margin_left = 10
+	_style_sidebar_hover.content_margin_right = 8
+	_style_sidebar_hover.content_margin_top = 8
+	_style_sidebar_hover.content_margin_bottom = 8
+
 func _build_yuzu_ui() -> void:
 	# Fondo exterior + Ventana principal estilo Yuzu Configuration
 	var backdrop := ColorRect.new()
@@ -182,6 +227,7 @@ func _build_yuzu_ui() -> void:
 	title_lbl.add_theme_font_size_override("font_size", 12)
 	title_lbl.add_theme_color_override("font_color", Color(0.86, 0.88, 0.90))
 	title_hbox.add_child(title_lbl)
+	_window_title_label = title_lbl
 
 	var close_x_btn := Button.new()
 	close_x_btn.text = "X"
@@ -191,15 +237,15 @@ func _build_yuzu_ui() -> void:
 	close_x_btn.pressed.connect(_on_cancel_pressed)
 	title_hbox.add_child(close_x_btn)
 
-	# 2. Cuerpo Principal: Sidebar Izquierda + Panel Derecho de Controles
+	# 2. Cuerpo Principal: Sidebar Izquierda + Paneles de Vista
 	var body_hbox := HBoxContainer.new()
 	body_hbox.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	body_hbox.add_theme_constant_override("separation", 0)
 	root_vbox.add_child(body_hbox)
 
-	# Sidebar izquierda estilo Yuzu
+	# Sidebar izquierda estilo Yuzu con pestañas de Controles, Sonido y Créditos
 	var sidebar := PanelContainer.new()
-	sidebar.custom_minimum_size = Vector2(88, 0)
+	sidebar.custom_minimum_size = Vector2(96, 0)
 	var side_sb := StyleBoxFlat.new()
 	side_sb.bg_color = Color(0.08, 0.10, 0.13, 1.0)
 	side_sb.border_color = Color(0.22, 0.24, 0.27, 1.0)
@@ -208,24 +254,27 @@ func _build_yuzu_ui() -> void:
 	body_hbox.add_child(sidebar)
 
 	var side_vbox := VBoxContainer.new()
-	side_vbox.add_theme_constant_override("separation", 0)
+	side_vbox.add_theme_constant_override("separation", 2)
 	sidebar.add_child(side_vbox)
 
-	var active_nav := PanelContainer.new()
-	var nav_sb := StyleBoxFlat.new()
-	nav_sb.bg_color = Color(0.26, 0.53, 0.74, 1.0)
-	nav_sb.content_margin_left = 10
-	nav_sb.content_margin_top = 7
-	nav_sb.content_margin_bottom = 7
-	active_nav.add_theme_stylebox_override("panel", nav_sb)
-	var nav_lbl := Label.new()
-	nav_lbl.text = "Controls"
-	nav_lbl.add_theme_font_size_override("font_size", 12)
-	nav_lbl.add_theme_color_override("font_color", Color.WHITE)
-	active_nav.add_child(nav_lbl)
-	side_vbox.add_child(active_nav)
+	var nav_items := [
+		{"id": "controls", "label": "  🎮  Controles"},
+		{"id": "audio", "label": "  🔊  Sonido"},
+		{"id": "credits", "label": "  📜  Créditos"}
+	]
 
-	# Contenedor derecho principal
+	for item in nav_items:
+		var sec_btn := Button.new()
+		sec_btn.text = item["label"]
+		sec_btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		sec_btn.focus_mode = Control.FOCUS_NONE
+		sec_btn.custom_minimum_size = Vector2(96, 36)
+		sec_btn.add_theme_font_size_override("font_size", 12)
+		sec_btn.pressed.connect(func(sid = item["id"]): _select_section(sid))
+		side_vbox.add_child(sec_btn)
+		_sidebar_buttons[item["id"]] = sec_btn
+
+	# Contenedor derecho: Vista de Controles
 	var right_margin := MarginContainer.new()
 	right_margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	right_margin.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -234,6 +283,7 @@ func _build_yuzu_ui() -> void:
 	right_margin.add_theme_constant_override("margin_top", 6)
 	right_margin.add_theme_constant_override("margin_bottom", 6)
 	body_hbox.add_child(right_margin)
+	_controls_view = right_margin
 
 	var right_vbox := VBoxContainer.new()
 	right_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -258,12 +308,6 @@ func _build_yuzu_ui() -> void:
 	var tab_spacer := Control.new()
 	tab_spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	tabs_hbox.add_child(tab_spacer)
-
-	_status_toast_label = Label.new()
-	_status_toast_label.text = ""
-	_status_toast_label.add_theme_font_size_override("font_size", 11)
-	_status_toast_label.add_theme_color_override("font_color", Color(0.25, 0.92, 0.48))
-	tabs_hbox.add_child(_status_toast_label)
 
 	# Panel interior de la pestaña activa
 	var tab_body := PanelContainer.new()
@@ -303,11 +347,40 @@ func _build_yuzu_ui() -> void:
 	# 2.4 Fila Inferior: Vibration | Connected Controllers 1-4 | Defaults & Clear
 	inner_vbox.add_child(_build_bottom_status_row())
 
-	# 2.5 Barra Final de Dialogo: OK | Apply | Cancel
+	# Vistas alternativas: Sonido y Créditos
+	_audio_view = _build_audio_view()
+	body_hbox.add_child(_audio_view)
+
+	_credits_view = _build_credits_view()
+	body_hbox.add_child(_credits_view)
+
+	# 3. Barra Inferior Persistente de Diálogo: Status Toast (izquierda) | OK, Apply, Cancel (derecha)
+	var bottom_bar := PanelContainer.new()
+	var bottom_sb := StyleBoxFlat.new()
+	bottom_sb.bg_color = Color(0.13, 0.14, 0.16, 1.0)
+	bottom_sb.border_color = Color(0.24, 0.26, 0.29, 1.0)
+	bottom_sb.border_width_top = 1
+	bottom_sb.content_margin_left = 12
+	bottom_sb.content_margin_right = 12
+	bottom_sb.content_margin_top = 6
+	bottom_sb.content_margin_bottom = 6
+	bottom_bar.add_theme_stylebox_override("panel", bottom_sb)
+	root_vbox.add_child(bottom_bar)
+
+	var bottom_hbox := HBoxContainer.new()
+	bottom_bar.add_child(bottom_hbox)
+
+	_status_toast_label = Label.new()
+	_status_toast_label.text = ""
+	_status_toast_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_status_toast_label.add_theme_font_size_override("font_size", 11)
+	_status_toast_label.add_theme_color_override("font_color", Color(0.25, 0.92, 0.48))
+	bottom_hbox.add_child(_status_toast_label)
+
 	var dlg_hbox := HBoxContainer.new()
 	dlg_hbox.alignment = BoxContainer.ALIGNMENT_END
 	dlg_hbox.add_theme_constant_override("separation", 6)
-	right_vbox.add_child(dlg_hbox)
+	bottom_hbox.add_child(dlg_hbox)
 
 	var ok_btn := _create_yuzu_action_button("✓  OK", Vector2(76, 26))
 	ok_btn.pressed.connect(_on_ok_pressed)
@@ -1322,16 +1395,19 @@ func _on_clear_pressed() -> void:
 func _on_apply_pressed() -> void:
 	_stop_listening()
 	InputManager.set_all_configs(_working_configs, true)
-	_show_status("✓ Configuracion aplicada y guardada")
+	AudioManager.save_audio_settings()
+	_show_status("✓ Configuración aplicada y guardada")
 
 func _on_ok_pressed() -> void:
 	_stop_listening()
 	InputManager.set_all_configs(_working_configs, true)
+	AudioManager.save_audio_settings()
 	closed.emit()
 	queue_free()
 
 func _on_cancel_pressed() -> void:
 	_stop_listening()
+	AudioManager.load_audio_settings()
 	closed.emit()
 	queue_free()
 
@@ -1343,3 +1419,427 @@ func _show_status(msg: String) -> void:
 	var tw := create_tween()
 	tw.tween_interval(2.0)
 	tw.tween_property(_status_toast_label, "modulate:a", 0.0, 0.4)
+
+# ==============================================================================
+# Navegación entre Secciones (Controls, Sonido, Créditos)
+# ==============================================================================
+func _select_section(section_id: String) -> void:
+	_current_section = section_id
+	_stop_listening()
+
+	if _controls_view:
+		_controls_view.visible = (section_id == "controls")
+	if _audio_view:
+		_audio_view.visible = (section_id == "audio")
+	if _credits_view:
+		_credits_view.visible = (section_id == "credits")
+
+	for s_id in _sidebar_buttons:
+		var btn: Button = _sidebar_buttons[s_id]
+		var is_active: bool = (s_id == section_id)
+		btn.add_theme_stylebox_override("normal", _style_sidebar_active if is_active else _style_sidebar_inactive)
+		btn.add_theme_stylebox_override("hover", _style_sidebar_active if is_active else _style_sidebar_hover)
+		btn.add_theme_stylebox_override("pressed", _style_sidebar_active)
+		btn.add_theme_color_override("font_color", Color.WHITE if is_active else Color(0.75, 0.78, 0.82))
+
+	if _window_title_label:
+		match section_id:
+			"controls":
+				_window_title_label.text = "CONFIGURACIÓN DE CONTROLES — XBOX CONTROLLER (4 JUGADORES)"
+			"audio":
+				_window_title_label.text = "AJUSTES DE AUDIO — VOLUMEN GENERAL, VOCES, MÚSICA Y SFX"
+			"credits":
+				_window_title_label.text = "CRÉDITOS Y AGRADECIMIENTOS — RECURSOS, MODELOS 3D Y MÚSICA"
+
+# ==============================================================================
+# Panel de Sonido
+# ==============================================================================
+func _build_audio_view() -> Control:
+	var margin := MarginContainer.new()
+	margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	margin.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	margin.add_theme_constant_override("margin_left", 12)
+	margin.add_theme_constant_override("margin_right", 12)
+	margin.add_theme_constant_override("margin_top", 10)
+	margin.add_theme_constant_override("margin_bottom", 10)
+
+	var panel := PanelContainer.new()
+	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	var panel_sb := StyleBoxFlat.new()
+	panel_sb.bg_color = Color(0.20, 0.21, 0.23, 1.0)
+	panel_sb.border_color = Color(0.28, 0.30, 0.33, 1.0)
+	panel_sb.set_border_width_all(1)
+	panel_sb.set_corner_radius_all(4)
+	panel_sb.content_margin_left = 16
+	panel_sb.content_margin_right = 16
+	panel_sb.content_margin_top = 12
+	panel_sb.content_margin_bottom = 12
+	panel.add_theme_stylebox_override("panel", panel_sb)
+	margin.add_child(panel)
+
+	var scroll := ScrollContainer.new()
+	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	panel.add_child(scroll)
+
+	var vbox := VBoxContainer.new()
+	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	vbox.add_theme_constant_override("separation", 12)
+	scroll.add_child(vbox)
+
+	# Encabezado
+	var header_hbox := HBoxContainer.new()
+	vbox.add_child(header_hbox)
+
+	var hdr_lbl := Label.new()
+	hdr_lbl.text = "Mezcla de Canales de Audio"
+	hdr_lbl.add_theme_font_size_override("font_size", 14)
+	hdr_lbl.add_theme_color_override("font_color", Color(0.24, 0.68, 0.91))
+	header_hbox.add_child(hdr_lbl)
+
+	var spacer := Control.new()
+	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	header_hbox.add_child(spacer)
+
+	var reset_btn := _create_yuzu_action_button("↺  Restablecer Predeterminados", Vector2(210, 26))
+	reset_btn.pressed.connect(_on_audio_reset_defaults)
+	header_hbox.add_child(reset_btn)
+
+	# Fila 1: Master
+	vbox.add_child(_create_audio_channel_row(
+		"master",
+		"🔊  Volumen General (Master)",
+		"Control maestro que afecta todos los sonidos del juego globalmente.",
+		AudioManager.get_master_volume(),
+		func(): AudioManager.play_test_sfx()
+	))
+
+	# Fila 2: Voces y Gritos
+	vbox.add_child(_create_audio_channel_row(
+		"voices",
+		"🗣️  Voces y Gritos de Personajes",
+		"Volumen de exclamaciones y gritos de combate de los luchadores (ej. Hornet: 'Shaw!', 'Adeeno!').",
+		AudioManager.get_voices_volume(),
+		func(): AudioManager.play_test_voice()
+	))
+
+	# Fila 3: Sonidos de Ambiente y Música
+	vbox.add_child(_create_audio_channel_row(
+		"music",
+		"🎵  Música y Sonido de Ambiente",
+		"Banda sonora de escenarios de combate y pantallas de selección.",
+		AudioManager.get_music_volume(),
+		func(): AudioManager.play_test_music()
+	))
+
+	# Fila 4: Efectos de Combate (SFX)
+	vbox.add_child(_create_audio_channel_row(
+		"sfx",
+		"💥  Efectos de Combate (SFX)",
+		"Impactos de golpes, tajos de seda, escudos, proyectiles y parries.",
+		AudioManager.get_sfx_volume(),
+		func(): AudioManager.play_test_sfx()
+	))
+
+	# Separador y nota informativa
+	var sep := HSeparator.new()
+	vbox.add_child(sep)
+
+	var info_lbl := Label.new()
+	info_lbl.text = "💡 Los ajustes en las barras de volumen tienen efecto inmediato. Pulsa 'Apply' u 'OK' para guardarlos de forma permanente."
+	info_lbl.add_theme_font_size_override("font_size", 11)
+	info_lbl.add_theme_color_override("font_color", Color(0.65, 0.70, 0.75))
+	info_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	vbox.add_child(info_lbl)
+
+	return margin
+
+func _create_audio_channel_row(
+	channel_id: String,
+	title: String,
+	description: String,
+	initial_val: float,
+	test_callable: Callable
+) -> Control:
+	var group := PanelContainer.new()
+	var group_sb := StyleBoxFlat.new()
+	group_sb.bg_color = Color(0.14, 0.15, 0.18, 1.0)
+	group_sb.border_color = Color(0.25, 0.27, 0.30, 1.0)
+	group_sb.set_border_width_all(1)
+	group_sb.set_corner_radius_all(4)
+	group_sb.content_margin_left = 12
+	group_sb.content_margin_right = 12
+	group_sb.content_margin_top = 8
+	group_sb.content_margin_bottom = 8
+	group.add_theme_stylebox_override("panel", group_sb)
+
+	var row_vbox := VBoxContainer.new()
+	row_vbox.add_theme_constant_override("separation", 5)
+	group.add_child(row_vbox)
+
+	# Fila 1: Título y botón probar
+	var top_h := HBoxContainer.new()
+	row_vbox.add_child(top_h)
+
+	var t_lbl := Label.new()
+	t_lbl.text = title
+	t_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	t_lbl.add_theme_font_size_override("font_size", 12)
+	t_lbl.add_theme_color_override("font_color", Color(0.92, 0.94, 0.96))
+	top_h.add_child(t_lbl)
+
+	var test_btn := _create_yuzu_action_button("▶  Probar", Vector2(82, 22))
+	test_btn.pressed.connect(test_callable)
+	top_h.add_child(test_btn)
+
+	# Fila 2: Descripción breve
+	var d_lbl := Label.new()
+	d_lbl.text = description
+	d_lbl.add_theme_font_size_override("font_size", 10)
+	d_lbl.add_theme_color_override("font_color", Color(0.60, 0.64, 0.70))
+	row_vbox.add_child(d_lbl)
+
+	# Fila 3: Slider + Porcentaje + Silenciar
+	var ctrl_h := HBoxContainer.new()
+	ctrl_h.add_theme_constant_override("separation", 10)
+	row_vbox.add_child(ctrl_h)
+
+	var slider := HSlider.new()
+	slider.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	slider.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	slider.min_value = 0.0
+	slider.max_value = 100.0
+	slider.step = 1.0
+	slider.value = round(initial_val * 100.0)
+	ctrl_h.add_child(slider)
+	_audio_sliders[channel_id] = slider
+
+	var pct_lbl := Label.new()
+	pct_lbl.custom_minimum_size = Vector2(45, 0)
+	pct_lbl.text = "%d%%" % int(slider.value)
+	pct_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	pct_lbl.add_theme_font_size_override("font_size", 11)
+	pct_lbl.add_theme_color_override("font_color", Color(0.24, 0.68, 0.91))
+	ctrl_h.add_child(pct_lbl)
+	_audio_labels[channel_id] = pct_lbl
+
+	var mute_chk := CheckBox.new()
+	mute_chk.text = "Silenciar"
+	mute_chk.focus_mode = Control.FOCUS_NONE
+	mute_chk.button_pressed = (initial_val <= 0.001)
+	mute_chk.add_theme_font_size_override("font_size", 11)
+	ctrl_h.add_child(mute_chk)
+	_audio_mutes[channel_id] = mute_chk
+
+	slider.value_changed.connect(func(v: float):
+		_on_audio_slider_changed(channel_id, v)
+	)
+
+	mute_chk.toggled.connect(func(pressed: bool):
+		_on_audio_mute_toggled(channel_id, pressed)
+	)
+
+	return group
+
+func _on_audio_slider_changed(channel_id: String, val: float) -> void:
+	var linear_val: float = clampf(val / 100.0, 0.0, 1.0)
+	if _audio_labels.has(channel_id):
+		_audio_labels[channel_id].text = "%d%%" % int(val)
+	if _audio_mutes.has(channel_id) and val > 0.0:
+		_audio_mutes[channel_id].set_pressed_no_signal(false)
+
+	match channel_id:
+		"master":
+			AudioManager.set_master_volume(linear_val, false)
+		"voices":
+			AudioManager.set_voices_volume(linear_val, false)
+		"music":
+			AudioManager.set_music_volume(linear_val, false)
+		"sfx":
+			AudioManager.set_sfx_volume(linear_val, false)
+
+func _on_audio_mute_toggled(channel_id: String, pressed: bool) -> void:
+	if pressed:
+		match channel_id:
+			"master": AudioManager.set_master_volume(0.0, false)
+			"voices": AudioManager.set_voices_volume(0.0, false)
+			"music": AudioManager.set_music_volume(0.0, false)
+			"sfx": AudioManager.set_sfx_volume(0.0, false)
+		if _audio_labels.has(channel_id):
+			_audio_labels[channel_id].text = "0%"
+	else:
+		var last_val: float = 100.0
+		if _audio_sliders.has(channel_id):
+			last_val = maxf(_audio_sliders[channel_id].value, 20.0)
+			_audio_sliders[channel_id].value = last_val
+		_on_audio_slider_changed(channel_id, last_val)
+
+func _on_audio_reset_defaults() -> void:
+	var defaults := {
+		"master": 100.0,
+		"voices": 90.0,
+		"music": 80.0,
+		"sfx": 85.0
+	}
+	for ch in defaults:
+		if _audio_sliders.has(ch):
+			_audio_sliders[ch].value = defaults[ch]
+		if _audio_mutes.has(ch):
+			_audio_mutes[ch].button_pressed = false
+		_on_audio_slider_changed(ch, defaults[ch])
+	_show_status("Audio restablecido a valores predeterminados")
+
+# ==============================================================================
+# Panel de Créditos
+# ==============================================================================
+func _build_credits_view() -> Control:
+	var margin := MarginContainer.new()
+	margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	margin.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	margin.add_theme_constant_override("margin_left", 12)
+	margin.add_theme_constant_override("margin_right", 12)
+	margin.add_theme_constant_override("margin_top", 10)
+	margin.add_theme_constant_override("margin_bottom", 10)
+
+	var panel := PanelContainer.new()
+	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	var panel_sb := StyleBoxFlat.new()
+	panel_sb.bg_color = Color(0.20, 0.21, 0.23, 1.0)
+	panel_sb.border_color = Color(0.28, 0.30, 0.33, 1.0)
+	panel_sb.set_border_width_all(1)
+	panel_sb.set_corner_radius_all(4)
+	panel_sb.content_margin_left = 16
+	panel_sb.content_margin_right = 16
+	panel_sb.content_margin_top = 12
+	panel_sb.content_margin_bottom = 12
+	panel.add_theme_stylebox_override("panel", panel_sb)
+	margin.add_child(panel)
+
+	var vbox := VBoxContainer.new()
+	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	vbox.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	vbox.add_theme_constant_override("separation", 10)
+	panel.add_child(vbox)
+
+	# Fila Superior: Título + Badge de Archivo + Botón de Recarga
+	var top_h := HBoxContainer.new()
+	vbox.add_child(top_h)
+
+	var title_vbox := VBoxContainer.new()
+	title_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	top_h.add_child(title_vbox)
+
+	var h_lbl := Label.new()
+	h_lbl.text = "Créditos, Modelos y Agradecimientos"
+	h_lbl.add_theme_font_size_override("font_size", 14)
+	h_lbl.add_theme_color_override("font_color", Color(0.24, 0.68, 0.91))
+	title_vbox.add_child(h_lbl)
+
+	var sub_lbl := Label.new()
+	sub_lbl.text = "Archivo editable para desarrolladores: data/credits.md"
+	sub_lbl.add_theme_font_size_override("font_size", 11)
+	sub_lbl.add_theme_color_override("font_color", Color(0.55, 0.58, 0.63))
+	title_vbox.add_child(sub_lbl)
+
+	var reload_btn := _create_yuzu_action_button("🔄  Recargar Archivo", Vector2(150, 26))
+	reload_btn.pressed.connect(_load_and_display_credits)
+	top_h.add_child(reload_btn)
+
+	# Visor Markdown / RichText
+	var text_panel := PanelContainer.new()
+	text_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	text_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	var text_sb := StyleBoxFlat.new()
+	text_sb.bg_color = Color(0.12, 0.13, 0.15, 1.0)
+	text_sb.border_color = Color(0.24, 0.26, 0.28, 1.0)
+	text_sb.set_border_width_all(1)
+	text_sb.set_corner_radius_all(3)
+	text_sb.content_margin_left = 16
+	text_sb.content_margin_right = 16
+	text_sb.content_margin_top = 14
+	text_sb.content_margin_bottom = 14
+	text_panel.add_theme_stylebox_override("panel", text_sb)
+	vbox.add_child(text_panel)
+
+	_credits_rich_label = RichTextLabel.new()
+	_credits_rich_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_credits_rich_label.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_credits_rich_label.bbcode_enabled = true
+	_credits_rich_label.selection_enabled = false
+	_credits_rich_label.scroll_following = false
+	text_panel.add_child(_credits_rich_label)
+
+	_load_and_display_credits()
+
+	return margin
+
+func _load_and_display_credits() -> void:
+	if not _credits_rich_label:
+		return
+	var paths_to_try: Array[String] = [
+		"res://data/credits.md",
+		"data/credits.md"
+	]
+	var content: String = ""
+	for path in paths_to_try:
+		if FileAccess.file_exists(path):
+			var f := FileAccess.open(path, FileAccess.READ)
+			if f:
+				content = f.get_as_text()
+				f.close()
+				break
+
+	if content == "":
+		_credits_rich_label.text = "[color=#e06c75]No se pudo cargar el archivo data/credits.md[/color]"
+		return
+
+	var bbcode := _format_markdown_to_bbcode(content)
+	_credits_rich_label.text = bbcode
+	_show_status("Créditos actualizados desde data/credits.md")
+
+func _format_markdown_to_bbcode(md: String) -> String:
+	var lines := md.split("\n")
+	var result_lines: Array[String] = []
+
+	for line in lines:
+		var trimmed := line.strip_edges()
+		if trimmed.begins_with("### "):
+			var text := trimmed.substr(4)
+			result_lines.append("\n[color=#e5c07b][font_size=13][b]%s[/b][/font_size][/color]" % text)
+		elif trimmed.begins_with("## "):
+			var text := trimmed.substr(3)
+			result_lines.append("\n[color=#61afef][font_size=15][b]%s[/b][/font_size][/color]" % text)
+		elif trimmed.begins_with("# "):
+			var text := trimmed.substr(2)
+			result_lines.append("\n[center][color=#98c379][font_size=19][b]%s[/b][/font_size][/color][/center]\n" % text)
+		elif trimmed == "---":
+			result_lines.append("[color=#3e4451]────────────────────────────────────────────────────────────────────────[/color]")
+		elif trimmed.begins_with("- "):
+			var item := trimmed.substr(2)
+			item = _parse_inline_markdown(item)
+			result_lines.append("  [color=#61afef]•[/color] %s" % item)
+		else:
+			result_lines.append(_parse_inline_markdown(line))
+
+	return "\n".join(result_lines)
+
+func _parse_inline_markdown(text: String) -> String:
+	var s: String = text
+	# Negrita **texto** -> [b]texto[/b]
+	var bold_regex := RegEx.new()
+	bold_regex.compile("\\*\\*(.*?)\\*\\*")
+	s = bold_regex.sub(s, "[b]$1[/b]", true)
+
+	# Comillas / citas "texto" -> [color=#e5c07b]"texto"[/color]
+	var quote_regex := RegEx.new()
+	quote_regex.compile("\"([^\"]+)\"")
+	s = quote_regex.sub(s, "[color=#e5c07b]\"$1\"[/color]", true)
+
+	# URLs http -> [color=#56b6c2][u]...[/u][/color]
+	var url_regex := RegEx.new()
+	url_regex.compile("(https?://[^\\s\\)]+)")
+	s = url_regex.sub(s, "[color=#56b6c2][u]$1[/u][/color]", true)
+
+	return s

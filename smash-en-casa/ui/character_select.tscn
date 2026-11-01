@@ -1,10 +1,6 @@
-[gd_scene load_steps=19 format=3 uid="uid://c_char_select"]
+[gd_scene format=3 uid="uid://3cx5sdpqjyq1"]
 
-[ext_resource type="Script" path="res://ui/character_select.gd" id="1_cselect"]
-[ext_resource type="Resource" uid="uid://c_lego_batman_data" path="res://resources/instances/lego_batman_data.tres" id="3_batman"]
-[ext_resource type="Resource" uid="uid://c_sakuya_data" path="res://resources/instances/sakuya_data.tres" id="4_sakuya"]
-[ext_resource type="Resource" uid="uid://c_gogeta_data" path="res://resources/instances/gogeta_data.tres" id="6_gogeta"]
-[ext_resource type="Resource" uid="uid://c_john_placeholder_data" path="res://resources/instances/john_placeholder_data.tres" id="7_john"]
+[ext_resource type="Script" uid="uid://wk2o8pjtpmc4" path="res://ui/character_select.gd" id="1_cselect"]
 [ext_resource type="FontVariation" path="res://ui/Fondos de texto/kamikaze_condensed.tres" id="8_font"]
 
 [sub_resource type="Environment" id="Environment_dbfz"]
@@ -83,123 +79,116 @@ bg_color = Color(0.04, 0.05, 0.08, 0.9)
 border_width_top = 2
 border_color = Color(0.85, 0.68, 0.22, 1)
 
-[node name="CharacterSelect" type="Node3D"]
+[node name="CharacterSelect" type="Node3D" unique_id=899564698]
 script = ExtResource("1_cselect")
-lego_batman_data = ExtResource("3_batman")
-sakuya_data = ExtResource("4_sakuya")
-gogeta_data = ExtResource("6_gogeta")
-john_data = ExtResource("7_john")
 
-[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=210116741]
 environment = SubResource("Environment_dbfz")
 
-[node name="Camera3D" type="Camera3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 0.984808, 0.173648, 0, -0.173648, 0.984808, 0, 1.20, 4.0)
+[node name="Camera3D" type="Camera3D" parent="." unique_id=1666251660]
+transform = Transform3D(1, 0, 0, 0, 0.984808, 0.173648, 0, -0.173648, 0.984808, 0, 1.2, 4)
 fov = 48.0
 
-[node name="Lights" type="Node3D" parent="."]
+[node name="Lights" type="Node3D" parent="." unique_id=780226287]
 
-[node name="KeyLight" type="DirectionalLight3D" parent="Lights"]
+[node name="KeyLight" type="DirectionalLight3D" parent="Lights" unique_id=183280553]
 transform = Transform3D(0.939693, -0.116978, 0.321394, 0, 0.939693, 0.34202, -0.34202, -0.321394, 0.883022, 1.5, 4, 3)
 light_color = Color(1, 0.96, 0.9, 1)
 light_energy = 0.95
 shadow_enabled = true
 
-[node name="FillLight" type="DirectionalLight3D" parent="Lights"]
+[node name="FillLight" type="DirectionalLight3D" parent="Lights" unique_id=134663436]
 transform = Transform3D(0.866025, 0.25, -0.433013, 0, 0.866025, 0.5, 0.5, -0.433013, 0.75, -2, 2, 2)
 light_color = Color(0.5, 0.6, 0.85, 1)
 light_energy = 0.5
 
-[node name="StageLightP1" type="SpotLight3D" parent="Lights"]
-transform = Transform3D(0.965926, 0.148453, -0.212012, 0, 0.819152, 0.573576, 0.258819, -0.554032, 0.79124, -1.85, 3.0, 1.0)
+[node name="StageLightP1" type="SpotLight3D" parent="Lights" unique_id=1999120002]
+transform = Transform3D(0.965926, 0.148453, -0.212012, 0, 0.819152, 0.573576, 0.258819, -0.554032, 0.79124, -1.85, 3, 1)
 light_color = Color(0.3, 0.7, 1, 1)
 light_energy = 2.0
 spot_range = 7.0
 spot_angle = 40.0
 
-[node name="StageLightP2" type="SpotLight3D" parent="Lights"]
-transform = Transform3D(0.965926, -0.148453, 0.212012, 0, 0.819152, 0.573576, -0.258819, -0.554032, 0.79124, 1.85, 3.0, 1.0)
+[node name="StageLightP2" type="SpotLight3D" parent="Lights" unique_id=1397153135]
+transform = Transform3D(0.965926, -0.148453, 0.212012, 0, 0.819152, 0.573576, -0.258819, -0.554032, 0.79124, 1.85, 3, 1)
 light_color = Color(1, 0.35, 0.3, 1)
 light_energy = 2.0
 spot_range = 7.0
 spot_angle = 40.0
 
-[node name="Floor" type="MeshInstance3D" parent="."]
+[node name="Floor" type="MeshInstance3D" parent="." unique_id=1876204469]
 mesh = SubResource("PlaneMesh_floor")
 
-[node name="StageP1" type="Node3D" parent="."]
+[node name="StageP1" type="Node3D" parent="." unique_id=1339469464]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.85, 0.05, -0.4)
 
-[node name="PedestalP1" type="MeshInstance3D" parent="StageP1"]
+[node name="PedestalP1" type="MeshInstance3D" parent="StageP1" unique_id=1361631160]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.04, 0)
 mesh = SubResource("CylinderMesh_p1")
 
-[node name="ModelContainer" type="Node3D" parent="StageP1"]
+[node name="ModelContainer" type="Node3D" parent="StageP1" unique_id=334992681]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.08, 0)
 
-[node name="StageP2" type="Node3D" parent="."]
+[node name="StageP2" type="Node3D" parent="." unique_id=685225650]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.85, 0.05, -0.4)
 
-[node name="PedestalP2" type="MeshInstance3D" parent="StageP2"]
+[node name="PedestalP2" type="MeshInstance3D" parent="StageP2" unique_id=678129934]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.04, 0)
 mesh = SubResource("CylinderMesh_p2")
 
-[node name="ModelContainer" type="Node3D" parent="StageP2"]
+[node name="ModelContainer" type="Node3D" parent="StageP2" unique_id=1423780519]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.08, 0)
 
-[node name="CardArc" type="Node3D" parent="."]
+[node name="CardArc" type="Node3D" parent="." unique_id=270166304]
 transform = Transform3D(1, 0, 0, 0, 0.866025, 0.5, 0, -0.5, 0.866025, 0, 0.35, 1.55)
 
-[node name="Tokens" type="Node3D" parent="."]
+[node name="Tokens" type="Node3D" parent="." unique_id=237666675]
 
-[node name="P1Token" type="Node3D" parent="Tokens"]
+[node name="P1Token" type="Node3D" parent="Tokens" unique_id=1974524747]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
 
-[node name="Disc" type="MeshInstance3D" parent="Tokens/P1Token"]
+[node name="Disc" type="MeshInstance3D" parent="Tokens/P1Token" unique_id=732015722]
 transform = Transform3D(1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 0, 0, 0)
 material_override = SubResource("Mat_TokenP1")
 mesh = SubResource("CylinderMesh_token")
 
-[node name="Arrow" type="MeshInstance3D" parent="Tokens/P1Token"]
+[node name="Arrow" type="MeshInstance3D" parent="Tokens/P1Token" unique_id=1613323594]
 transform = Transform3D(1, 0, 0, 0, -1, 8.74228e-08, 0, -8.74228e-08, -1, 0, -0.055, 0)
 material_override = SubResource("Mat_TokenP1")
 mesh = SubResource("PrismMesh_arrow")
 
-[node name="Label3D" type="Label3D" parent="Tokens/P1Token"]
+[node name="Label3D" type="Label3D" parent="Tokens/P1Token" unique_id=1556327236]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.015)
 text = "1"
 font = ExtResource("8_font")
 font_size = 14
 outline_size = 4
-outline_modulate = Color(0, 0, 0, 1)
 
-[node name="P2Token" type="Node3D" parent="Tokens"]
+[node name="P2Token" type="Node3D" parent="Tokens" unique_id=117021178]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
 
-[node name="Disc" type="MeshInstance3D" parent="Tokens/P2Token"]
+[node name="Disc" type="MeshInstance3D" parent="Tokens/P2Token" unique_id=21262047]
 transform = Transform3D(1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 0, 0, 0)
 material_override = SubResource("Mat_TokenP2")
 mesh = SubResource("CylinderMesh_token")
 
-[node name="Arrow" type="MeshInstance3D" parent="Tokens/P2Token"]
+[node name="Arrow" type="MeshInstance3D" parent="Tokens/P2Token" unique_id=969585629]
 transform = Transform3D(1, 0, 0, 0, -1, 8.74228e-08, 0, -8.74228e-08, -1, 0, -0.055, 0)
 material_override = SubResource("Mat_TokenP2")
 mesh = SubResource("PrismMesh_arrow")
 
-[node name="Label3D" type="Label3D" parent="Tokens/P2Token"]
+[node name="Label3D" type="Label3D" parent="Tokens/P2Token" unique_id=506044595]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.015)
 text = "2"
 font = ExtResource("8_font")
 font_size = 14
 outline_size = 4
-outline_modulate = Color(0, 0, 0, 1)
 
-[node name="SFXPlayer" type="AudioStreamPlayer" parent="."]
-bus = &"Master"
+[node name="SFXPlayer" type="AudioStreamPlayer" parent="." unique_id=1188809333]
 
-[node name="CanvasLayer" type="CanvasLayer" parent="."]
+[node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=2084260454]
 
-[node name="UI" type="Control" parent="CanvasLayer"]
+[node name="UI" type="Control" parent="CanvasLayer" unique_id=1625992307]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -208,7 +197,7 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 
-[node name="TopBanner" type="VBoxContainer" parent="CanvasLayer/UI"]
+[node name="TopBanner" type="VBoxContainer" parent="CanvasLayer/UI" unique_id=1042324513]
 layout_mode = 1
 anchors_preset = 5
 anchor_left = 0.5
@@ -220,7 +209,7 @@ offset_bottom = 52.0
 grow_horizontal = 2
 alignment = 1
 
-[node name="Title" type="Label" parent="CanvasLayer/UI/TopBanner"]
+[node name="Title" type="Label" parent="CanvasLayer/UI/TopBanner" unique_id=19910799]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.95, 0.8, 1)
 theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.8)
@@ -231,7 +220,7 @@ theme_override_font_sizes/font_size = 22
 text = "SELECCIÓN DE PERSONAJES"
 horizontal_alignment = 1
 
-[node name="Subtitle" type="Label" parent="CanvasLayer/UI/TopBanner"]
+[node name="Subtitle" type="Label" parent="CanvasLayer/UI/TopBanner" unique_id=1411044100]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.85, 0.68, 0.22, 1)
 theme_override_fonts/font = ExtResource("8_font")
@@ -239,21 +228,21 @@ theme_override_font_sizes/font_size = 12
 text = "★ ELIGE A TU LUCHADOR ★"
 horizontal_alignment = 1
 
-[node name="P1Info" type="VBoxContainer" parent="CanvasLayer/UI"]
+[node name="P1Info" type="VBoxContainer" parent="CanvasLayer/UI" unique_id=1729956247]
 layout_mode = 1
 offset_left = 20.0
 offset_top = 10.0
 offset_right = 220.0
 offset_bottom = 85.0
 
-[node name="Badge" type="Label" parent="CanvasLayer/UI/P1Info"]
+[node name="Badge" type="Label" parent="CanvasLayer/UI/P1Info" unique_id=1194484585]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.3, 0.75, 1, 1)
 theme_override_fonts/font = ExtResource("8_font")
 theme_override_font_sizes/font_size = 14
 text = "◄ JUGADOR 1"
 
-[node name="NameLabel" type="Label" parent="CanvasLayer/UI/P1Info"]
+[node name="NameLabel" type="Label" parent="CanvasLayer/UI/P1Info" unique_id=543478439]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.92, 0.5, 1)
 theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.9)
@@ -263,14 +252,14 @@ theme_override_fonts/font = ExtResource("8_font")
 theme_override_font_sizes/font_size = 22
 text = "LEGO BATMAN"
 
-[node name="StatusLabel" type="Label" parent="CanvasLayer/UI/P1Info"]
+[node name="StatusLabel" type="Label" parent="CanvasLayer/UI/P1Info" unique_id=1660459390]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.3, 0.7, 1, 1)
 theme_override_fonts/font = ExtResource("8_font")
 theme_override_font_sizes/font_size = 13
 text = "ELIGE LUCHADOR"
 
-[node name="P2Info" type="VBoxContainer" parent="CanvasLayer/UI"]
+[node name="P2Info" type="VBoxContainer" parent="CanvasLayer/UI" unique_id=1948765340]
 layout_mode = 1
 anchors_preset = 1
 anchor_left = 1.0
@@ -282,7 +271,7 @@ offset_bottom = 85.0
 grow_horizontal = 0
 alignment = 2
 
-[node name="Badge" type="Label" parent="CanvasLayer/UI/P2Info"]
+[node name="Badge" type="Label" parent="CanvasLayer/UI/P2Info" unique_id=276948124]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.35, 0.3, 1)
 theme_override_fonts/font = ExtResource("8_font")
@@ -290,7 +279,7 @@ theme_override_font_sizes/font_size = 14
 text = "JUGADOR 2 ►"
 horizontal_alignment = 2
 
-[node name="NameLabel" type="Label" parent="CanvasLayer/UI/P2Info"]
+[node name="NameLabel" type="Label" parent="CanvasLayer/UI/P2Info" unique_id=1211624652]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.92, 0.5, 1)
 theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.9)
@@ -301,7 +290,7 @@ theme_override_font_sizes/font_size = 22
 text = "LEGO BATMAN"
 horizontal_alignment = 2
 
-[node name="StatusLabel" type="Label" parent="CanvasLayer/UI/P2Info"]
+[node name="StatusLabel" type="Label" parent="CanvasLayer/UI/P2Info" unique_id=903715290]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.35, 0.3, 1)
 theme_override_fonts/font = ExtResource("8_font")
@@ -309,7 +298,7 @@ theme_override_font_sizes/font_size = 13
 text = "ELIGE LUCHADOR"
 horizontal_alignment = 2
 
-[node name="CenterVS" type="VBoxContainer" parent="CanvasLayer/UI"]
+[node name="CenterVS" type="VBoxContainer" parent="CanvasLayer/UI" unique_id=1796894138]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -324,7 +313,7 @@ grow_horizontal = 2
 grow_vertical = 2
 alignment = 1
 
-[node name="CountdownLabel" type="Label" parent="CanvasLayer/UI/CenterVS"]
+[node name="CountdownLabel" type="Label" parent="CanvasLayer/UI/CenterVS" unique_id=1685043493]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.85, 0.25, 1)
 theme_override_fonts/font = ExtResource("8_font")
@@ -332,7 +321,7 @@ theme_override_font_sizes/font_size = 18
 text = "BATALLA EN 2..."
 horizontal_alignment = 1
 
-[node name="StartBattleButton" type="Button" parent="CanvasLayer/UI/CenterVS"]
+[node name="StartBattleButton" type="Button" parent="CanvasLayer/UI/CenterVS" unique_id=49331857]
 custom_minimum_size = Vector2(180, 36)
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.95, 0.7, 1)
@@ -340,7 +329,7 @@ theme_override_fonts/font = ExtResource("8_font")
 theme_override_font_sizes/font_size = 18
 text = "¡INICIAR BATALLA!"
 
-[node name="BottomBar" type="PanelContainer" parent="CanvasLayer/UI"]
+[node name="BottomBar" type="PanelContainer" parent="CanvasLayer/UI" unique_id=286628197]
 layout_mode = 1
 anchors_preset = 12
 anchor_top = 1.0
@@ -351,15 +340,15 @@ grow_horizontal = 2
 grow_vertical = 0
 theme_override_styles/panel = SubResource("StyleBoxFlat_bottom")
 
-[node name="HBox" type="HBoxContainer" parent="CanvasLayer/UI/BottomBar"]
+[node name="HBox" type="HBoxContainer" parent="CanvasLayer/UI/BottomBar" unique_id=2027436237]
 layout_mode = 2
 theme_override_constants/separation = 15
 
-[node name="MarginLeft" type="Control" parent="CanvasLayer/UI/BottomBar/HBox"]
+[node name="MarginLeft" type="Control" parent="CanvasLayer/UI/BottomBar/HBox" unique_id=442306669]
 custom_minimum_size = Vector2(10, 0)
 layout_mode = 2
 
-[node name="BackButton" type="Button" parent="CanvasLayer/UI/BottomBar/HBox"]
+[node name="BackButton" type="Button" parent="CanvasLayer/UI/BottomBar/HBox" unique_id=5995329]
 custom_minimum_size = Vector2(120, 28)
 layout_mode = 2
 size_flags_vertical = 4
@@ -367,7 +356,7 @@ theme_override_fonts/font = ExtResource("8_font")
 theme_override_font_sizes/font_size = 13
 text = "← Menú Principal"
 
-[node name="PromptLabel" type="Label" parent="CanvasLayer/UI/BottomBar/HBox"]
+[node name="PromptLabel" type="Label" parent="CanvasLayer/UI/BottomBar/HBox" unique_id=811057774]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.85, 0.88, 0.95, 1)
@@ -377,7 +366,7 @@ text = "P1: [W/A/S/D] Mover • [J / Espacio] Confirmar | P2: [Flechas] Mover �
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="MarginRight" type="Control" parent="CanvasLayer/UI/BottomBar/HBox"]
+[node name="MarginRight" type="Control" parent="CanvasLayer/UI/BottomBar/HBox" unique_id=806380622]
 custom_minimum_size = Vector2(10, 0)
 layout_mode = 2
 
