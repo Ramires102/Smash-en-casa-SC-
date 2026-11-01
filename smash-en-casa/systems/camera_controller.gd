@@ -1,11 +1,15 @@
+# ==============================================================================
+# CameraController — Cámara Dinámica Multijugador (2 a 4 Luchadores)
+# ==============================================================================
+# Encuadra automáticamente a todos los personajes vivos en el escenario:
+#   - Calcula el rectángulo envolvente (bounding box) en 3D de los jugadores activos.
+#   - Aleja la cámara en Z cuando los luchadores se separan y la acerca en duelos cortos.
+#   - Aplica sacudida de impacto (Camera Shake) cuando recibe Events.camera_shake_requested.
+# ==============================================================================
 class_name CameraController
 extends Camera3D
 
-@export var player_1: Node
-@export var player_2: Node
-@export var player_3: Node
-@export var player_4: Node
-
+## Lista de personajes instanciados por BattleScene.
 var players: Array[Node] = []
 
 @export var min_distance: float = 11.5
@@ -30,17 +34,17 @@ func _exit_tree() -> void:
 		Events.camera_shake_requested.disconnect(_on_camera_shake_requested)
 
 func _on_camera_shake_requested(intensity: float) -> void:
-	if not shake_enabled:
-		return
-	_shake_intensity = maxf(_shake_intensity, clampf(intensity * 0.022, 0.03, 0.28))
+	if shake_enabled:
+		_shake_intensity = maxf(_shake_intensity, clampf(intensity * 0.022, 0.03, 0.28))
 
 func _physics_process(delta: float) -> void:
 	var active_targets: Array[Node] = _get_active_players()
 	if active_targets.is_empty():
 		return
 
+	# Si solo queda 1 luchador vivo en pantalla, centrarlo suavemente
 	if active_targets.size() == 1:
-		var p_pos := _get_player_3d_position(active_targets[0])
+		var p_pos: Vector3 = _get_player_3d_position(active_targets[0])
 		global_position.x = lerpf(global_position.x, p_pos.x, minf(1.0, smooth_speed_x * delta))
 		global_position.y = lerpf(global_position.y, p_pos.y + 1.8, minf(1.0, smooth_speed_y * delta))
 		global_position.z = lerpf(global_position.z, min_distance, minf(1.0, smooth_speed_z * delta))
@@ -54,7 +58,7 @@ func _physics_process(delta: float) -> void:
 	var avg_lead := Vector2.ZERO
 
 	for p in active_targets:
-		var pos_3d := _get_player_3d_position(p)
+		var pos_3d: Vector3 = _get_player_3d_position(p)
 		min_x = minf(min_x, pos_3d.x)
 		max_x = maxf(max_x, pos_3d.x)
 		min_y = minf(min_y, pos_3d.y)
@@ -72,9 +76,7 @@ func _physics_process(delta: float) -> void:
 	var avg_y: float = (min_y + max_y) * 0.5 + avg_lead.y
 	var target_y: float = clampf(avg_y * 0.72 + 1.6, -2.5, 12.0)
 
-	var dist_x: float = max_x - min_x
-	var dist_y: float = max_y - min_y
-	var view_distance: float = maxf(dist_x * 0.82, dist_y * 1.30)
+	var view_distance: float = maxf((max_x - min_x) * 0.82, (max_y - min_y) * 1.30)
 	var target_z: float = clampf(view_distance + margin, min_distance, max_distance)
 
 	global_position.x = lerpf(global_position.x, center_x, minf(1.0, smooth_speed_x * delta))
@@ -95,15 +97,7 @@ func _apply_shake(delta: float) -> void:
 
 func _get_active_players() -> Array[Node]:
 	var list: Array[Node] = []
-	var pool: Array[Node] = []
-	if not players.is_empty():
-		pool.append_array(players)
-	else:
-		for p in [player_1, player_2, player_3, player_4]:
-			if p != null:
-				pool.append(p)
-
-	for p in pool:
+	for p in players:
 		if is_instance_valid(p) and p.is_inside_tree() and p.visible:
 			if "state_machine" in p and p.state_machine and p.state_machine.current_state:
 				if p.state_machine.current_state.name.to_lower() == "death":
@@ -112,11 +106,9 @@ func _get_active_players() -> Array[Node]:
 	return list
 
 func _get_player_3d_position(p: Node) -> Vector3:
-	if p is Character:
-		return Vector3(p.global_position.x / Constants.UNIT_SIZE, -p.global_position.y / Constants.UNIT_SIZE, 0.0)
-	elif "global_position" in p:
+	if "global_position" in p:
 		if p.global_position is Vector2:
-			return Vector3(p.global_position.x / Constants.UNIT_SIZE, -p.global_position.y / Constants.UNIT_SIZE, 0.0)
+			return Utils.pos_2d_to_3d(p.global_position)
 		elif p.global_position is Vector3:
 			return p.global_position
 	return Vector3.ZERO

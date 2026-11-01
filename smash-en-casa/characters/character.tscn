@@ -1,4 +1,4 @@
-[gd_scene load_steps=44 format=3 uid="uid://c_character_base"]
+[gd_scene load_steps=37 format=3 uid="uid://c_character_base"]
 
 [ext_resource type="Script" path="res://characters/character.gd" id="1_char"]
 [ext_resource type="Script" path="res://characters/character_controller.gd" id="2_ctrl"]
@@ -17,22 +17,15 @@
 [ext_resource type="Script" path="res://characters/state_machine/death_state.gd" id="15_death"]
 [ext_resource type="Script" path="res://characters/state_machine/shield_state.gd" id="16_shield"]
 [ext_resource type="Script" path="res://combat/pushbox.gd" id="17_push"]
-[ext_resource type="Script" path="res://characters/state_machine/tumble_state.gd" id="18_tumble"]
-[ext_resource type="Script" path="res://characters/state_machine/ukemi_state.gd" id="19_ukemi"]
 [ext_resource type="Script" path="res://characters/state_machine/air_dodge_state.gd" id="20_airdodge"]
 [ext_resource type="Script" path="res://characters/state_machine/ledge_state.gd" id="21_ledge"]
 [ext_resource type="Script" path="res://characters/state_machine/ledge_getup_state.gd" id="22_getup"]
-[ext_resource type="Script" path="res://characters/state_machine/walk_state.gd" id="23_walk"]
-[ext_resource type="Script" path="res://characters/state_machine/dash_state.gd" id="24_dash"]
 [ext_resource type="Script" path="res://characters/state_machine/jumpsquat_state.gd" id="25_jsquat"]
-[ext_resource type="Script" path="res://characters/state_machine/squat_state.gd" id="26_squat"]
 [ext_resource type="Script" path="res://characters/state_machine/daze_state.gd" id="27_daze"]
 [ext_resource type="Script" path="res://characters/state_machine/roll_state.gd" id="28_roll"]
 [ext_resource type="Script" path="res://characters/state_machine/spotdodge_state.gd" id="29_spot"]
 [ext_resource type="Script" path="res://characters/shield_controller.gd" id="31_shieldctrl"]
 [ext_resource type="Script" path="res://characters/visual_controller.gd" id="32_visctrl"]
-[ext_resource type="Script" path="res://characters/state_machine/run_brake_state.gd" id="33_runbrake"]
-[ext_resource type="Script" path="res://characters/state_machine/pivot_state.gd" id="34_pivot"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_main"]
 radius = 14.0
@@ -203,12 +196,6 @@ initial_state = NodePath("Idle")
 [node name="Idle" type="Node" parent="StateMachine"]
 script = ExtResource("9_idle")
 
-[node name="Walk" type="Node" parent="StateMachine"]
-script = ExtResource("23_walk")
-
-[node name="Dash" type="Node" parent="StateMachine"]
-script = ExtResource("24_dash")
-
 [node name="Run" type="Node" parent="StateMachine"]
 script = ExtResource("10_run")
 
@@ -221,20 +208,11 @@ script = ExtResource("11_jump")
 [node name="Fall" type="Node" parent="StateMachine"]
 script = ExtResource("12_fall")
 
-[node name="Squat" type="Node" parent="StateMachine"]
-script = ExtResource("26_squat")
-
 [node name="Attack" type="Node" parent="StateMachine"]
 script = ExtResource("13_atk")
 
 [node name="Hit" type="Node" parent="StateMachine"]
 script = ExtResource("14_hitst")
-
-[node name="Tumble" type="Node" parent="StateMachine"]
-script = ExtResource("18_tumble")
-
-[node name="Ukemi" type="Node" parent="StateMachine"]
-script = ExtResource("19_ukemi")
 
 [node name="AirDodge" type="Node" parent="StateMachine"]
 script = ExtResource("20_airdodge")
@@ -259,12 +237,6 @@ script = ExtResource("29_spot")
 
 [node name="Death" type="Node" parent="StateMachine"]
 script = ExtResource("15_death")
-
-[node name="RunBrake" type="Node" parent="StateMachine"]
-script = ExtResource("33_runbrake")
-
-[node name="Pivot" type="Node" parent="StateMachine"]
-script = ExtResource("34_pivot")
 
 [node name="Humanoid" type="Node3D" parent="."]
 

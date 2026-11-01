@@ -1,38 +1,37 @@
+# ==============================================================================
+# LedgeState — Agarre en el Borde de Plataforma (Ledge Hang)
+# ==============================================================================
+# Suspende al luchador en un LedgePoint con invulnerabilidad inicial de 0.75s y
+# habilita las 5 opciones clásicas de borde: Soltarse (Drop), Saltar, Subir
+# normal, Subir atacando o Subir rodando (o caer tras 2.5s colgado).
+# ==============================================================================
 class_name LedgeState
 extends State
 
-## Estado de agarre en borde de plataforma 2D (Ledge Hang).
-## El personaje queda suspendido en el borde con invulnerabilidad temporal y opciones de recuperación.
+const MAX_HANG_TIME: float = 2.5
+const MIN_HANG_TIME: float = 0.12
+const INVINCIBILITY_DURATION: float = 0.75
 
 var current_ledge: LedgePoint = null
 var hang_time: float = 0.0
-var max_hang_time: float = 2.5
-var min_hang_time: float = 0.12
-var invincibility_duration: float = 0.75
 var _invincible_timer: float = 0.0
 
 func enter(msg: Dictionary = {}) -> void:
 	current_ledge = msg.get("ledge", null)
 	hang_time = 0.0
-	_invincible_timer = invincibility_duration
+	_invincible_timer = INVINCIBILITY_DURATION
 
 	if character:
 		character.velocity = Vector2.ZERO
 		character.is_fast_falling = false
 		character.set_hurtbox_state(Hurtbox.HurtboxState.INVULNERABLE)
-		
+
 		if current_ledge:
 			current_ledge.occupy(character)
 			character.global_position = current_ledge.get_hang_position_2d()
 			character.set_facing_direction(current_ledge.ledge_direction)
 
-		if character.has_node("AnimationController"):
-			character.get_node("AnimationController").play_animation("Ledge")
-
-	dbg("enter", {
-		"ledge": String(current_ledge.name) if current_ledge else "None",
-		"direction": current_ledge.ledge_direction if current_ledge else 1.0
-	})
+		character.play_anim("Ledge")
 
 func physics_update(delta: float) -> void:
 	hang_time += delta
@@ -46,58 +45,44 @@ func physics_update(delta: float) -> void:
 		if _invincible_timer <= 0.0 and character:
 			character.set_hurtbox_state(Hurtbox.HurtboxState.NORMAL)
 
-	dbg_tick(delta, {
-		"hang_time": snapped(hang_time, 0.01),
-		"invincible": _invincible_timer > 0.0
-	})
-
-	if hang_time < min_hang_time:
-		return
-
-	if character == null:
+	if hang_time < MIN_HANG_TIME or character == null:
 		return
 
 	var input_vec: Vector2 = character.get_input_vector()
 	var facing: float = character.get_facing_direction()
 
-	# 1. Soltarse hacia abajo o atrás (Drop)
+	# 1. Soltarse del borde (Abajo o Atrás)
 	if input_vec.y < -0.4 or input_vec.y > 0.4 or (input_vec.x * facing < -0.4):
-		dbg("ledge_action", {"action": "drop"})
 		character.release_ledge(0.5)
 		character.velocity = Vector2(-facing * 50.0, 100.0)
 		state_machine.transition_to("Fall")
 		return
 
-	# 2. Salto desde el borde (Ledge Jump)
+	# 2. Salto desde el borde
 	if character.is_jump_just_pressed():
-		dbg("ledge_action", {"action": "jump"})
 		character.release_ledge(0.5)
 		var j_vel: float = character.controller.get_jump_velocity() if character.controller else 450.0
 		character.velocity = Vector2(facing * 80.0, -j_vel * 0.95)
 		state_machine.transition_to("Jump")
 		return
 
-
-	# 3. Subir normalmente (Normal Getup)
+	# 3. Subida normal hacia el escenario
 	if input_vec.x * facing > 0.4:
-		dbg("ledge_action", {"action": "normal_getup"})
 		state_machine.transition_to("LedgeGetup", {"type": "normal", "ledge": current_ledge})
 		return
 
-	# 4. Ataque desde el borde (Ledge Attack)
+	# 4. Ataque desde el borde
 	if character.is_attack_just_pressed():
-		dbg("ledge_action", {"action": "attack_getup"})
 		state_machine.transition_to("LedgeGetup", {"type": "attack", "ledge": current_ledge})
 		return
 
-	# 5. Rodar al subir (Ledge Roll)
+	# 5. Rodada hacia adentro desde el borde
 	if character.is_shield_pressed():
-		dbg("ledge_action", {"action": "roll_getup"})
 		state_machine.transition_to("LedgeGetup", {"type": "roll", "ledge": current_ledge})
 		return
 
-	# 6. Auto-drop por límite de tiempo
-	if hang_time >= max_hang_time:
+	# 6. Caída automática al superar el tiempo máximo colgado
+	if hang_time >= MAX_HANG_TIME:
 		character.release_ledge(0.6)
 		character.velocity = Vector2(0.0, 100.0)
 		state_machine.transition_to("Fall")

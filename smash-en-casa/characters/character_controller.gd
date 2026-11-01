@@ -1,81 +1,52 @@
+# ==============================================================================
+# CharacterController — Motor de Locomoción 2D del Luchador
+# ==============================================================================
+# Gestiona velocidades terrestres y aéreas, fricción, fuerza de salto, gravedad
+# y dirección de mirada. Trabaja internamente con unidades métricas (m/s) y las
+# convierte a píxeles 2D multiplicando por Constants.UNIT_SIZE.
+# ==============================================================================
 class_name CharacterController
 extends Node
 
 @export var character: Character
 
-# Constantes globales 1:1 con shared/constants.ts
+#region Constantes Físicas Base (en metros/s y metros/s²)
 const TS_GRAVITY: float = 26.0
 const TS_TERMINAL_VELOCITY: float = 22.0
 const TS_GROUND_FRICTION: float = 14.0
 const TS_AIR_FRICTION: float = 3.5
+#endregion
 
-# Stats en metros/s (idénticos a GogetaData / SansData en TypeScript)
+#region Atributos de Movimiento Activos
 var ts_movement_speed: float = 8.6
 var ts_acceleration: float = 38.0
 var ts_jump_force: float = 12.4
 var ts_air_speed: float = 7.8
-
-# Variables heredadas para compatibilidad con otros estados
-var run_speed: float = 2.18
-var walk_speed: float = 1.05
-var initial_dash_speed: float = 2.35
-var traction: float = 0.11
-var jump_velocity: float = 14.2
-var short_hop_velocity: float = 10.8
-var air_speed: float = 1.08
-var air_acceleration: float = 0.055
-var air_friction: float = 0.012
-var smash_gravity: float = 0.09
-var smash_fall_speed: float = 1.62
-var smash_fast_fall_speed: float = 2.55
-var jumpsquat_frames: int = 0
-var instant_run: bool = true
-
 var facing_direction: float = 1.0
+#endregion
 
+## Interpolación exponencial independiente de los FPS (suavizado frame-rate independent).
 static func damp(current: float, target: float, lambda_val: float, dt: float) -> float:
 	return lerpf(current, target, 1.0 - exp(-lambda_val * dt))
 
 func setup(data: CharacterData) -> void:
-	var is_sans: bool = false
-	if data:
-		var c_name: String = ""
-		if "character_name" in data:
-			c_name = str(data.character_name).to_lower()
-		elif "display_name" in data:
-			c_name = str(data.display_name).to_lower()
-		is_sans = c_name.contains("sans")
-
+	var is_sans: bool = data != null and data.character_name.to_lower().contains("sans")
 	if is_sans:
-		# Stats exactos de SansData (sans_data.ts)
 		ts_movement_speed = 7.4
 		ts_acceleration = 34.0
 		ts_jump_force = 11.8
 		ts_air_speed = 7.2
 	else:
-		# Stats exactos de GogetaData (gogeta_data.ts)
 		ts_movement_speed = 8.6
 		ts_acceleration = 38.0
 		ts_jump_force = 12.4
 		ts_air_speed = 7.8
 
-	jumpsquat_frames = 0
-	instant_run = true
-
+#region Movimiento Terrestre (px/s)
 func get_jumpsquat_frames() -> int:
 	return 0
 
-func is_instant_run() -> bool:
-	return true
-
-# ── Movimiento Terrestre 2D (px/s) 1:1 con TypeScript ────────────────────────
 func get_run_speed() -> float:
-	return ts_movement_speed * Constants.UNIT_SIZE
-
-func get_walk_speed() -> float:
-	return ts_movement_speed * Constants.UNIT_SIZE
-
-func get_initial_dash_speed() -> float:
 	return ts_movement_speed * Constants.UNIT_SIZE
 
 func get_traction() -> float:
@@ -90,22 +61,14 @@ func apply_ground_friction(delta: float, mult: float = 1.0) -> void:
 	if character == null:
 		return
 	character.velocity.x = damp(character.velocity.x, 0.0, TS_GROUND_FRICTION * mult, delta)
+#endregion
 
-# ── Salto y Gravedad 2D (px/s) 1:1 con TypeScript ───────────────────────────
+#region Salto, Caída y Movimiento Aéreo (px/s)
 func get_jump_velocity() -> float:
-	return ts_jump_force * Constants.UNIT_SIZE
-
-func get_short_hop_velocity() -> float:
 	return ts_jump_force * Constants.UNIT_SIZE
 
 func get_air_speed() -> float:
 	return ts_air_speed * Constants.UNIT_SIZE
-
-func get_air_acceleration() -> float:
-	return 8.0 * Constants.UNIT_SIZE
-
-func get_air_friction() -> float:
-	return TS_AIR_FRICTION * Constants.UNIT_SIZE
 
 func get_gravity_value() -> float:
 	return TS_GRAVITY * Constants.UNIT_SIZE
@@ -132,9 +95,12 @@ func apply_snd_air_movement(input_x: float, delta: float, lambda_val: float = 7.
 		character.velocity.x = damp(character.velocity.x, target_vx, lambda_val, delta)
 	else:
 		character.velocity.x = damp(character.velocity.x, 0.0, TS_AIR_FRICTION, delta)
+#endregion
 
+#region Orientación Horizontal
 func set_facing_direction(dir: float, smooth_turn: bool = false) -> void:
 	if dir != 0.0:
 		facing_direction = signf(dir)
-		if character and character.has_method("update_visual_rotation"):
+		if character:
 			character.update_visual_rotation(facing_direction, smooth_turn)
+#endregion

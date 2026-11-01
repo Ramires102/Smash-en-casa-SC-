@@ -1,3 +1,9 @@
+# ==============================================================================
+# Stage — Escenario de Batalla Híbrido ( Geometría Visual 3D + Colisión 2D )
+# ==============================================================================
+# Gestiona los límites mortales del mapa (BlastZone2D), los puntos de aparición
+# de hasta 4 jugadores y las animaciones ambientales del decorado 3D.
+# ==============================================================================
 class_name Stage
 extends Node3D
 
@@ -8,12 +14,10 @@ signal blast_zone_entered(body: Node)
 @export var blast_right: float = 780.0
 @export var blast_top: float = -650.0
 @export var blast_bottom: float = 550.0
-@onready var blast_zone_2d: Area2D = get_node_or_null("StageColliders2D/BlastZone2D")
 
+@onready var blast_zone_2d: Area2D = get_node_or_null("StageColliders2D/BlastZone2D")
 @onready var celestial_ring: Node3D = get_node_or_null("BackgroundDeco/CelestialRing")
 @onready var core_crystal: Node3D = get_node_or_null("MainPlatform/CoreCrystal")
-@onready var island_left: Node3D = get_node_or_null("BackgroundDeco/FloatingIslandLeft")
-@onready var island_right: Node3D = get_node_or_null("BackgroundDeco/FloatingIslandRight")
 
 var _anim_time: float = 0.0
 
@@ -22,7 +26,6 @@ func _ready() -> void:
 		blast_zone_2d = get_node_or_null("BlastZone2D")
 	if blast_zone_2d and not blast_zone_2d.body_entered.is_connected(_on_blast_zone_body_entered):
 		blast_zone_2d.body_entered.connect(_on_blast_zone_body_entered)
-
 
 func _process(delta: float) -> void:
 	_anim_time += delta
@@ -39,17 +42,13 @@ func _on_blast_zone_body_entered(body: Node) -> void:
 				return
 		blast_zone_entered.emit(body)
 
-func is_position_out_of_bounds(pos: Vector2) -> bool:
-	return pos.y > blast_bottom or pos.y < blast_top or pos.x < blast_left or pos.x > blast_right
-
 func get_spawn_position(player_id: int) -> Vector2:
+	return get_default_spawn_position(player_id)
+
+static func get_default_spawn_position(player_id: int) -> Vector2:
 	match player_id:
-		1:
-			return Vector2(-170.0, -80.0)
-		2:
-			return Vector2(170.0, -80.0)
-		3:
-			return Vector2(-65.0, -80.0)
-		4:
-			return Vector2(65.0, -80.0)
-	return Vector2(0.0, -80.0)
+		1: return Vector2(-170.0, -80.0)
+		2: return Vector2(170.0, -80.0)
+		3: return Vector2(-65.0, -80.0)
+		4: return Vector2(65.0, -80.0)
+		_: return Vector2(0.0, -80.0)

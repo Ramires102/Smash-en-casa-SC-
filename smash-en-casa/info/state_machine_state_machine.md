@@ -1,48 +1,27 @@
 # Explicación de `characters/state_machine/state_machine.gd`
 
 ## Resumen
-Máquina de Estados Finita (FSM) genérica desacoplada. Registra dinámicamente sus estados hijos, delega el bucle `_physics_process` al estado activo y realiza transiciones seguras con `transition_to()`.
+Máquina de Estados Finita (**Patrón State / FSM**) desacoplada. Registra automáticamente todos sus nodos hijos que heredan de `State`, delega la actualización física (`physics_update`) únicamente al estado activo y gestiona transiciones seguras mediante `transition_to()`.
 
-## Explicación Línea por Línea
+## Flujo Principal
 ```gdscript
-1: class_name StateMachine
-2: extends Node
+class_name StateMachine
+extends Node
 
-4: signal state_changed(current_state_name: String)
-5: @export var initial_state: State
-6: var current_state: State
-7: var states: Dictionary = {}
-```
-- Declara la señal `state_changed`, la referencia al estado inicial y el diccionario `states` donde se indexan los nodos de estado.
+signal state_changed(current_state_name: String)
 
-```gdscript
-9: func _ready() -> void:
-10: 	await owner.ready
-11: 	for child in get_children():
-12: 		if child is State:
-13: 			states[child.name.to_lower()] = child
-14: 			child.state_machine = self
-15: 			child.character = owner as CharacterBody3D
+@export var initial_state: State
+var current_state: State
+var states: Dictionary = {}
 ```
-- Indexa automáticamente todos los nodos hijos de tipo `State`, inyectando la referencia del `character` dueño y de la `state_machine`.
 
-```gdscript
-27: func _physics_process(delta: float) -> void:
-28: 	if current_state:
-29: 		current_state.physics_update(delta)
-```
-- Delega el ciclo de física de Godot al `physics_update()` del estado activo actual.
-
-```gdscript
-31: func transition_to(target_state_name: String, msg: Dictionary = {}) -> void:
-32: 	var state_key: String = target_state_name.to_lower()
-33: 	if not states.has(state_key): return
-34: 	if current_state: current_state.exit()
-35: 	current_state = states[state_key]
-36: 	current_state.enter(msg)
-37: 	state_changed.emit(current_state.name)
-```
-- `transition_to`: Ejecuta `exit()` en el estado saliente, cambia `current_state`, ejecuta `enter(msg)` en el estado entrante y emite la señal `state_changed`.
+1. **Inicialización (`_ready`)**:
+   - Espera a que el `Character` raíz (`CharacterBody2D`) esté listo (`await owner.ready`).
+   - Recorre sus hijos de tipo `State`, los registra en `states[child.name.to_lower()]` e inyecta las referencias `child.state_machine = self` y `child.character = owner as Character`.
+2. **Actualización por Frame (`_physics_process`)**:
+   - Si el personaje no está congelado en *Hitstop* (`hitlag`), delega el frame a `current_state.physics_update(delta)`.
+3. **Transición (`transition_to(target_state_name, msg)`)**:
+   - Resuelve alias de estados estilo Smash (`ACMD_ALIASES`), ejecuta `current_state.exit()`, activa el nuevo estado ejecutando `enter(msg)` y emite `state_changed`.
 
 ## Comunicación e Interacciones
-- **Gobernador de**: Nodos `State` (Idle, Run, Jump, Fall, Attack, Hit, Death).
+- **Gobernador de**: Los 15 estados activos del luchador (`IdleState`, `RunState`, `JumpSquatState`, `JumpState`, `FallState`, `AttackState`, `HitState`, `ShieldState`, `RollState`, `SpotDodgeState`, `AirDodgeState`, `DazeState`, `LedgeState`, `LedgeGetupState`, `DeathState`).

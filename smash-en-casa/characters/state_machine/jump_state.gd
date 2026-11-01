@@ -1,16 +1,22 @@
+# ==============================================================================
+# JumpState — Estado de Ascenso Aéreo (Salto Simple y Doble Salto)
+# ==============================================================================
+# Aplica el impulso vertical hacia arriba (`velocity.y < 0`), permite control
+# horizontal en el aire (air drift) y transiciona a `Fall` al alcanzar el ápice.
+# ==============================================================================
 class_name JumpState
 extends State
 
 func enter(msg: Dictionary = {}) -> void:
 	if character == null:
 		return
-	var is_double_jump: bool = msg.get("is_double_jump", false)
+	var is_double_jump: bool = bool(msg.get("is_double_jump", false))
 	var mult: float = 0.94 if is_double_jump else float(msg.get("multiplier", 1.0))
 	var jump_vel: float = character.controller.get_jump_velocity() if character.controller else (12.4 * Constants.UNIT_SIZE)
 
 	character.velocity.y = -jump_vel * mult
 	if msg.has("initial_vx"):
-		character.velocity.x = msg["initial_vx"]
+		character.velocity.x = float(msg["initial_vx"])
 
 	if character.anim_controller:
 		character.anim_controller.is_double_jumping = is_double_jump

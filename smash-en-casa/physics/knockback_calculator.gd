@@ -1,9 +1,17 @@
+# ==============================================================================
+# KnockbackCalculator — Motor Matemático de Empuje, Hitstun y Hitlag
+# ==============================================================================
+# Implementa las ecuaciones de combate de un Platform Fighter estilo Smash Bros:
+#   - A mayor % acumulado del defensor y menor peso, mayor velocidad de eyección.
+#   - Calcula cuántos frames queda aturdido el defensor (Hitstun) y cuántos frames
+#     se congelan ambos personajes en el instante del golpe (Hitlag / Hitstop).
+# ==============================================================================
 class_name KnockbackCalculator
 extends RefCounted
 
-const ANGLE_CONVERSION: float = PI / 180.0
+const DEG_TO_RAD: float = PI / 180.0
 
-# ── Ecuación exacta de KnockbackCalculator.calculateKnockback (knockback_calculator.ts) ──
+## Ecuación principal de magnitud de Knockback estilo Super Smash Bros.
 static func calculate_knockback_magnitude(
 	target_percentage: float,
 	attack_damage: float,
@@ -11,7 +19,7 @@ static func calculate_knockback_magnitude(
 	base_knockback: float,
 	knockback_scaling: float
 ) -> float:
-	# Si un recurso viejo tenía knockback_scaling en escala 80..120 en vez de 0.08..0.19, normalizarlo
+	# Normaliza recursos que guarden scaling como entero (ej. 100 -> 1.00)
 	var growth: float = knockback_scaling / 100.0 if knockback_scaling > 1.5 else knockback_scaling
 	var base_kb: float = base_knockback * 0.45 if base_knockback > 14.0 else base_knockback
 
@@ -20,69 +28,40 @@ static func calculate_knockback_magnitude(
 	var scaled_kb: float = percent_term * weight_factor * 1.35 * growth + base_kb
 	return clampf(scaled_kb, 3.5, 34.0)
 
-# ── Hitstun exacto de DamageCalculator.calculateHitstunFrames (damage_calculator.ts) ──
+## Frames que el rival permanece sin poder actuar durante el vuelo tras recibir el golpe.
 static func calculate_hitstun(kb: float) -> int:
 	return clampi(int(round(kb * 1.65)), 10, 55)
 
-# ── Hitlag exacto de DamageCalculator.calculateHitstopFrames (damage_calculator.ts) ──
+## Frames de congelamiento de impacto (Hitstop) al conectar un golpe.
 static func calculate_hitlag(damage: float, hitlag_modifier: float = 1.0) -> int:
 	var base_stop: int = clampi(int(round(3.0 + damage * 0.35)), 3, 12)
 	return maxi(2, int(round(float(base_stop) / maxf(0.25, hitlag_modifier))))
 
-static func get_horizontal_velocity(kb: float, angle: float) -> float:
-	var initial_velocity: float = kb * Constants.UNIT_SIZE
-	return initial_velocity * cos(angle * ANGLE_CONVERSION)
+static func get_horizontal_velocity(kb: float, angle_deg: float) -> float:
+	return (kb * Constants.UNIT_SIZE) * cos(angle_deg * DEG_TO_RAD)
 
-static func get_vertical_velocity(kb: float, angle: float) -> float:
-	var initial_velocity: float = kb * Constants.UNIT_SIZE
-	return initial_velocity * sin(angle * ANGLE_CONVERSION)
+static func get_vertical_velocity(kb: float, angle_deg: float) -> float:
+	return (kb * Constants.UNIT_SIZE) * sin(angle_deg * DEG_TO_RAD)
 
-static func get_horizontal_decay(angle: float) -> float:
-	return Constants.KB_DECAY_BASE * cos(angle * ANGLE_CONVERSION) * 1000.0
+static func get_horizontal_decay(angle_deg: float) -> float:
+	return Constants.KB_DECAY_BASE * cos(angle_deg * DEG_TO_RAD) * 1000.0
 
-static func get_vertical_decay(angle: float) -> float:
-	return absf(Constants.KB_DECAY_BASE * sin(angle * ANGLE_CONVERSION) * 1000.0)
+static func get_vertical_decay(angle_deg: float) -> float:
+	return absf(Constants.KB_DECAY_BASE * sin(angle_deg * DEG_TO_RAD) * 1000.0)
 
+## Resuelve el código especial de Ángulo Sakurai (361° / -181°).
 static func resolve_sakurai_angle(raw_angle: float, kb: float, target_in_air: bool) -> float:
 	if raw_angle == Constants.SAKURAI_ANGLE:
 		if kb > Constants.SAKURAI_KB_THRESHOLD:
 			return Constants.SAKURAI_HIGH_AIR if target_in_air else Constants.SAKURAI_HIGH_GROUND
-		else:
-			return Constants.SAKURAI_LOW_AIR if target_in_air else Constants.SAKURAI_LOW_GROUND
+		return Constants.SAKURAI_LOW_AIR if target_in_air else Constants.SAKURAI_LOW_GROUND
 	elif raw_angle == Constants.SAKURAI_ANGLE_NEG:
 		if kb > Constants.SAKURAI_KB_THRESHOLD:
 			return (-Constants.SAKURAI_HIGH_AIR + 180.0) if target_in_air else (-Constants.SAKURAI_HIGH_GROUND + 180.0)
-		else:
-			return (-Constants.SAKURAI_LOW_AIR + 180.0) if target_in_air else (-Constants.SAKURAI_LOW_GROUND + 180.0)
+		return (-Constants.SAKURAI_LOW_AIR + 180.0) if target_in_air else (-Constants.SAKURAI_LOW_GROUND + 180.0)
 	return raw_angle
 
-static func apply_angle_flipper(
-	_flipper: int,
-	kb: float,
-	angle: float,
-	_attacker_dir: float,
-	_attacker_pos: Vector2,
-	_target_pos: Vector2,
-	_hitbox_pos: Vector2
-) -> Dictionary:
-	# En Godot 2D: X+ es derecha, Y- es arriba (por eso usamos -angle para sen/cos)
-	var dir_sign: float = -1.0 if _attacker_dir < 0.0 else 1.0
-	return {
-		"vx": get_horizontal_velocity(kb, -angle) * dir_sign,
-		"vy": get_vertical_velocity(kb, -angle),
-		"hdecay": get_horizontal_decay(-angle),
-		"vdecay": get_vertical_decay(angle)
-	}
-
-static func apply_hitlag_di(knockback_vector: Vector2, _di_input: Vector2) -> Dictionary:
-	var vector_angle_deg: float = rad_to_deg(atan2(knockback_vector.y, knockback_vector.x))
-	return {
-		"vector": knockback_vector,
-		"hdecay": get_horizontal_decay(vector_angle_deg),
-		"vdecay": get_vertical_decay(-vector_angle_deg),
-		"angle_deg": -vector_angle_deg
-	}
-
+## Calcula de una sola vez velocidad inicial (vx, vy), desaceleración, hitstun y hitlag.
 static func calculate_full_knockback(
 	target_percentage: float,
 	attack_damage: float,
@@ -90,12 +69,8 @@ static func calculate_full_knockback(
 	base_knockback: float,
 	knockback_scaling: float,
 	raw_angle: float,
-	angle_flipper: int,
 	hitlag_modifier: float,
 	attacker_dir: float,
-	attacker_pos: Vector2,
-	target_pos: Vector2,
-	hitbox_pos: Vector2,
 	target_in_air: bool
 ) -> Dictionary:
 	var kb: float = calculate_knockback_magnitude(
@@ -103,20 +78,16 @@ static func calculate_full_knockback(
 		base_knockback, knockback_scaling
 	)
 	var resolved_angle: float = resolve_sakurai_angle(raw_angle, kb, target_in_air)
-	var flipper_result: Dictionary = apply_angle_flipper(
-		angle_flipper, kb, resolved_angle,
-		attacker_dir, attacker_pos, target_pos, hitbox_pos
-	)
-	var hitstun: int = calculate_hitstun(kb)
-	var hitlag: int = calculate_hitlag(attack_damage, hitlag_modifier)
 
+	# En Godot 2D: X+ apunta a la derecha e Y- apunta hacia arriba (por eso se invierte el signo de angle)
+	var dir_sign: float = -1.0 if attacker_dir < 0.0 else 1.0
 	return {
 		"kb": kb,
-		"vx": flipper_result.vx,
-		"vy": flipper_result.vy,
-		"hdecay": flipper_result.hdecay,
-		"vdecay": flipper_result.vdecay,
-		"hitstun": hitstun,
-		"hitlag": hitlag,
+		"vx": get_horizontal_velocity(kb, -resolved_angle) * dir_sign,
+		"vy": get_vertical_velocity(kb, -resolved_angle),
+		"hdecay": get_horizontal_decay(-resolved_angle),
+		"vdecay": get_vertical_decay(resolved_angle),
+		"hitstun": calculate_hitstun(kb),
+		"hitlag": calculate_hitlag(attack_damage, hitlag_modifier),
 		"resolved_angle": resolved_angle
 	}

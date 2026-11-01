@@ -1,12 +1,16 @@
+# ==============================================================================
+# FallState — Estado de Descenso Aéreo y Caída Rápida (Fast-Fall)
+# ==============================================================================
+# Gestiona la deriva horizontal en caída, el salto Coyote justo tras salir de un
+# borde, el doble salto, el esquive aéreo y la aceleración voluntaria hacia abajo
+# (`Fast-Fall`) al inclinar el stick inferiormente.
+# ==============================================================================
 class_name FallState
 extends State
 
 func enter(_msg: Dictionary = {}) -> void:
-	if character and character.has_node("AnimationController"):
-		character.get_node("AnimationController").play_animation("Fall")
-
-func exit() -> void:
-	pass
+	if character:
+		character.play_anim("Fall")
 
 func physics_update(delta: float) -> void:
 	if character == null:
@@ -16,10 +20,7 @@ func physics_update(delta: float) -> void:
 
 	if character.is_on_floor():
 		character.is_fast_falling = false
-		if absf(input_vec.x) > 0.15:
-			state_machine.transition_to("Run")
-		else:
-			state_machine.transition_to("Idle")
+		state_machine.transition_to("Run" if absf(input_vec.x) > 0.15 else "Idle")
 		return
 
 	if character.is_attack_just_pressed():
@@ -42,12 +43,11 @@ func physics_update(delta: float) -> void:
 		state_machine.transition_to("AirDodge")
 		return
 
-	# Fast-fall progresivo idéntico a fall_state.ts (18.0 m/s² -> TERMINAL_VELOCITY * 1.25)
+	# Fast-fall progresivo al empujar el stick hacia abajo durante el descenso
 	if input_vec.y < -0.5 and character.velocity.y > 0.0:
 		character.is_fast_falling = true
-		var max_fast_fall: float = 22.0 * 1.25 * Constants.UNIT_SIZE
+		var max_fast_fall: float = character.controller.get_fast_fall_speed() if character.controller else (22.0 * 1.25 * Constants.UNIT_SIZE)
 		character.velocity.y = minf(max_fast_fall, character.velocity.y + (18.0 * Constants.UNIT_SIZE) * delta)
 
-	# Horizontal air drift (lambda = 7.5 con input, AIR_FRICTION = 3.5 sin input)
 	if character.controller:
 		character.controller.apply_snd_air_movement(input_vec.x, delta, 7.5)

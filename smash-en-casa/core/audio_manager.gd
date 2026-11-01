@@ -1,10 +1,14 @@
 # ==============================================================================
-# AudioManager (Autoload / Singleton Core)
-# Responsabilidad: Reproducción centralizada de BGM, SFX y Voces, gestión de buses
-# y configuración persistente de volúmenes (Master, Música/Ambiente, SFX, Voces).
+# AudioManager (Autoload Global)
+# ==============================================================================
+# Sistema centralizado de sonido para todo el proyecto:
+#   - Música de fondo (BGM) con transiciones suaves (fade-out) y bucle automático.
+#   - Pool de 12 canales de efectos de sonido (SFX) y 6 de voces para evitar cortes.
+#   - Creación dinámica de buses (Master, Music, SFX, Voices) y guardado en JSON.
 # ==============================================================================
 extends Node
 
+#region Constantes y Rutas
 const SETTINGS_FILE_PATH: String = "user://audio_settings.json"
 
 const MAX_SFX_CHANNELS: int = 12
@@ -15,59 +19,78 @@ const MENU_THEME_EXTERNAL: String = "/home/RodriFumo/Música/Menu theme.mp3"
 
 const BATTLE_THEME_PATH: String = "res://assets/audio/music/battle_theme.mp3"
 const BATTLE_THEME_EXTERNAL: String = "/home/RodriFumo/Música/battle.mpeg"
+#endregion
 
+#region Estado y Reproductores
 var bgm_player: AudioStreamPlayer
 var sfx_players: Array[AudioStreamPlayer] = []
 var voice_players: Array[AudioStreamPlayer] = []
 
 var menu_theme_stream: AudioStream = null
 var battle_theme_stream: AudioStream = null
-
 var _bgm_fade_tween: Tween = null
 
-# Niveles lineales de volumen (0.0 a 1.0)
+## Volúmenes lineales normalizados entre 0.0 (silencio) y 1.0 (100%).
 var master_volume: float = 1.0
 var music_volume: float = 0.80
 var sfx_volume: float = 0.85
 var voices_volume: float = 0.90
+#endregion
 
+#region Inicialización
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_setup_audio_buses()
-	
-	bgm_player = AudioStreamPlayer.new()
-	bgm_player.bus = &"Music"
-	add_child(bgm_player)
-	
-	for i in range(MAX_SFX_CHANNELS):
-		var player := AudioStreamPlayer.new()
-		player.bus = &"SFX"
-		add_child(player)
-		sfx_players.append(player)
-
-	for i in range(MAX_VOICE_CHANNELS):
-		var v_player := AudioStreamPlayer.new()
-		v_player.bus = &"Voices"
-		add_child(v_player)
-		voice_players.append(v_player)
-
+	_create_audio_pools()
 	_init_music_streams()
 	load_audio_settings()
+
+func _exit_tree() -> void:
+	if bgm_player:
+		bgm_player.stop()
+		bgm_player.stream = null
+	for p in sfx_players:
+		if p:
+			p.stop()
+			p.stream = null
+	for vp in voice_players:
+		if vp:
+			vp.stop()
+			vp.stream = null
+	menu_theme_stream = null
+	battle_theme_stream = null
 
 func _setup_audio_buses() -> void:
 	var required_buses: Array[StringName] = [&"Music", &"SFX", &"Voices"]
 	for bus_name in required_buses:
-		var idx: int = AudioServer.get_bus_index(bus_name)
-		if idx == -1:
+		if AudioServer.get_bus_index(bus_name) == -1:
 			AudioServer.add_bus()
 			var new_idx: int = AudioServer.get_bus_count() - 1
 			AudioServer.set_bus_name(new_idx, bus_name)
 			AudioServer.set_bus_send(new_idx, &"Master")
 
+func _create_audio_pools() -> void:
+	bgm_player = AudioStreamPlayer.new()
+	bgm_player.bus = &"Music"
+	add_child(bgm_player)
+
+	for _i in range(MAX_SFX_CHANNELS):
+		var player := AudioStreamPlayer.new()
+		player.bus = &"SFX"
+		add_child(player)
+		sfx_players.append(player)
+
+	for _i in range(MAX_VOICE_CHANNELS):
+		var v_player := AudioStreamPlayer.new()
+		v_player.bus = &"Voices"
+		add_child(v_player)
+		voice_players.append(v_player)
+
 func _init_music_streams() -> void:
 	menu_theme_stream = _load_audio_stream(MENU_THEME_PATH, MENU_THEME_EXTERNAL)
 	battle_theme_stream = _load_audio_stream(BATTLE_THEME_PATH, BATTLE_THEME_EXTERNAL)
 
+## Intenta cargar el tema empaquetado en res://; si no existe, usa la ruta local de respaldo.
 func _load_audio_stream(res_path: String, external_path: String) -> AudioStream:
 	var stream: AudioStream = null
 	if ResourceLoader.exists(res_path):
@@ -82,10 +105,9 @@ func _load_audio_stream(res_path: String, external_path: String) -> AudioStream:
 	if stream is AudioStreamMP3:
 		stream.loop = true
 	return stream
+#endregion
 
-# ------------------------------------------------------------------------------
-# Control de Volúmenes y Buses
-# ------------------------------------------------------------------------------
+#region Control de Volúmenes y Persistencia
 func _apply_bus_volume(bus_name: StringName, linear_val: float) -> void:
 	var idx: int = AudioServer.get_bus_index(bus_name)
 	if idx == -1:
@@ -143,11 +165,9 @@ func save_audio_settings() -> void:
 	var f := FileAccess.open(SETTINGS_FILE_PATH, FileAccess.WRITE)
 	if f:
 		f.store_string(JSON.stringify(data, "  "))
-		f.close()
 
 func load_audio_settings() -> void:
 	if not FileAccess.file_exists(SETTINGS_FILE_PATH):
-		# Valores predeterminados óptimos
 		set_master_volume(1.0, false)
 		set_music_volume(0.80, false)
 		set_sfx_volume(0.85, false)
@@ -158,19 +178,15 @@ func load_audio_settings() -> void:
 	if not f:
 		return
 
-	var content: String = f.get_as_text()
-	f.close()
-	var json := JSON.new()
-	if json.parse(content) == OK and json.data is Dictionary:
-		var d: Dictionary = json.data
-		if d.has("master"): set_master_volume(float(d["master"]), false)
-		if d.has("music"): set_music_volume(float(d["music"]), false)
-		if d.has("sfx"): set_sfx_volume(float(d["sfx"]), false)
-		if d.has("voices"): set_voices_volume(float(d["voices"]), false)
+	var parsed: Variant = JSON.parse_string(f.get_as_text())
+	if parsed is Dictionary:
+		if parsed.has("master"): set_master_volume(float(parsed["master"]), false)
+		if parsed.has("music"): set_music_volume(float(parsed["music"]), false)
+		if parsed.has("sfx"): set_sfx_volume(float(parsed["sfx"]), false)
+		if parsed.has("voices"): set_voices_volume(float(parsed["voices"]), false)
+#endregion
 
-# ------------------------------------------------------------------------------
-# Reproducción de Música
-# ------------------------------------------------------------------------------
+#region Reproducción de Música (BGM)
 func play_menu_theme() -> void:
 	if menu_theme_stream == null:
 		menu_theme_stream = _load_audio_stream(MENU_THEME_PATH, MENU_THEME_EXTERNAL)
@@ -208,17 +224,16 @@ func stop_bgm(fade_duration: float = 0.2) -> void:
 	if fade_duration > 0.0:
 		_bgm_fade_tween = create_tween().set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 		_bgm_fade_tween.tween_property(bgm_player, "volume_db", -40.0, fade_duration)
-		_bgm_fade_tween.tween_callback(func():
+		_bgm_fade_tween.tween_callback(func() -> void:
 			bgm_player.stop()
 			bgm_player.volume_db = 0.0
 		)
 	else:
 		bgm_player.stop()
 		bgm_player.volume_db = 0.0
+#endregion
 
-# ------------------------------------------------------------------------------
-# Reproducción de SFX y Voces
-# ------------------------------------------------------------------------------
+#region Reproducción de Efectos (SFX) y Voces
 func play_sfx(stream: AudioStream, pitch_scale: float = 1.0) -> void:
 	if stream == null:
 		return
@@ -238,16 +253,13 @@ func play_voice(stream: AudioStream, pitch_scale: float = 1.0) -> void:
 			player.pitch_scale = pitch_scale
 			player.play()
 			return
-	# Si todos están ocupados, usar el primero
-	if voice_players.size() > 0:
-		var p := voice_players[0]
+	# Si los 6 canales de voz están ocupados, reutiliza el primero
+	if not voice_players.is_empty():
+		var p: AudioStreamPlayer = voice_players[0]
 		p.stream = stream
 		p.pitch_scale = pitch_scale
 		p.play()
 
-# ------------------------------------------------------------------------------
-# Sonidos de Prueba (Test SFX)
-# ------------------------------------------------------------------------------
 func play_test_sfx() -> void:
 	var test_path := "res://assets/audio/sfx/undertale_hit.wav"
 	if ResourceLoader.exists(test_path):
@@ -261,3 +273,4 @@ func play_test_voice() -> void:
 func play_test_music() -> void:
 	if not bgm_player.playing:
 		play_menu_theme()
+#endregion

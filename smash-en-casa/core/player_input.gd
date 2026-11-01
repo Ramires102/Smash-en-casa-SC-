@@ -1,3 +1,10 @@
+# ==============================================================================
+# PlayerInput — Instantánea de Entrada por Frame (DTO)
+# ==============================================================================
+# Estructura liviana que encapsula qué botones y ejes está pulsando un jugador
+# en el frame físico actual. InputManager construye un objeto de este tipo en
+# cada frame y Character lo consume sin acoplarse a teclas ni mandos físicos.
+# ==============================================================================
 class_name PlayerInput
 extends RefCounted
 
@@ -9,15 +16,3 @@ var attack_pressed: bool = false
 var special_pressed: bool = false
 var shield_pressed: bool = false
 var shield_just_pressed: bool = false
-
-func has_movement() -> bool:
-	return movement.length_squared() > 0.01
-
-func is_moving_horizontal() -> bool:
-	return absf(movement.x) > 0.12
-
-func is_crouch_intent() -> bool:
-	return movement.y < -0.55
-
-func has_attack_intent() -> bool:
-	return attack_pressed or special_pressed

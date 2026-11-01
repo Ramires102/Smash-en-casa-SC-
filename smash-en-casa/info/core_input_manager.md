@@ -1,32 +1,25 @@
 # Explicación de `core/input_manager.gd`
 
 ## Resumen
-Autoload (Singleton) que gestiona y registra automáticamente en tiempo de ejecución las acciones del `InputMap` para el Jugador 1 (`p1_...`) y Jugador 2 (`p2_...`), incluyendo la detección precisa de doble toque (*Double Tap*) diferenciando entre mantener presionado (*Walk*) y toques rápidos (*Dash/Run*), tanto para **Teclado** como para **Mandos / Joysticks**.
+Autoload (Singleton) que registra y sincroniza dinámicamente las acciones del `InputMap` para hasta **4 jugadores** (`p1_...` a `p4_...`), integrándose con `ProfileManager` para soportar perfiles personalizados de teclado y mandos tipo Xbox, zonas muertas (*deadzones*) y detección de doble toque (*Double Tap*).
 
 ---
 
-## 🎮 Mapa de Acciones Normalizado por Jugador
+## 🎮 Acciones Normalizadas por Jugador (`p{id}_{action}`)
 
-Todas las acciones siguen la convención estándar `p{player_id}_{action}`:
-
-| Acción Normalizada | Jugador 1 (P1) - Teclado | Jugador 1 (P1) - Joystick (Dev 0) | Jugador 2 (P2) - Teclado | Jugador 2 (P2) - Joystick (Dev 1) |
+| Acción | Descripción | Teclado P1 (Default) | Teclado P2 (Default) | Mando Xbox |
 | :--- | :--- | :--- | :--- | :--- |
-| `p{id}_left` | `A` | Stick Izq (←) / D-Pad Left | `Flecha Izquierda` | Stick Izq (←) / D-Pad Left |
-| `p{id}_right` | `D` | Stick Izq (→) / D-Pad Right | `Flecha Derecha` | Stick Izq (→) / D-Pad Right |
-| `p{id}_up` | `W` | Stick Izq (↑) / D-Pad Up | `Flecha Arriba` | Stick Izq (↑) / D-Pad Up |
-| `p{id}_down` | `S` (Agacharse) | Stick Izq (↓) / D-Pad Down | `Flecha Abajo` | Stick Izq (↓) / D-Pad Down |
-| `p{id}_jump` | `Espacio` | Botón `A` (Salto) | `B` / `Numpad 0` | Botón `A` (Salto) |
-| `p{id}_attack` | `J` (Normal / Jab) | Botón `X` / `Y` (Ataque Normal) | `N` / `Numpad 1` | Botón `X` / `Y` (Ataque Normal) |
-| `p{id}_special` | `K` (Especial) | Botón `B` (Especial) | `M` / `Numpad 2` | Botón `B` (Especial) |
-| `p{id}_shield` | `L` (Burbuja Escudo) | `LB` / `RB` / `LT` / `RT` (Escudo) | `V` / `Numpad 3` | `LB` / `RB` / `LT` / `RT` (Escudo) |
+| `left` / `right` | Movimiento horizontal | `A` / `D` | `←` / `→` | Stick Izq / D-Pad |
+| `up` / `down` | Apuntado vertical / Fast-Fall | `W` / `S` | `↑` / `↓` | Stick Izq / D-Pad |
+| `jump` | Salto (Short Hop / Full Hop) | `Espacio` | `Enter` / `KP 0` | `A` / `Y` |
+| `attack` | Ataque normal (Jab / Tilt / Aerial) | `J` | `K` / `KP 1` | `X` |
+| `special` | Ataque especial (`B`) | `K` | `L` / `KP 2` | `B` |
+| `shield` | Escudo / Parry / Esquiva | `L` | `;` / `KP 3` | `LB` / `RB` / `LT` / `RT` |
+| `c_left`..`c_down` | C-Stick (Ataques direccionales rápidos) | — | — | Stick Derecho |
 
 ---
 
-## 🕹️ Funcionalidades del Script
-
-1. **Mapeo Automático**: En `_setup_default_input_map()`, crea dinámicamente en el `InputMap` todas las acciones `p1_` y `p2_` vinculando los eventos `InputEventKey`, `InputEventJoypadButton` e `InputEventJoypadMotion`.
-2. **Buffer / Detección de Dash**: Registra la diferencia temporal de toques (`dt`) para activar la bandera `is_dash_intent[player_id] = true` si ocurre un doble toque en menos de 0.28s.
-3. **Consulta Desacoplada**: Expone métodos de lectura (`get_move_vector(id)`, `is_jump_pressed(id)`, `is_attack_pressed(id)`, etc.) consumidos por los componentes de los luchadores sin acoplarse al hardware.
-
-## Comunicación e Interacciones
-- **Consumido por**: `CharacterController.gd`, `Character.gd`, `IdleState`, `WalkState`, `DashState`, `RunState`, `RunBrakeState`, `PivotState`, `SquatState`, `ShieldState`.
+## 🕹️ Funcionalidades Clave
+1. **Sincronización con Perfiles**: Reconstruye el `InputMap` cuando el usuario cambia un botón o perfil en `controls_config.tscn`.
+2. **Construcción de `PlayerInput`**: Empaqueta en cada frame físico todas las lecturas de un jugador en un objeto `PlayerInput` limpio mediante `get_player_input(player_id)`.
+3. **Consumido por**: `Character`, `CharacterController`, `AttackController`, `StateMachine` y pantallas de UI multijugador (`character_select.gd`, `controls_config.gd`).

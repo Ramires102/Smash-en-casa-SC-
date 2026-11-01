@@ -1,21 +1,40 @@
+# ==============================================================================
+# ControlsConfig (Ventana de Opciones y Configuración de Controles Estilo Yuzu)
+# ==============================================================================
+# Pantalla de configuración general accesible desde el Menú Principal y Pausa:
+#   1. Pestañas para hasta 4 jugadores simultáneos (`Player 1` .. `Player 4`).
+#   2. Asignación interactiva ("listening") de botones, ejes analógicos y teclas
+#      con vista previa en vivo sobre un control de Xbox (`XboxControllerView`).
+#   3. Gestión de perfiles de jugador (`Save`, `New`, `Delete`) sincronizados con
+#      `InputManager` y la tabla de clasificación (`ProfileManager`).
+#   4. Delega las pestañas de Audio y Créditos a `SettingsPanelsBuilder`.
+# ==============================================================================
 class_name ControlsConfig
 extends Control
 
 signal closed
 
-const XboxControllerViewScript = preload("res://ui/xbox_controller_view.gd")
 const LISTEN_TIMEOUT_SEC: float = 5.0
 
-# Copia de trabajo de las configuraciones de los 4 jugadores (se aplica al dar OK o Apply)
+#region Estado de Trabajo y Escucha de Entradas
+## Copia temporal de las configuraciones de los 4 jugadores; solo se guarda al pulsar Apply u OK.
 var _working_configs: Dictionary = {}
 var _current_player: int = 1
 
-# Estado de mapeo interactivo ("listening")
 var _listening_slot: String = ""
 var _listen_timer: float = 0.0
 var _initial_axis_values: Dictionary = {}
 
-# Referencias de UI generadas
+var _panels_builder := SettingsPanelsBuilder.new()
+#endregion
+
+#region Referencias de Nodos Generados
+var _window_title_label: Label = null
+var _sidebar_buttons: Dictionary = {}
+var _controls_view: Control = null
+var _audio_view: Control = null
+var _credits_view: Control = null
+
 var _player_tab_buttons: Dictionary = {}
 var _connect_chk_box: ColorRect = null
 var _connect_btn: Button = null
@@ -30,38 +49,17 @@ var _deadzone_label: Label = null
 var _deadzone_slider: HSlider = null
 var _vibration_chk: CheckBox = null
 var _connected_leds: Dictionary = {}
-var _xbox_view: Control = null
+var _xbox_view: XboxControllerView = null
 var _status_toast_label: Label = null
 
-# Secciones de Navegacion (Controls, Sonido, Creditos)
-var _current_section: String = "controls"
-var _window_title_label: Label = null
-var _sidebar_buttons: Dictionary = {}
-var _controls_view: Control = null
-var _audio_view: Control = null
-var _credits_view: Control = null
-
-# Estilos de botones de la sidebar
-var _style_sidebar_active: StyleBoxFlat
-var _style_sidebar_inactive: StyleBoxFlat
-var _style_sidebar_hover: StyleBoxFlat
-
-# Controles de audio
-var _audio_sliders: Dictionary = {}
-var _audio_labels: Dictionary = {}
-var _audio_mutes: Dictionary = {}
-
-# Controles de creditos
-var _credits_rich_label: RichTextLabel = null
-
-# Popups modales (Nuevo Perfil y Configurar Vibracion)
 var _new_profile_modal: Control = null
 var _new_profile_input: LineEdit = null
 var _vibration_modal: Control = null
 var _vibration_slider: HSlider = null
 var _vibration_val_label: Label = null
+#endregion
 
-# Estilos reutilizables estilo Yuzu Dark Theme
+#region Estilos del Tema Oscuro Estilo Yuzu
 var _style_bind_normal: StyleBoxFlat
 var _style_bind_hover: StyleBoxFlat
 var _style_bind_listening: StyleBoxFlat
@@ -69,7 +67,12 @@ var _style_tab_active: StyleBoxFlat
 var _style_tab_inactive: StyleBoxFlat
 var _style_action_btn: StyleBoxFlat
 var _style_action_btn_hover: StyleBoxFlat
+var _style_sidebar_active: StyleBoxFlat
+var _style_sidebar_inactive: StyleBoxFlat
+var _style_sidebar_hover: StyleBoxFlat
+#endregion
 
+#region Ciclo de Vida
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -91,85 +94,53 @@ func _on_controller_connection_changed(_dev_id: int, _connected: bool) -> void:
 	_refresh_device_dropdown()
 	_refresh_ui_from_working_config()
 
+func _process(delta: float) -> void:
+	if not is_visible_in_tree():
+		return
+
+	if _listening_slot != "":
+		var prev_sec: int = int(ceil(_listen_timer))
+		_listen_timer -= delta
+		if _listen_timer <= 0.0:
+			_stop_listening()
+		elif int(ceil(_listen_timer)) != prev_sec:
+			_refresh_ui_from_working_config()
+
+	_update_live_controller_preview()
+#endregion
+
+#region Construcción de Estilos y Estructura Principal
 func _init_styles() -> void:
-	_style_bind_normal = StyleBoxFlat.new()
-	_style_bind_normal.bg_color = Color(0.14, 0.15, 0.17, 1.0)
-	_style_bind_normal.border_color = Color(0.28, 0.30, 0.33, 1.0)
-	_style_bind_normal.set_border_width_all(1)
-	_style_bind_normal.set_corner_radius_all(3)
-	_style_bind_normal.content_margin_left = 4
-	_style_bind_normal.content_margin_right = 4
-	_style_bind_normal.content_margin_top = 2
-	_style_bind_normal.content_margin_bottom = 2
+	_style_bind_normal = UIThemeUtils.make_stylebox(Color(0.14, 0.15, 0.17, 1.0), Color(0.28, 0.30, 0.33, 1.0), 1, 3, 4.0, 2.0)
+	_style_bind_hover = UIThemeUtils.make_stylebox(Color(0.18, 0.20, 0.23, 1.0), Color(0.24, 0.68, 0.91, 1.0), 1, 3, 4.0, 2.0)
+	_style_bind_listening = UIThemeUtils.make_stylebox(Color(0.12, 0.26, 0.36, 1.0), Color(0.18, 0.92, 0.45, 1.0), 2, 3, 4.0, 2.0)
 
-	_style_bind_hover = _style_bind_normal.duplicate()
-	_style_bind_hover.bg_color = Color(0.18, 0.20, 0.23, 1.0)
-	_style_bind_hover.border_color = Color(0.24, 0.68, 0.91, 1.0)
-
-	_style_bind_listening = _style_bind_normal.duplicate()
-	_style_bind_listening.bg_color = Color(0.12, 0.26, 0.36, 1.0)
-	_style_bind_listening.border_color = Color(0.18, 0.92, 0.45, 1.0)
-	_style_bind_listening.set_border_width_all(2)
-
-	_style_tab_active = StyleBoxFlat.new()
-	_style_tab_active.bg_color = Color(0.20, 0.21, 0.23, 1.0)
+	_style_tab_active = UIThemeUtils.make_stylebox(Color(0.20, 0.21, 0.23, 1.0), Color(0.24, 0.68, 0.91, 1.0), 0, 0, 14.0, 4.0)
 	_style_tab_active.border_color = Color(0.24, 0.68, 0.91, 1.0)
 	_style_tab_active.border_width_top = 2
 	_style_tab_active.border_width_left = 1
 	_style_tab_active.border_width_right = 1
-	_style_tab_active.content_margin_left = 14
-	_style_tab_active.content_margin_right = 14
-	_style_tab_active.content_margin_top = 4
-	_style_tab_active.content_margin_bottom = 4
 
-	_style_tab_inactive = StyleBoxFlat.new()
-	_style_tab_inactive.bg_color = Color(0.13, 0.14, 0.16, 1.0)
-	_style_tab_inactive.border_color = Color(0.24, 0.26, 0.28, 1.0)
-	_style_tab_inactive.set_border_width_all(1)
-	_style_tab_inactive.content_margin_left = 14
-	_style_tab_inactive.content_margin_right = 14
-	_style_tab_inactive.content_margin_top = 4
-	_style_tab_inactive.content_margin_bottom = 4
+	_style_tab_inactive = UIThemeUtils.make_stylebox(Color(0.13, 0.14, 0.16, 1.0), Color(0.24, 0.26, 0.28, 1.0), 1, 0, 14.0, 4.0)
+	_style_action_btn = UIThemeUtils.make_stylebox(Color(0.22, 0.24, 0.27, 1.0), Color(0.34, 0.36, 0.40, 1.0), 1, 3, 10.0, 4.0)
+	_style_action_btn_hover = UIThemeUtils.make_stylebox(Color(0.26, 0.29, 0.33, 1.0), Color(0.24, 0.68, 0.91, 1.0), 1, 3, 10.0, 4.0)
 
-	_style_action_btn = StyleBoxFlat.new()
-	_style_action_btn.bg_color = Color(0.22, 0.24, 0.27, 1.0)
-	_style_action_btn.border_color = Color(0.34, 0.36, 0.40, 1.0)
-	_style_action_btn.set_border_width_all(1)
-	_style_action_btn.set_corner_radius_all(3)
-	_style_action_btn.content_margin_left = 10
-	_style_action_btn.content_margin_right = 10
-	_style_action_btn.content_margin_top = 4
-	_style_action_btn.content_margin_bottom = 4
-
-	_style_action_btn_hover = _style_action_btn.duplicate()
-	_style_action_btn_hover.bg_color = Color(0.26, 0.29, 0.33, 1.0)
-	_style_action_btn_hover.border_color = Color(0.24, 0.68, 0.91, 1.0)
-
-	_style_sidebar_active = StyleBoxFlat.new()
-	_style_sidebar_active.bg_color = Color(0.26, 0.53, 0.74, 1.0)
+	_style_sidebar_active = UIThemeUtils.make_stylebox(Color(0.26, 0.53, 0.74, 1.0))
 	_style_sidebar_active.content_margin_left = 12
 	_style_sidebar_active.content_margin_right = 8
 	_style_sidebar_active.content_margin_top = 8
 	_style_sidebar_active.content_margin_bottom = 8
 
-	_style_sidebar_inactive = StyleBoxFlat.new()
+	_style_sidebar_inactive = _style_sidebar_active.duplicate()
 	_style_sidebar_inactive.bg_color = Color(0.08, 0.10, 0.13, 1.0)
-	_style_sidebar_inactive.content_margin_left = 12
-	_style_sidebar_inactive.content_margin_right = 8
-	_style_sidebar_inactive.content_margin_top = 8
-	_style_sidebar_inactive.content_margin_bottom = 8
 
-	_style_sidebar_hover = StyleBoxFlat.new()
+	_style_sidebar_hover = _style_sidebar_active.duplicate()
 	_style_sidebar_hover.bg_color = Color(0.16, 0.20, 0.26, 1.0)
 	_style_sidebar_hover.border_color = Color(0.24, 0.68, 0.91, 0.6)
 	_style_sidebar_hover.border_width_left = 2
 	_style_sidebar_hover.content_margin_left = 10
-	_style_sidebar_hover.content_margin_right = 8
-	_style_sidebar_hover.content_margin_top = 8
-	_style_sidebar_hover.content_margin_bottom = 8
 
 func _build_yuzu_ui() -> void:
-	# Fondo exterior + Ventana principal estilo Yuzu Configuration
 	var backdrop := ColorRect.new()
 	backdrop.color = Color(0.04, 0.05, 0.07, 0.85)
 	backdrop.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -184,11 +155,7 @@ func _build_yuzu_ui() -> void:
 	add_child(win_margin)
 
 	var win_panel := PanelContainer.new()
-	var win_sb := StyleBoxFlat.new()
-	win_sb.bg_color = Color(0.18, 0.19, 0.21, 1.0)
-	win_sb.border_color = Color(0.30, 0.32, 0.35, 1.0)
-	win_sb.set_border_width_all(1)
-	win_sb.set_corner_radius_all(5)
+	var win_sb: StyleBoxFlat = UIThemeUtils.make_stylebox(Color(0.18, 0.19, 0.21, 1.0), Color(0.30, 0.32, 0.35, 1.0), 1, 5)
 	win_sb.shadow_color = Color(0, 0, 0, 0.55)
 	win_sb.shadow_size = 14
 	win_panel.add_theme_stylebox_override("panel", win_sb)
@@ -198,10 +165,34 @@ func _build_yuzu_ui() -> void:
 	root_vbox.add_theme_constant_override("separation", 0)
 	win_panel.add_child(root_vbox)
 
-	# 1. Barra de titulo superior estilo Yuzu
+	# 1. Barra de título superior.
+	root_vbox.add_child(_build_title_bar())
+
+	# 2. Cuerpo central: Barra lateral izquierda + Vistas intercambiables.
+	var body_hbox := HBoxContainer.new()
+	body_hbox.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	body_hbox.add_theme_constant_override("separation", 0)
+	root_vbox.add_child(body_hbox)
+
+	body_hbox.add_child(_build_sidebar())
+
+	_controls_view = _build_controls_section_view()
+	body_hbox.add_child(_controls_view)
+
+	var btn_factory := Callable(self, "_create_yuzu_action_button")
+	var status_cb := Callable(self, "_show_status")
+	_audio_view = _panels_builder.build_audio_view(btn_factory, status_cb)
+	body_hbox.add_child(_audio_view)
+
+	_credits_view = _panels_builder.build_credits_view(btn_factory, status_cb)
+	body_hbox.add_child(_credits_view)
+
+	# 3. Barra inferior de diálogo (Toast de estado + OK / Apply / Cancel).
+	root_vbox.add_child(_build_dialog_footer())
+
+func _build_title_bar() -> PanelContainer:
 	var title_bar := PanelContainer.new()
-	var title_sb := StyleBoxFlat.new()
-	title_sb.bg_color = Color(0.13, 0.14, 0.16, 1.0)
+	var title_sb: StyleBoxFlat = UIThemeUtils.make_stylebox(Color(0.13, 0.14, 0.16, 1.0))
 	title_sb.border_color = Color(0.24, 0.26, 0.29, 1.0)
 	title_sb.border_width_bottom = 1
 	title_sb.content_margin_left = 10
@@ -209,7 +200,6 @@ func _build_yuzu_ui() -> void:
 	title_sb.content_margin_top = 4
 	title_sb.content_margin_bottom = 4
 	title_bar.add_theme_stylebox_override("panel", title_sb)
-	root_vbox.add_child(title_bar)
 
 	var title_hbox := HBoxContainer.new()
 	title_bar.add_child(title_hbox)
@@ -220,14 +210,13 @@ func _build_yuzu_ui() -> void:
 	icon_lbl.add_theme_color_override("font_color", Color(0.24, 0.85, 0.42))
 	title_hbox.add_child(icon_lbl)
 
-	var title_lbl := Label.new()
-	title_lbl.text = "CONFIGURACION DE CONTROLES — XBOX CONTROLLER (4 JUGADORES)"
-	title_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	title_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title_lbl.add_theme_font_size_override("font_size", 12)
-	title_lbl.add_theme_color_override("font_color", Color(0.86, 0.88, 0.90))
-	title_hbox.add_child(title_lbl)
-	_window_title_label = title_lbl
+	_window_title_label = Label.new()
+	_window_title_label.text = "CONFIGURACIÓN DE CONTROLES — XBOX CONTROLLER (4 JUGADORES)"
+	_window_title_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_window_title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_window_title_label.add_theme_font_size_override("font_size", 12)
+	_window_title_label.add_theme_color_override("font_color", Color(0.86, 0.88, 0.90))
+	title_hbox.add_child(_window_title_label)
 
 	var close_x_btn := Button.new()
 	close_x_btn.text = "X"
@@ -236,33 +225,25 @@ func _build_yuzu_ui() -> void:
 	close_x_btn.add_theme_font_size_override("font_size", 12)
 	close_x_btn.pressed.connect(_on_cancel_pressed)
 	title_hbox.add_child(close_x_btn)
+	return title_bar
 
-	# 2. Cuerpo Principal: Sidebar Izquierda + Paneles de Vista
-	var body_hbox := HBoxContainer.new()
-	body_hbox.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	body_hbox.add_theme_constant_override("separation", 0)
-	root_vbox.add_child(body_hbox)
-
-	# Sidebar izquierda estilo Yuzu con pestañas de Controles, Sonido y Créditos
+func _build_sidebar() -> PanelContainer:
 	var sidebar := PanelContainer.new()
 	sidebar.custom_minimum_size = Vector2(96, 0)
-	var side_sb := StyleBoxFlat.new()
-	side_sb.bg_color = Color(0.08, 0.10, 0.13, 1.0)
+	var side_sb: StyleBoxFlat = UIThemeUtils.make_stylebox(Color(0.08, 0.10, 0.13, 1.0))
 	side_sb.border_color = Color(0.22, 0.24, 0.27, 1.0)
 	side_sb.border_width_right = 1
 	sidebar.add_theme_stylebox_override("panel", side_sb)
-	body_hbox.add_child(sidebar)
 
 	var side_vbox := VBoxContainer.new()
 	side_vbox.add_theme_constant_override("separation", 2)
 	sidebar.add_child(side_vbox)
 
-	var nav_items := [
+	var nav_items: Array[Dictionary] = [
 		{"id": "controls", "label": "  🎮  Controles"},
 		{"id": "audio", "label": "  🔊  Sonido"},
 		{"id": "credits", "label": "  📜  Créditos"}
 	]
-
 	for item in nav_items:
 		var sec_btn := Button.new()
 		sec_btn.text = item["label"]
@@ -270,108 +251,23 @@ func _build_yuzu_ui() -> void:
 		sec_btn.focus_mode = Control.FOCUS_NONE
 		sec_btn.custom_minimum_size = Vector2(96, 36)
 		sec_btn.add_theme_font_size_override("font_size", 12)
-		sec_btn.pressed.connect(func(sid = item["id"]): _select_section(sid))
+		sec_btn.pressed.connect(func(sid: String = item["id"]) -> void: _select_section(sid))
 		side_vbox.add_child(sec_btn)
 		_sidebar_buttons[item["id"]] = sec_btn
 
-	# Contenedor derecho: Vista de Controles
-	var right_margin := MarginContainer.new()
-	right_margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	right_margin.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	right_margin.add_theme_constant_override("margin_left", 8)
-	right_margin.add_theme_constant_override("margin_right", 8)
-	right_margin.add_theme_constant_override("margin_top", 6)
-	right_margin.add_theme_constant_override("margin_bottom", 6)
-	body_hbox.add_child(right_margin)
-	_controls_view = right_margin
+	return sidebar
 
-	var right_vbox := VBoxContainer.new()
-	right_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	right_vbox.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	right_vbox.add_theme_constant_override("separation", 4)
-	right_margin.add_child(right_vbox)
-
-	# 2.1 Pestañas de Jugador (Player 1, Player 2, Player 3, Player 4)
-	var tabs_hbox := HBoxContainer.new()
-	tabs_hbox.add_theme_constant_override("separation", 2)
-	right_vbox.add_child(tabs_hbox)
-
-	for p_id in range(1, InputManager.MAX_PLAYERS + 1):
-		var tab_btn := Button.new()
-		tab_btn.text = "Player %d" % p_id
-		tab_btn.focus_mode = Control.FOCUS_NONE
-		tab_btn.add_theme_font_size_override("font_size", 12)
-		tab_btn.pressed.connect(func(pid = p_id): _select_player_tab(pid))
-		tabs_hbox.add_child(tab_btn)
-		_player_tab_buttons[p_id] = tab_btn
-
-	var tab_spacer := Control.new()
-	tab_spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	tabs_hbox.add_child(tab_spacer)
-
-	# Panel interior de la pestaña activa
-	var tab_body := PanelContainer.new()
-	tab_body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	tab_body.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	var tab_body_sb := StyleBoxFlat.new()
-	tab_body_sb.bg_color = Color(0.20, 0.21, 0.23, 1.0)
-	tab_body_sb.border_color = Color(0.28, 0.30, 0.33, 1.0)
-	tab_body_sb.set_border_width_all(1)
-	tab_body_sb.content_margin_left = 8
-	tab_body_sb.content_margin_right = 8
-	tab_body_sb.content_margin_top = 6
-	tab_body_sb.content_margin_bottom = 6
-	tab_body.add_theme_stylebox_override("panel", tab_body_sb)
-	right_vbox.add_child(tab_body)
-
-	var inner_vbox := VBoxContainer.new()
-	inner_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	inner_vbox.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	inner_vbox.add_theme_constant_override("separation", 6)
-	tab_body.add_child(inner_vbox)
-
-	# 2.2 Fila Superior: Connect Controller | Input Device | Profile
-	inner_vbox.add_child(_build_top_device_profile_row())
-
-	# 2.3 Area Central de Mapeo + Control de Xbox Interactivo
-	var main_area := HBoxContainer.new()
-	main_area.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	main_area.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	main_area.add_theme_constant_override("separation", 8)
-	inner_vbox.add_child(main_area)
-
-	main_area.add_child(_build_left_column())
-	main_area.add_child(_build_center_column())
-	main_area.add_child(_build_right_column())
-
-	# 2.4 Fila Inferior: Vibration | Connected Controllers 1-4 | Defaults & Clear
-	inner_vbox.add_child(_build_bottom_status_row())
-
-	# Vistas alternativas: Sonido y Créditos
-	_audio_view = _build_audio_view()
-	body_hbox.add_child(_audio_view)
-
-	_credits_view = _build_credits_view()
-	body_hbox.add_child(_credits_view)
-
-	# 3. Barra Inferior Persistente de Diálogo: Status Toast (izquierda) | OK, Apply, Cancel (derecha)
+func _build_dialog_footer() -> PanelContainer:
 	var bottom_bar := PanelContainer.new()
-	var bottom_sb := StyleBoxFlat.new()
-	bottom_sb.bg_color = Color(0.13, 0.14, 0.16, 1.0)
+	var bottom_sb: StyleBoxFlat = UIThemeUtils.make_stylebox(Color(0.13, 0.14, 0.16, 1.0), Color.TRANSPARENT, 0, 0, 12.0, 6.0)
 	bottom_sb.border_color = Color(0.24, 0.26, 0.29, 1.0)
 	bottom_sb.border_width_top = 1
-	bottom_sb.content_margin_left = 12
-	bottom_sb.content_margin_right = 12
-	bottom_sb.content_margin_top = 6
-	bottom_sb.content_margin_bottom = 6
 	bottom_bar.add_theme_stylebox_override("panel", bottom_sb)
-	root_vbox.add_child(bottom_bar)
 
 	var bottom_hbox := HBoxContainer.new()
 	bottom_bar.add_child(bottom_hbox)
 
 	_status_toast_label = Label.new()
-	_status_toast_label.text = ""
 	_status_toast_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_status_toast_label.add_theme_font_size_override("font_size", 11)
 	_status_toast_label.add_theme_color_override("font_color", Color(0.25, 0.92, 0.48))
@@ -393,12 +289,77 @@ func _build_yuzu_ui() -> void:
 	var cancel_btn := _create_yuzu_action_button("X  Cancel", Vector2(82, 26))
 	cancel_btn.pressed.connect(_on_cancel_pressed)
 	dlg_hbox.add_child(cancel_btn)
+	return bottom_bar
+#endregion
+
+#region Construcción de la Sección de Controles (4 Jugadores)
+func _build_controls_section_view() -> MarginContainer:
+	var right_margin := MarginContainer.new()
+	right_margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	right_margin.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	right_margin.add_theme_constant_override("margin_left", 8)
+	right_margin.add_theme_constant_override("margin_right", 8)
+	right_margin.add_theme_constant_override("margin_top", 6)
+	right_margin.add_theme_constant_override("margin_bottom", 6)
+
+	var right_vbox := VBoxContainer.new()
+	right_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	right_vbox.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	right_vbox.add_theme_constant_override("separation", 4)
+	right_margin.add_child(right_vbox)
+
+	# Pestañas Player 1..4
+	var tabs_hbox := HBoxContainer.new()
+	tabs_hbox.add_theme_constant_override("separation", 2)
+	right_vbox.add_child(tabs_hbox)
+
+	for p_id in range(1, InputManager.MAX_PLAYERS + 1):
+		var tab_btn := Button.new()
+		tab_btn.text = "Player %d" % p_id
+		tab_btn.focus_mode = Control.FOCUS_NONE
+		tab_btn.add_theme_font_size_override("font_size", 12)
+		tab_btn.pressed.connect(func(pid: int = p_id) -> void: _select_player_tab(pid))
+		tabs_hbox.add_child(tab_btn)
+		_player_tab_buttons[p_id] = tab_btn
+
+	var tab_spacer := Control.new()
+	tab_spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	tabs_hbox.add_child(tab_spacer)
+
+	var tab_body := PanelContainer.new()
+	tab_body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	tab_body.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	tab_body.add_theme_stylebox_override(
+		"panel", UIThemeUtils.make_stylebox(Color(0.20, 0.21, 0.23, 1.0), Color(0.28, 0.30, 0.33, 1.0), 1, 0, 8.0, 6.0)
+	)
+	right_vbox.add_child(tab_body)
+
+	var inner_vbox := VBoxContainer.new()
+	inner_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	inner_vbox.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	inner_vbox.add_theme_constant_override("separation", 6)
+	tab_body.add_child(inner_vbox)
+
+	inner_vbox.add_child(_build_top_device_profile_row())
+
+	var main_area := HBoxContainer.new()
+	main_area.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	main_area.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	main_area.add_theme_constant_override("separation", 8)
+	inner_vbox.add_child(main_area)
+
+	main_area.add_child(_build_left_column())
+	main_area.add_child(_build_center_column())
+	main_area.add_child(_build_right_column())
+
+	inner_vbox.add_child(_build_bottom_status_row())
+	return right_margin
 
 func _build_top_device_profile_row() -> HBoxContainer:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 10)
 
-	# Columna 1: Connect Controller + Tipo (Xbox Controller)
+	# 1. Conectar Control + Tipo (Xbox / Teclado)
 	var conn_vbox := VBoxContainer.new()
 	conn_vbox.custom_minimum_size = Vector2(142, 0)
 	conn_vbox.add_theme_constant_override("separation", 4)
@@ -409,16 +370,9 @@ func _build_top_device_profile_row() -> HBoxContainer:
 	conn_vbox.add_child(conn_hbox)
 
 	var led_frame := PanelContainer.new()
-	var led_sb := StyleBoxFlat.new()
-	led_sb.bg_color = Color(0.12, 0.13, 0.15, 1.0)
-	led_sb.border_color = Color(0.32, 0.34, 0.38, 1.0)
-	led_sb.set_border_width_all(1)
-	led_sb.set_corner_radius_all(2)
-	led_sb.content_margin_left = 2
-	led_sb.content_margin_right = 2
-	led_sb.content_margin_top = 2
-	led_sb.content_margin_bottom = 2
-	led_frame.add_theme_stylebox_override("panel", led_sb)
+	led_frame.add_theme_stylebox_override(
+		"panel", UIThemeUtils.make_stylebox(Color(0.12, 0.13, 0.15, 1.0), Color(0.32, 0.34, 0.38, 1.0), 1, 2, 2.0, 2.0)
+	)
 	conn_hbox.add_child(led_frame)
 
 	_connect_chk_box = ColorRect.new()
@@ -444,7 +398,7 @@ func _build_top_device_profile_row() -> HBoxContainer:
 	_controller_type_opt.item_selected.connect(_on_controller_type_selected)
 	conn_vbox.add_child(_controller_type_opt)
 
-	# Columna 2: Input Device
+	# 2. Dispositivo físico de entrada
 	var dev_vbox := VBoxContainer.new()
 	dev_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	dev_vbox.add_theme_constant_override("separation", 4)
@@ -464,7 +418,7 @@ func _build_top_device_profile_row() -> HBoxContainer:
 	_device_opt.item_selected.connect(_on_device_selected)
 	dev_vbox.add_child(_device_opt)
 
-	# Columna 3: Profile (Dropdown + Save + New + Delete)
+	# 3. Perfil (Selector + Save + New + Delete)
 	var prof_vbox := VBoxContainer.new()
 	prof_vbox.add_theme_constant_override("separation", 4)
 	row.add_child(prof_vbox)
@@ -505,15 +459,13 @@ func _build_left_column() -> VBoxContainer:
 	col.custom_minimum_size = Vector2(168, 0)
 	col.add_theme_constant_override("separation", 6)
 
-	# GroupBox: Left Stick (Movimiento + Range + Deadzone)
-	var ls_box := _create_group_box("Left Stick")
+	var ls_box: PanelContainer = SettingsPanelsBuilder.create_group_box("Left Stick")
 	ls_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	col.add_child(ls_box)
 	var ls_vbox: VBoxContainer = ls_box.get_meta("content")
 
 	ls_vbox.add_child(_create_cross_pad_grid("stick_up", "stick_left", "stick_right", "stick_down"))
 
-	# Range row
 	var range_hbox := HBoxContainer.new()
 	range_hbox.alignment = BoxContainer.ALIGNMENT_CENTER
 	range_hbox.add_theme_constant_override("separation", 6)
@@ -535,7 +487,6 @@ func _build_left_column() -> VBoxContainer:
 	_range_spin.value_changed.connect(_on_range_changed)
 	range_hbox.add_child(_range_spin)
 
-	# Deadzone row
 	_deadzone_label = Label.new()
 	_deadzone_label.text = "Deadzone: 15%"
 	_deadzone_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -549,18 +500,13 @@ func _build_left_column() -> VBoxContainer:
 	_deadzone_slider.step = 1.0
 	_deadzone_slider.value = 15.0
 	_deadzone_slider.custom_minimum_size = Vector2(130, 14)
-	var sl_fill := StyleBoxFlat.new()
-	sl_fill.bg_color = Color(0.24, 0.68, 0.91, 1.0)
-	sl_fill.content_margin_top = 3
-	sl_fill.content_margin_bottom = 3
-	sl_fill.set_corner_radius_all(2)
+	var sl_fill: StyleBoxFlat = UIThemeUtils.make_stylebox(Color(0.24, 0.68, 0.91, 1.0), Color.TRANSPARENT, 0, 2, -1.0, 3.0)
 	_deadzone_slider.add_theme_stylebox_override("grabber_area", sl_fill)
 	_deadzone_slider.add_theme_stylebox_override("grabber_area_highlight", sl_fill)
 	_deadzone_slider.value_changed.connect(_on_deadzone_changed)
 	ls_vbox.add_child(_deadzone_slider)
 
-	# GroupBox: D-Pad (Cruceta)
-	var dpad_box := _create_group_box("D-Pad")
+	var dpad_box: PanelContainer = SettingsPanelsBuilder.create_group_box("D-Pad")
 	col.add_child(dpad_box)
 	var dpad_vbox: VBoxContainer = dpad_box.get_meta("content")
 	dpad_vbox.add_child(_create_cross_pad_grid("dpad_up", "dpad_left", "dpad_right", "dpad_down"))
@@ -573,51 +519,42 @@ func _build_center_column() -> VBoxContainer:
 	col.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	col.add_theme_constant_override("separation", 2)
 
-	# Fila Superior igual a Yuzu: LB/LT a la izquierda, Start al centro, RB/RT a la derecha
 	var top_hbox := HBoxContainer.new()
 	top_hbox.alignment = BoxContainer.ALIGNMENT_CENTER
 	top_hbox.add_theme_constant_override("separation", 12)
 	col.add_child(top_hbox)
 
-	# Izquierda: LB y LT con barra analogica
-	var left_trig_box := _create_group_box("LB / LT (Escudo)")
+	var left_trig_box: PanelContainer = SettingsPanelsBuilder.create_group_box("LB / LT (Escudo)")
 	top_hbox.add_child(left_trig_box)
-	var lt_vbox: VBoxContainer = left_trig_box.get_meta("content")
 	var l_row := HBoxContainer.new()
 	l_row.add_theme_constant_override("separation", 6)
-	lt_vbox.add_child(l_row)
+	left_trig_box.get_meta("content").add_child(l_row)
 	l_row.add_child(_create_labeled_bind_slot("LB", "btn_lb"))
 	var lt_slot_vbox := _create_labeled_bind_slot("LT", "btn_lt")
-	_lt_bar = _create_mini_trigger_bar()
+	_lt_bar = SettingsPanelsBuilder.create_mini_trigger_bar()
 	lt_slot_vbox.add_child(_lt_bar)
 	l_row.add_child(lt_slot_vbox)
 
-	# Centro: Start / Menu (Pausa)
-	var sys_box := _create_group_box("Menu (Pausa)")
+	var sys_box: PanelContainer = SettingsPanelsBuilder.create_group_box("Menu (Pausa)")
 	sys_box.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	top_hbox.add_child(sys_box)
-	var sys_vbox: VBoxContainer = sys_box.get_meta("content")
-	sys_vbox.add_child(_create_labeled_bind_slot("Start", "btn_start"))
+	sys_box.get_meta("content").add_child(_create_labeled_bind_slot("Start", "btn_start"))
 
-	# Derecha: RB y RT con barra analogica
-	var right_trig_box := _create_group_box("RB / RT (Escudo)")
+	var right_trig_box: PanelContainer = SettingsPanelsBuilder.create_group_box("RB / RT (Escudo)")
 	top_hbox.add_child(right_trig_box)
-	var rt_vbox: VBoxContainer = right_trig_box.get_meta("content")
 	var r_row := HBoxContainer.new()
 	r_row.add_theme_constant_override("separation", 6)
-	rt_vbox.add_child(r_row)
+	right_trig_box.get_meta("content").add_child(r_row)
 	r_row.add_child(_create_labeled_bind_slot("RB", "btn_rb"))
 	var rt_slot_vbox := _create_labeled_bind_slot("RT", "btn_rt")
-	_rt_bar = _create_mini_trigger_bar()
+	_rt_bar = SettingsPanelsBuilder.create_mini_trigger_bar()
 	rt_slot_vbox.add_child(_rt_bar)
 	r_row.add_child(rt_slot_vbox)
 
-	# Centro: Diagrama Interactivo del Control de Xbox + Visualizador de Stick
-	_xbox_view = XboxControllerViewScript.new()
+	_xbox_view = XboxControllerView.new()
 	_xbox_view.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_xbox_view.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	col.add_child(_xbox_view)
-
 	return col
 
 func _build_right_column() -> VBoxContainer:
@@ -625,52 +562,11 @@ func _build_right_column() -> VBoxContainer:
 	col.custom_minimum_size = Vector2(174, 0)
 	col.add_theme_constant_override("separation", 6)
 
-	# GroupBox: Face Buttons (Disposicion Diamante de Xbox: Y arriba, X izq, B der, A abajo)
-	var fb_box := _create_group_box("Face Buttons")
+	var fb_box: PanelContainer = SettingsPanelsBuilder.create_group_box("Face Buttons")
 	col.add_child(fb_box)
-	var fb_vbox: VBoxContainer = fb_box.get_meta("content")
-	fb_vbox.add_child(_create_xbox_face_diamond())
+	fb_box.get_meta("content").add_child(_create_xbox_face_diamond())
 
-	# GroupBox: Guia Rapida de Acciones del Juego
-	var help_box := _create_group_box("Acciones del Juego")
-	help_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	col.add_child(help_box)
-	var help_vbox: VBoxContainer = help_box.get_meta("content")
-	help_vbox.add_theme_constant_override("separation", 4)
-
-	var actions_info: Array[Array] = [
-		["A", "Saltar / Doble Salto", Color(0.25, 0.88, 0.42)],
-		["X", "Ataque Normal / Smash", Color(0.28, 0.68, 0.98)],
-		["B", "Ataque Especial", Color(0.95, 0.35, 0.32)],
-		["Y", "Ataque / Salto Alt.", Color(0.96, 0.82, 0.22)],
-		["LB/RB/LT/RT", "Escudo / Dodge", Color(0.75, 0.82, 0.90)],
-		["Start", "Pausar Partida", Color(0.75, 0.82, 0.90)]
-	]
-	for item in actions_info:
-		var h := HBoxContainer.new()
-		h.add_theme_constant_override("separation", 4)
-		var k_lbl := Label.new()
-		k_lbl.text = item[0] + ":"
-		k_lbl.add_theme_font_size_override("font_size", 10)
-		k_lbl.add_theme_color_override("font_color", item[2])
-		h.add_child(k_lbl)
-
-		var d_lbl := Label.new()
-		d_lbl.text = item[1]
-		d_lbl.add_theme_font_size_override("font_size", 10)
-		d_lbl.add_theme_color_override("font_color", Color(0.78, 0.80, 0.84))
-		h.add_child(d_lbl)
-		help_vbox.add_child(h)
-
-	var sep := HSeparator.new()
-	help_vbox.add_child(sep)
-
-	var tip_lbl := Label.new()
-	tip_lbl.text = "CLIC IZQ: ASIGNAR BOTON/TECLA\nCLIC DER: BORRAR ([NOT SET])\nESC: CANCELAR ASIGNACION"
-	tip_lbl.add_theme_font_size_override("font_size", 9)
-	tip_lbl.add_theme_color_override("font_color", Color(0.60, 0.65, 0.72))
-	help_vbox.add_child(tip_lbl)
-
+	col.add_child(SettingsPanelsBuilder.build_actions_help_box())
 	return col
 
 func _build_bottom_status_row() -> HBoxContainer:
@@ -678,8 +574,7 @@ func _build_bottom_status_row() -> HBoxContainer:
 	row.alignment = BoxContainer.ALIGNMENT_CENTER
 	row.add_theme_constant_override("separation", 12)
 
-	# 1. Vibration Box (igual a Yuzu)
-	var vib_box := _create_group_box("Vibration")
+	var vib_box: PanelContainer = SettingsPanelsBuilder.create_group_box("Vibration")
 	row.add_child(vib_box)
 	var vib_hbox := HBoxContainer.new()
 	vib_hbox.add_theme_constant_override("separation", 6)
@@ -700,7 +595,7 @@ func _build_bottom_status_row() -> HBoxContainer:
 	spacer_l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(spacer_l)
 
-	# 2. Connected Controllers 1 2 3 4 (Exactamente 4 controles maximos permitidos)
+	# Indicadores LED de los 4 controles permitidos.
 	var conn_grid := GridContainer.new()
 	conn_grid.columns = 5
 	conn_grid.size_flags_vertical = Control.SIZE_SHRINK_CENTER
@@ -733,7 +628,7 @@ func _build_bottom_status_row() -> HBoxContainer:
 		led_btn.custom_minimum_size = Vector2(16, 16)
 		led_btn.focus_mode = Control.FOCUS_NONE
 		led_btn.tooltip_text = "Conectar / Desconectar Player %d" % p_id
-		led_btn.pressed.connect(func(pid = p_id): _toggle_player_connected(pid))
+		led_btn.pressed.connect(func(pid: int = p_id) -> void: _toggle_player_connected(pid))
 		conn_grid.add_child(led_btn)
 		_connected_leds[p_id] = led_btn
 
@@ -741,7 +636,6 @@ func _build_bottom_status_row() -> HBoxContainer:
 	spacer_r.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(spacer_r)
 
-	# 3. Botones Defaults y Clear (derecha inferior igual que Yuzu)
 	var def_clear_hbox := HBoxContainer.new()
 	def_clear_hbox.alignment = BoxContainer.ALIGNMENT_END
 	def_clear_hbox.size_flags_vertical = Control.SIZE_SHRINK_END
@@ -758,50 +652,16 @@ func _build_bottom_status_row() -> HBoxContainer:
 
 	return row
 
-# ==============================================================================
-# Constructores de Sub-Componentes Estilo Yuzu
-# ==============================================================================
-func _create_group_box(title: String) -> PanelContainer:
-	var panel := PanelContainer.new()
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = Color(0.18, 0.19, 0.21, 0.65)
-	sb.border_color = Color(0.28, 0.30, 0.33, 1.0)
-	sb.set_border_width_all(1)
-	sb.set_corner_radius_all(3)
-	sb.content_margin_left = 6
-	sb.content_margin_right = 6
-	sb.content_margin_top = 4
-	sb.content_margin_bottom = 6
-	panel.add_theme_stylebox_override("panel", sb)
-
-	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 4)
-	panel.add_child(vbox)
-
-	var title_lbl := Label.new()
-	title_lbl.text = title
-	title_lbl.add_theme_font_size_override("font_size", 10)
-	title_lbl.add_theme_color_override("font_color", Color(0.86, 0.88, 0.92))
-	vbox.add_child(title_lbl)
-
-	var content_vbox := VBoxContainer.new()
-	content_vbox.add_theme_constant_override("separation", 4)
-	vbox.add_child(content_vbox)
-	panel.set_meta("content", content_vbox)
-	return panel
-
 func _create_cross_pad_grid(up_slot: String, left_slot: String, right_slot: String, down_slot: String) -> VBoxContainer:
 	var vbox := VBoxContainer.new()
 	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
 	vbox.add_theme_constant_override("separation", 2)
 
-	# Arriba
 	var up_row := HBoxContainer.new()
 	up_row.alignment = BoxContainer.ALIGNMENT_CENTER
 	up_row.add_child(_create_labeled_bind_slot("Up", up_slot))
 	vbox.add_child(up_row)
 
-	# Izquierda y Derecha
 	var mid_row := HBoxContainer.new()
 	mid_row.alignment = BoxContainer.ALIGNMENT_CENTER
 	mid_row.add_theme_constant_override("separation", 6)
@@ -809,12 +669,10 @@ func _create_cross_pad_grid(up_slot: String, left_slot: String, right_slot: Stri
 	mid_row.add_child(_create_labeled_bind_slot("Right", right_slot))
 	vbox.add_child(mid_row)
 
-	# Abajo
 	var down_row := HBoxContainer.new()
 	down_row.alignment = BoxContainer.ALIGNMENT_CENTER
 	down_row.add_child(_create_labeled_bind_slot("Down", down_slot))
 	vbox.add_child(down_row)
-
 	return vbox
 
 func _create_xbox_face_diamond() -> VBoxContainer:
@@ -822,13 +680,11 @@ func _create_xbox_face_diamond() -> VBoxContainer:
 	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
 	vbox.add_theme_constant_override("separation", 3)
 
-	# Arriba: Y
 	var top_row := HBoxContainer.new()
 	top_row.alignment = BoxContainer.ALIGNMENT_CENTER
 	top_row.add_child(_create_labeled_bind_slot("Y (Ataque)", "btn_y"))
 	vbox.add_child(top_row)
 
-	# Medio: X (Izquierda) y B (Derecha)
 	var mid_row := HBoxContainer.new()
 	mid_row.alignment = BoxContainer.ALIGNMENT_CENTER
 	mid_row.add_theme_constant_override("separation", 6)
@@ -836,12 +692,10 @@ func _create_xbox_face_diamond() -> VBoxContainer:
 	mid_row.add_child(_create_labeled_bind_slot("B (Especial)", "btn_b"))
 	vbox.add_child(mid_row)
 
-	# Abajo: A (Saltar)
 	var bot_row := HBoxContainer.new()
 	bot_row.alignment = BoxContainer.ALIGNMENT_CENTER
 	bot_row.add_child(_create_labeled_bind_slot("A (Saltar)", "btn_a"))
 	vbox.add_child(bot_row)
-
 	return vbox
 
 func _create_labeled_bind_slot(label_text: String, slot_name: String) -> VBoxContainer:
@@ -867,17 +721,17 @@ func _create_labeled_bind_slot(label_text: String, slot_name: String) -> VBoxCon
 	btn.add_theme_stylebox_override("hover", _style_bind_hover)
 	btn.add_theme_stylebox_override("pressed", _style_bind_listening)
 
-	btn.pressed.connect(func(): _start_listening(slot_name))
-	btn.gui_input.connect(func(ev: InputEvent):
+	btn.pressed.connect(func() -> void: _start_listening(slot_name))
+	btn.gui_input.connect(func(ev: InputEvent) -> void:
 		if ev is InputEventMouseButton and ev.pressed and ev.button_index == MOUSE_BUTTON_RIGHT:
 			_clear_single_slot(slot_name)
 			get_viewport().set_input_as_handled()
 	)
-	btn.mouse_entered.connect(func():
+	btn.mouse_entered.connect(func() -> void:
 		if _xbox_view:
 			_xbox_view.highlighted_slot = slot_name
 	)
-	btn.mouse_exited.connect(func():
+	btn.mouse_exited.connect(func() -> void:
 		if _xbox_view and _xbox_view.highlighted_slot == slot_name:
 			_xbox_view.highlighted_slot = ""
 	)
@@ -886,26 +740,9 @@ func _create_labeled_bind_slot(label_text: String, slot_name: String) -> VBoxCon
 	_binding_buttons[slot_name] = btn
 	return box
 
-func _create_mini_trigger_bar() -> ProgressBar:
-	var bar := ProgressBar.new()
-	bar.min_value = 0.0
-	bar.max_value = 1.0
-	bar.value = 0.0
-	bar.show_percentage = false
-	bar.custom_minimum_size = Vector2(68, 5)
-	var bg_sb := StyleBoxFlat.new()
-	bg_sb.bg_color = Color(0.11, 0.12, 0.14, 1.0)
-	bg_sb.set_corner_radius_all(2)
-	var fg_sb := StyleBoxFlat.new()
-	fg_sb.bg_color = Color(0.24, 0.68, 0.91, 1.0)
-	fg_sb.set_corner_radius_all(2)
-	bar.add_theme_stylebox_override("background", bg_sb)
-	bar.add_theme_stylebox_override("fill", fg_sb)
-	return bar
-
-func _create_yuzu_action_button(text: String, min_sz: Vector2) -> Button:
+func _create_yuzu_action_button(text_val: String, min_sz: Vector2) -> Button:
 	var btn := Button.new()
-	btn.text = text
+	btn.text = text_val
 	btn.custom_minimum_size = min_sz
 	btn.focus_mode = Control.FOCUS_NONE
 	btn.add_theme_font_size_override("font_size", 11)
@@ -916,7 +753,7 @@ func _create_yuzu_action_button(text: String, min_sz: Vector2) -> Button:
 	return btn
 
 func _build_modals() -> void:
-	# Modal 1: Crear Nuevo Perfil
+	# Modal 1: Crear nuevo perfil de jugador.
 	_new_profile_modal = ColorRect.new()
 	_new_profile_modal.color = Color(0, 0, 0, 0.65)
 	_new_profile_modal.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -927,7 +764,7 @@ func _build_modals() -> void:
 	np_center.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_new_profile_modal.add_child(np_center)
 
-	var np_panel := _create_group_box("Nuevo Perfil de Control")
+	var np_panel: PanelContainer = SettingsPanelsBuilder.create_group_box("Nuevo Perfil de Control")
 	np_panel.custom_minimum_size = Vector2(280, 110)
 	np_center.add_child(np_panel)
 	var np_vbox: VBoxContainer = np_panel.get_meta("content")
@@ -946,10 +783,10 @@ func _build_modals() -> void:
 	np_btns.add_child(np_ok)
 
 	var np_cancel := _create_yuzu_action_button("Cancelar", Vector2(70, 24))
-	np_cancel.pressed.connect(func(): _new_profile_modal.visible = false)
+	np_cancel.pressed.connect(func() -> void: _new_profile_modal.visible = false)
 	np_btns.add_child(np_cancel)
 
-	# Modal 2: Configurar Vibracion
+	# Modal 2: Intensidad y prueba de vibración.
 	_vibration_modal = ColorRect.new()
 	_vibration_modal.color = Color(0, 0, 0, 0.65)
 	_vibration_modal.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -960,7 +797,7 @@ func _build_modals() -> void:
 	vib_center.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_vibration_modal.add_child(vib_center)
 
-	var vib_panel := _create_group_box("Configuracion de Vibracion — Player")
+	var vib_panel: PanelContainer = SettingsPanelsBuilder.create_group_box("Configuración de Vibración — Player")
 	vib_panel.custom_minimum_size = Vector2(290, 130)
 	vib_center.add_child(vib_panel)
 	var vib_vbox: VBoxContainer = vib_panel.get_meta("content")
@@ -976,7 +813,7 @@ func _build_modals() -> void:
 	_vibration_slider.max_value = 100.0
 	_vibration_slider.step = 5.0
 	_vibration_slider.value = 100.0
-	_vibration_slider.value_changed.connect(func(v: float):
+	_vibration_slider.value_changed.connect(func(v: float) -> void:
 		_vibration_val_label.text = "Intensidad: %d%%" % int(round(v))
 		_working_configs[_current_player]["vibration_strength"] = v / 100.0
 	)
@@ -987,38 +824,53 @@ func _build_modals() -> void:
 	vib_btns.add_theme_constant_override("separation", 6)
 	vib_vbox.add_child(vib_btns)
 
-	var test_vib := _create_yuzu_action_button("Probar Vibracion", Vector2(115, 24))
-	test_vib.pressed.connect(func():
+	var test_vib := _create_yuzu_action_button("Probar Vibración", Vector2(115, 24))
+	test_vib.pressed.connect(func() -> void:
 		var dev_id: int = _get_working_device_id(_current_player)
 		if dev_id >= 0 and dev_id in Input.get_connected_joypads():
 			var str_val: float = float(_working_configs[_current_player].get("vibration_strength", 1.0))
 			Input.start_joy_vibration(dev_id, 0.6 * str_val, 0.9 * str_val, 0.25)
 			_show_status("Vibrando Control %d..." % dev_id)
 		else:
-			_show_status("No hay mando fisico conectado en ese puerto")
+			_show_status("No hay mando físico conectado en ese puerto")
 	)
 	vib_btns.add_child(test_vib)
 
 	var close_vib := _create_yuzu_action_button("Cerrar", Vector2(68, 24))
-	close_vib.pressed.connect(func(): _vibration_modal.visible = false)
+	close_vib.pressed.connect(func() -> void: _vibration_modal.visible = false)
 	vib_btns.add_child(close_vib)
+#endregion
 
-# ==============================================================================
-# Logica de Pestañas, Dispositivos, Perfiles y Actualizacion Visual
-# ==============================================================================
+#region Pestañas, Dispositivos, Perfiles y Vista Previa en Vivo
+func _select_section(section_id: String) -> void:
+	_stop_listening()
+	if _controls_view: _controls_view.visible = (section_id == "controls")
+	if _audio_view: _audio_view.visible = (section_id == "audio")
+	if _credits_view: _credits_view.visible = (section_id == "credits")
+
+	for s_id in _sidebar_buttons:
+		var btn: Button = _sidebar_buttons[s_id]
+		var is_active: bool = (s_id == section_id)
+		btn.add_theme_stylebox_override("normal", _style_sidebar_active if is_active else _style_sidebar_inactive)
+		btn.add_theme_stylebox_override("hover", _style_sidebar_active if is_active else _style_sidebar_hover)
+		btn.add_theme_stylebox_override("pressed", _style_sidebar_active)
+		btn.add_theme_color_override("font_color", Color.WHITE if is_active else Color(0.75, 0.78, 0.82))
+
+	if _window_title_label:
+		match section_id:
+			"controls": _window_title_label.text = "CONFIGURACIÓN DE CONTROLES — XBOX CONTROLLER (4 JUGADORES)"
+			"audio": _window_title_label.text = "AJUSTES DE AUDIO — VOLUMEN GENERAL, VOCES, MÚSICA Y SFX"
+			"credits": _window_title_label.text = "CRÉDITOS Y AGRADECIMIENTOS — RECURSOS, MODELOS 3D Y MÚSICA"
+
 func _select_player_tab(player_id: int) -> void:
 	_stop_listening()
 	_current_player = clampi(player_id, 1, InputManager.MAX_PLAYERS)
 	for p_id in _player_tab_buttons.keys():
 		var btn: Button = _player_tab_buttons[p_id]
-		if p_id == _current_player:
-			btn.add_theme_stylebox_override("normal", _style_tab_active)
-			btn.add_theme_stylebox_override("hover", _style_tab_active)
-			btn.add_theme_color_override("font_color", Color.WHITE)
-		else:
-			btn.add_theme_stylebox_override("normal", _style_tab_inactive)
-			btn.add_theme_stylebox_override("hover", _style_tab_inactive)
-			btn.add_theme_color_override("font_color", Color(0.68, 0.70, 0.74))
+		var active: bool = (p_id == _current_player)
+		btn.add_theme_stylebox_override("normal", _style_tab_active if active else _style_tab_inactive)
+		btn.add_theme_stylebox_override("hover", _style_tab_active if active else _style_tab_inactive)
+		btn.add_theme_color_override("font_color", Color.WHITE if active else Color(0.68, 0.70, 0.74))
 	_refresh_ui_from_working_config()
 
 func _refresh_device_dropdown() -> void:
@@ -1027,13 +879,10 @@ func _refresh_device_dropdown() -> void:
 	_device_opt.clear()
 	var connected_pads: Array[int] = Input.get_connected_joypads()
 	for i in range(InputManager.MAX_PLAYERS):
-		var label: String = "Xbox Controller %d" % i
+		var label: String = "Xbox Virtual / Gamepad %d" % i
 		if i in connected_pads:
 			var jname: String = Input.get_joy_name(i)
-			if jname != "":
-				label = "%s %d" % [jname, i]
-		else:
-			label = "Xbox Virtual / Gamepad %d" % i
+			label = ("%s %d" % [jname, i]) if jname != "" else ("Xbox Controller %d" % i)
 		_device_opt.add_item(label, i)
 		_device_opt.set_item_metadata(i, "joy_%d" % i)
 
@@ -1057,21 +906,20 @@ func _refresh_ui_from_working_config() -> void:
 	if _connect_chk_box:
 		_connect_chk_box.color = Color(0.12, 0.95, 0.22, 1.0) if is_conn else Color(0.16, 0.17, 0.19, 1.0)
 
-	# Actualizar los 4 indicadores inferiores de Connected Controllers
 	for p_id in range(1, InputManager.MAX_PLAYERS + 1):
 		if _connected_leds.has(p_id):
 			var p_conn: bool = bool(_working_configs[p_id].get("connected", p_id <= 2))
 			var led_btn: Button = _connected_leds[p_id]
-			var sb := StyleBoxFlat.new()
-			sb.bg_color = Color(0.12, 0.95, 0.22, 1.0) if p_conn else Color(0.15, 0.16, 0.18, 1.0)
-			sb.border_color = Color(0.95, 0.95, 0.95, 0.9) if p_id == _current_player else Color(0.32, 0.34, 0.38, 1.0)
-			sb.set_border_width_all(2 if p_id == _current_player else 1)
-			sb.set_corner_radius_all(2)
+			var sb: StyleBoxFlat = UIThemeUtils.make_stylebox(
+				Color(0.12, 0.95, 0.22, 1.0) if p_conn else Color(0.15, 0.16, 0.18, 1.0),
+				Color(0.95, 0.95, 0.95, 0.9) if p_id == _current_player else Color(0.32, 0.34, 0.38, 1.0),
+				2 if p_id == _current_player else 1,
+				2
+			)
 			led_btn.add_theme_stylebox_override("normal", sb)
 			led_btn.add_theme_stylebox_override("hover", sb)
 			led_btn.add_theme_stylebox_override("pressed", sb)
 
-	# Seleccionar dispositivo en dropdown
 	var dev_str: String = str(cfg.get("device", "joy_%d" % (_current_player - 1)))
 	if _device_opt:
 		for i in range(_device_opt.item_count):
@@ -1082,7 +930,6 @@ func _refresh_ui_from_working_config() -> void:
 	if _controller_type_opt:
 		_controller_type_opt.select(1 if dev_str == "keyboard" else 0)
 
-	# Seleccionar perfil en dropdown
 	var prof_str: String = str(cfg.get("profile", "Default"))
 	if _profile_opt:
 		for i in range(_profile_opt.item_count):
@@ -1090,19 +937,16 @@ func _refresh_ui_from_working_config() -> void:
 				_profile_opt.select(i)
 				break
 
-	# Actualizar textos de todos los botones de mapeo
 	var bindings: Dictionary = cfg.get("bindings", {})
 	for slot in _binding_buttons.keys():
 		var btn: Button = _binding_buttons[slot]
 		if _listening_slot == slot:
-			var rem: int = int(ceil(_listen_timer))
-			btn.text = "[Wait %ds]" % rem
+			btn.text = "[Wait %ds]" % int(ceil(_listen_timer))
 			btn.add_theme_stylebox_override("normal", _style_bind_listening)
 		else:
 			btn.text = InputManager.format_binding(bindings.get(slot, {"type": "none"}))
 			btn.add_theme_stylebox_override("normal", _style_bind_normal)
 
-	# Actualizar Range, Deadzone y Vibration
 	var rng_pct: float = round(float(cfg.get("range", 0.95)) * 100.0)
 	if _range_spin and not _range_spin.get_line_edit().has_focus():
 		_range_spin.set_value_no_signal(rng_pct)
@@ -1119,12 +963,34 @@ func _refresh_ui_from_working_config() -> void:
 	if _xbox_view:
 		_xbox_view.controller_connected = is_conn
 		_xbox_view.deadzone = float(cfg.get("deadzone", 0.15))
-		_xbox_view.stick_range = float(cfg.get("range", 0.95))
 		_xbox_view.listening_slot = _listening_slot
 
-# ==============================================================================
-# Sistema de Escucha de Inputs en Tiempo Real (Exacto a Yuzu)
-# ==============================================================================
+func _update_live_controller_preview() -> void:
+	if not _xbox_view:
+		return
+	var cfg: Dictionary = _working_configs.get(_current_player, {})
+	var bindings: Dictionary = cfg.get("bindings", {})
+	var dev_id: int = _get_working_device_id(_current_player)
+
+	for slot in InputManager.BINDING_SLOTS:
+		var bdata: Dictionary = bindings.get(slot, {"type": "none"})
+		_xbox_view.active_slots[slot] = InputManager.get_binding_strength_raw(bdata, dev_id)
+
+	var raw_vec := Vector2(
+		float(_xbox_view.active_slots.get("stick_right", 0.0)) - float(_xbox_view.active_slots.get("stick_left", 0.0)),
+		float(_xbox_view.active_slots.get("stick_up", 0.0)) - float(_xbox_view.active_slots.get("stick_down", 0.0))
+	)
+	if raw_vec.length() > 1.0:
+		raw_vec = raw_vec.normalized()
+	_xbox_view.stick_vector = raw_vec
+
+	if _lt_bar:
+		_lt_bar.value = float(_xbox_view.active_slots.get("btn_lt", 0.0))
+	if _rt_bar:
+		_rt_bar.value = float(_xbox_view.active_slots.get("btn_rt", 0.0))
+#endregion
+
+#region Sistema de Escucha de Entradas (Remapeo en Tiempo Real)
 func _start_listening(slot_name: String) -> void:
 	_listening_slot = slot_name
 	_listen_timer = LISTEN_TIMEOUT_SEC
@@ -1151,7 +1017,6 @@ func _input(event: InputEvent) -> void:
 	if not is_visible_in_tree():
 		return
 
-	# Si un modal esta abierto, permitir que el modal procese su propio input
 	if (_new_profile_modal and _new_profile_modal.visible) or (_vibration_modal and _vibration_modal.visible):
 		if event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE:
 			_new_profile_modal.visible = false
@@ -1159,39 +1024,34 @@ func _input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 		return
 
-	# Si estamos escuchando un boton/eje/tecla para mapear:
 	if _listening_slot != "":
 		if event is InputEventKey and event.pressed and not event.is_echo():
 			get_viewport().set_input_as_handled()
 			if event.keycode == KEY_ESCAPE:
 				_stop_listening()
-				return
 			elif event.keycode in [KEY_BACKSPACE, KEY_DELETE]:
 				_clear_single_slot(_listening_slot)
-				return
-			var kc: int = event.keycode if event.keycode != 0 else event.physical_keycode
-			_assign_binding(_listening_slot, {"type": "key", "keycode": kc})
-			_working_configs[_current_player]["keep_kb_fallback"] = false
+			else:
+				var kc: int = event.keycode if event.keycode != 0 else event.physical_keycode
+				_working_configs[_current_player]["keep_kb_fallback"] = false
+				_assign_binding(_listening_slot, {"type": "key", "keycode": kc})
 			return
 
-		if event is InputEventJoypadButton and event.pressed:
-			if _accepts_joy_event(event.device):
-				get_viewport().set_input_as_handled()
-				_assign_binding(_listening_slot, {"type": "joy_button", "button": event.button_index})
-				return
+		if event is InputEventJoypadButton and event.pressed and _accepts_joy_event(event.device):
+			get_viewport().set_input_as_handled()
+			_assign_binding(_listening_slot, {"type": "joy_button", "button": event.button_index})
+			return
 
-		if event is InputEventJoypadMotion:
-			if _accepts_joy_event(event.device):
-				var key: String = "%d_%d" % [event.device, event.axis]
-				var init_val: float = float(_initial_axis_values.get(key, 0.0))
-				if absf(event.axis_value) >= 0.55 and absf(event.axis_value - init_val) >= 0.40:
-					get_viewport().set_input_as_handled()
-					var dir: float = 1.0 if event.axis_value >= 0.0 else -1.0
-					_assign_binding(_listening_slot, {"type": "joy_axis", "axis": event.axis, "dir": dir})
-					return
+		if event is InputEventJoypadMotion and _accepts_joy_event(event.device):
+			var key: String = "%d_%d" % [event.device, event.axis]
+			var init_val: float = float(_initial_axis_values.get(key, 0.0))
+			if absf(event.axis_value) >= 0.55 and absf(event.axis_value - init_val) >= 0.40:
+				get_viewport().set_input_as_handled()
+				var dir: float = 1.0 if event.axis_value >= 0.0 else -1.0
+				_assign_binding(_listening_slot, {"type": "joy_axis", "axis": event.axis, "dir": dir})
+			return
 		return
 
-	# Si NO estamos escuchando y se presiona Escape, cerrar como Cancel
 	if event is InputEventKey and event.pressed and not event.is_echo() and event.keycode == KEY_ESCAPE:
 		get_viewport().set_input_as_handled()
 		_on_cancel_pressed()
@@ -1199,15 +1059,11 @@ func _input(event: InputEvent) -> void:
 func _accepts_joy_event(event_device: int) -> bool:
 	var target_dev: int = _get_working_device_id(_current_player)
 	if target_dev < 0:
-		# Si estaba en Keyboard pero presiona un mando, permitirlo y cambiar a ese mando
 		_working_configs[_current_player]["device"] = "joy_%d" % clampi(event_device, 0, 3)
 		return true
 	if event_device == target_dev:
 		return true
-	# Si el puerto seleccionado no esta conectado pero el usuario presiona un mando conectado, aceptarlo
-	if not (target_dev in Input.get_connected_joypads()):
-		return true
-	return false
+	return not (target_dev in Input.get_connected_joypads())
 
 func _assign_binding(slot_name: String, bind_data: Dictionary) -> void:
 	_working_configs[_current_player]["bindings"][slot_name] = bind_data
@@ -1223,72 +1079,29 @@ func _get_working_device_id(player_id: int) -> int:
 	if dev_str.begins_with("joy_"):
 		return int(dev_str.trim_prefix("joy_"))
 	return clampi(player_id - 1, 0, 3)
+#endregion
 
-func _process(delta: float) -> void:
-	if not is_visible_in_tree():
-		return
-
-	if _listening_slot != "":
-		var prev_sec: int = int(ceil(_listen_timer))
-		_listen_timer -= delta
-		if _listen_timer <= 0.0:
-			_stop_listening()
-		elif int(ceil(_listen_timer)) != prev_sec:
-			_refresh_ui_from_working_config()
-
-	_update_live_controller_preview()
-
-func _update_live_controller_preview() -> void:
-	if not _xbox_view:
-		return
-	var cfg: Dictionary = _working_configs.get(_current_player, {})
-	var bindings: Dictionary = cfg.get("bindings", {})
-	var dev_id: int = _get_working_device_id(_current_player)
-
-	for slot in InputManager.BINDING_SLOTS:
-		var bdata: Dictionary = bindings.get(slot, {"type": "none"})
-		_xbox_view.active_slots[slot] = InputManager.get_binding_strength_raw(bdata, dev_id)
-
-	var up_s: float = float(_xbox_view.active_slots.get("stick_up", 0.0))
-	var down_s: float = float(_xbox_view.active_slots.get("stick_down", 0.0))
-	var left_s: float = float(_xbox_view.active_slots.get("stick_left", 0.0))
-	var right_s: float = float(_xbox_view.active_slots.get("stick_right", 0.0))
-
-	var raw_vec := Vector2(right_s - left_s, up_s - down_s)
-	if raw_vec.length() > 1.0:
-		raw_vec = raw_vec.normalized()
-	_xbox_view.stick_vector = raw_vec
-
-	if _lt_bar:
-		_lt_bar.value = float(_xbox_view.active_slots.get("btn_lt", 0.0))
-	if _rt_bar:
-		_rt_bar.value = float(_xbox_view.active_slots.get("btn_rt", 0.0))
-
-# ==============================================================================
-# Callbacks de Controles Superiores e Inferiores
-# ==============================================================================
+#region Callbacks de Perfiles, Ajustes y Diálogo
 func _on_toggle_connect_current_player() -> void:
 	_toggle_player_connected(_current_player)
 
 func _toggle_player_connected(player_id: int) -> void:
-	var curr: bool = bool(_working_configs[player_id].get("connected", player_id <= 2))
-	_working_configs[player_id]["connected"] = not curr
+	var next_state: bool = not bool(_working_configs[player_id].get("connected", player_id <= 2))
+	_working_configs[player_id]["connected"] = next_state
 	_refresh_ui_from_working_config()
-	_show_status("Player %d %s" % [player_id, "Conectado" if not curr else "Desconectado"])
+	_show_status("Player %d %s" % [player_id, "Conectado" if next_state else "Desconectado"])
 
 func _on_controller_type_selected(idx: int) -> void:
 	if idx == 1:
-		# Cambiar a preset de Teclado
 		_working_configs[_current_player]["device"] = "keyboard"
 		_working_configs[_current_player]["bindings"] = InputManager.get_default_keyboard_bindings(_current_player)
 		_working_configs[_current_player]["keep_kb_fallback"] = false
-		_show_status("Disposicion de Teclado cargada (Player %d)" % _current_player)
+		_show_status("Disposición de Teclado cargada (Player %d)" % _current_player)
 	else:
-		# Cambiar a preset de Control de Xbox
 		_working_configs[_current_player]["device"] = "joy_%d" % (_current_player - 1)
 		_working_configs[_current_player]["bindings"] = InputManager.get_default_xbox_bindings()
 		_working_configs[_current_player]["keep_kb_fallback"] = (_current_player <= 2)
-		_show_status("Disposicion Xbox cargada (Player %d)" % _current_player)
+		_show_status("Disposición Xbox cargada (Player %d)" % _current_player)
 	_refresh_ui_from_working_config()
 
 func _on_device_selected(idx: int) -> void:
@@ -1353,8 +1166,6 @@ func _on_profile_delete_pressed() -> void:
 
 func _on_range_changed(val: float) -> void:
 	_working_configs[_current_player]["range"] = clampf(val / 100.0, 0.25, 1.50)
-	if _xbox_view:
-		_xbox_view.stick_range = _working_configs[_current_player]["range"]
 
 func _on_deadzone_changed(val: float) -> void:
 	_working_configs[_current_player]["deadzone"] = clampf(val / 100.0, 0.0, 0.50)
@@ -1416,430 +1227,7 @@ func _show_status(msg: String) -> void:
 		return
 	_status_toast_label.text = msg
 	_status_toast_label.modulate.a = 1.0
-	var tw := create_tween()
+	var tw: Tween = create_tween()
 	tw.tween_interval(2.0)
 	tw.tween_property(_status_toast_label, "modulate:a", 0.0, 0.4)
-
-# ==============================================================================
-# Navegación entre Secciones (Controls, Sonido, Créditos)
-# ==============================================================================
-func _select_section(section_id: String) -> void:
-	_current_section = section_id
-	_stop_listening()
-
-	if _controls_view:
-		_controls_view.visible = (section_id == "controls")
-	if _audio_view:
-		_audio_view.visible = (section_id == "audio")
-	if _credits_view:
-		_credits_view.visible = (section_id == "credits")
-
-	for s_id in _sidebar_buttons:
-		var btn: Button = _sidebar_buttons[s_id]
-		var is_active: bool = (s_id == section_id)
-		btn.add_theme_stylebox_override("normal", _style_sidebar_active if is_active else _style_sidebar_inactive)
-		btn.add_theme_stylebox_override("hover", _style_sidebar_active if is_active else _style_sidebar_hover)
-		btn.add_theme_stylebox_override("pressed", _style_sidebar_active)
-		btn.add_theme_color_override("font_color", Color.WHITE if is_active else Color(0.75, 0.78, 0.82))
-
-	if _window_title_label:
-		match section_id:
-			"controls":
-				_window_title_label.text = "CONFIGURACIÓN DE CONTROLES — XBOX CONTROLLER (4 JUGADORES)"
-			"audio":
-				_window_title_label.text = "AJUSTES DE AUDIO — VOLUMEN GENERAL, VOCES, MÚSICA Y SFX"
-			"credits":
-				_window_title_label.text = "CRÉDITOS Y AGRADECIMIENTOS — RECURSOS, MODELOS 3D Y MÚSICA"
-
-# ==============================================================================
-# Panel de Sonido
-# ==============================================================================
-func _build_audio_view() -> Control:
-	var margin := MarginContainer.new()
-	margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	margin.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	margin.add_theme_constant_override("margin_left", 12)
-	margin.add_theme_constant_override("margin_right", 12)
-	margin.add_theme_constant_override("margin_top", 10)
-	margin.add_theme_constant_override("margin_bottom", 10)
-
-	var panel := PanelContainer.new()
-	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	var panel_sb := StyleBoxFlat.new()
-	panel_sb.bg_color = Color(0.20, 0.21, 0.23, 1.0)
-	panel_sb.border_color = Color(0.28, 0.30, 0.33, 1.0)
-	panel_sb.set_border_width_all(1)
-	panel_sb.set_corner_radius_all(4)
-	panel_sb.content_margin_left = 16
-	panel_sb.content_margin_right = 16
-	panel_sb.content_margin_top = 12
-	panel_sb.content_margin_bottom = 12
-	panel.add_theme_stylebox_override("panel", panel_sb)
-	margin.add_child(panel)
-
-	var scroll := ScrollContainer.new()
-	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	panel.add_child(scroll)
-
-	var vbox := VBoxContainer.new()
-	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	vbox.add_theme_constant_override("separation", 12)
-	scroll.add_child(vbox)
-
-	# Encabezado
-	var header_hbox := HBoxContainer.new()
-	vbox.add_child(header_hbox)
-
-	var hdr_lbl := Label.new()
-	hdr_lbl.text = "Mezcla de Canales de Audio"
-	hdr_lbl.add_theme_font_size_override("font_size", 14)
-	hdr_lbl.add_theme_color_override("font_color", Color(0.24, 0.68, 0.91))
-	header_hbox.add_child(hdr_lbl)
-
-	var spacer := Control.new()
-	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	header_hbox.add_child(spacer)
-
-	var reset_btn := _create_yuzu_action_button("↺  Restablecer Predeterminados", Vector2(210, 26))
-	reset_btn.pressed.connect(_on_audio_reset_defaults)
-	header_hbox.add_child(reset_btn)
-
-	# Fila 1: Master
-	vbox.add_child(_create_audio_channel_row(
-		"master",
-		"🔊  Volumen General (Master)",
-		"Control maestro que afecta todos los sonidos del juego globalmente.",
-		AudioManager.get_master_volume(),
-		func(): AudioManager.play_test_sfx()
-	))
-
-	# Fila 2: Voces y Gritos
-	vbox.add_child(_create_audio_channel_row(
-		"voices",
-		"🗣️  Voces y Gritos de Personajes",
-		"Volumen de exclamaciones y gritos de combate de los luchadores (ej. Hornet: 'Shaw!', 'Adeeno!').",
-		AudioManager.get_voices_volume(),
-		func(): AudioManager.play_test_voice()
-	))
-
-	# Fila 3: Sonidos de Ambiente y Música
-	vbox.add_child(_create_audio_channel_row(
-		"music",
-		"🎵  Música y Sonido de Ambiente",
-		"Banda sonora de escenarios de combate y pantallas de selección.",
-		AudioManager.get_music_volume(),
-		func(): AudioManager.play_test_music()
-	))
-
-	# Fila 4: Efectos de Combate (SFX)
-	vbox.add_child(_create_audio_channel_row(
-		"sfx",
-		"💥  Efectos de Combate (SFX)",
-		"Impactos de golpes, tajos de seda, escudos, proyectiles y parries.",
-		AudioManager.get_sfx_volume(),
-		func(): AudioManager.play_test_sfx()
-	))
-
-	# Separador y nota informativa
-	var sep := HSeparator.new()
-	vbox.add_child(sep)
-
-	var info_lbl := Label.new()
-	info_lbl.text = "💡 Los ajustes en las barras de volumen tienen efecto inmediato. Pulsa 'Apply' u 'OK' para guardarlos de forma permanente."
-	info_lbl.add_theme_font_size_override("font_size", 11)
-	info_lbl.add_theme_color_override("font_color", Color(0.65, 0.70, 0.75))
-	info_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	vbox.add_child(info_lbl)
-
-	return margin
-
-func _create_audio_channel_row(
-	channel_id: String,
-	title: String,
-	description: String,
-	initial_val: float,
-	test_callable: Callable
-) -> Control:
-	var group := PanelContainer.new()
-	var group_sb := StyleBoxFlat.new()
-	group_sb.bg_color = Color(0.14, 0.15, 0.18, 1.0)
-	group_sb.border_color = Color(0.25, 0.27, 0.30, 1.0)
-	group_sb.set_border_width_all(1)
-	group_sb.set_corner_radius_all(4)
-	group_sb.content_margin_left = 12
-	group_sb.content_margin_right = 12
-	group_sb.content_margin_top = 8
-	group_sb.content_margin_bottom = 8
-	group.add_theme_stylebox_override("panel", group_sb)
-
-	var row_vbox := VBoxContainer.new()
-	row_vbox.add_theme_constant_override("separation", 5)
-	group.add_child(row_vbox)
-
-	# Fila 1: Título y botón probar
-	var top_h := HBoxContainer.new()
-	row_vbox.add_child(top_h)
-
-	var t_lbl := Label.new()
-	t_lbl.text = title
-	t_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	t_lbl.add_theme_font_size_override("font_size", 12)
-	t_lbl.add_theme_color_override("font_color", Color(0.92, 0.94, 0.96))
-	top_h.add_child(t_lbl)
-
-	var test_btn := _create_yuzu_action_button("▶  Probar", Vector2(82, 22))
-	test_btn.pressed.connect(test_callable)
-	top_h.add_child(test_btn)
-
-	# Fila 2: Descripción breve
-	var d_lbl := Label.new()
-	d_lbl.text = description
-	d_lbl.add_theme_font_size_override("font_size", 10)
-	d_lbl.add_theme_color_override("font_color", Color(0.60, 0.64, 0.70))
-	row_vbox.add_child(d_lbl)
-
-	# Fila 3: Slider + Porcentaje + Silenciar
-	var ctrl_h := HBoxContainer.new()
-	ctrl_h.add_theme_constant_override("separation", 10)
-	row_vbox.add_child(ctrl_h)
-
-	var slider := HSlider.new()
-	slider.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	slider.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	slider.min_value = 0.0
-	slider.max_value = 100.0
-	slider.step = 1.0
-	slider.value = round(initial_val * 100.0)
-	ctrl_h.add_child(slider)
-	_audio_sliders[channel_id] = slider
-
-	var pct_lbl := Label.new()
-	pct_lbl.custom_minimum_size = Vector2(45, 0)
-	pct_lbl.text = "%d%%" % int(slider.value)
-	pct_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	pct_lbl.add_theme_font_size_override("font_size", 11)
-	pct_lbl.add_theme_color_override("font_color", Color(0.24, 0.68, 0.91))
-	ctrl_h.add_child(pct_lbl)
-	_audio_labels[channel_id] = pct_lbl
-
-	var mute_chk := CheckBox.new()
-	mute_chk.text = "Silenciar"
-	mute_chk.focus_mode = Control.FOCUS_NONE
-	mute_chk.button_pressed = (initial_val <= 0.001)
-	mute_chk.add_theme_font_size_override("font_size", 11)
-	ctrl_h.add_child(mute_chk)
-	_audio_mutes[channel_id] = mute_chk
-
-	slider.value_changed.connect(func(v: float):
-		_on_audio_slider_changed(channel_id, v)
-	)
-
-	mute_chk.toggled.connect(func(pressed: bool):
-		_on_audio_mute_toggled(channel_id, pressed)
-	)
-
-	return group
-
-func _on_audio_slider_changed(channel_id: String, val: float) -> void:
-	var linear_val: float = clampf(val / 100.0, 0.0, 1.0)
-	if _audio_labels.has(channel_id):
-		_audio_labels[channel_id].text = "%d%%" % int(val)
-	if _audio_mutes.has(channel_id) and val > 0.0:
-		_audio_mutes[channel_id].set_pressed_no_signal(false)
-
-	match channel_id:
-		"master":
-			AudioManager.set_master_volume(linear_val, false)
-		"voices":
-			AudioManager.set_voices_volume(linear_val, false)
-		"music":
-			AudioManager.set_music_volume(linear_val, false)
-		"sfx":
-			AudioManager.set_sfx_volume(linear_val, false)
-
-func _on_audio_mute_toggled(channel_id: String, pressed: bool) -> void:
-	if pressed:
-		match channel_id:
-			"master": AudioManager.set_master_volume(0.0, false)
-			"voices": AudioManager.set_voices_volume(0.0, false)
-			"music": AudioManager.set_music_volume(0.0, false)
-			"sfx": AudioManager.set_sfx_volume(0.0, false)
-		if _audio_labels.has(channel_id):
-			_audio_labels[channel_id].text = "0%"
-	else:
-		var last_val: float = 100.0
-		if _audio_sliders.has(channel_id):
-			last_val = maxf(_audio_sliders[channel_id].value, 20.0)
-			_audio_sliders[channel_id].value = last_val
-		_on_audio_slider_changed(channel_id, last_val)
-
-func _on_audio_reset_defaults() -> void:
-	var defaults := {
-		"master": 100.0,
-		"voices": 90.0,
-		"music": 80.0,
-		"sfx": 85.0
-	}
-	for ch in defaults:
-		if _audio_sliders.has(ch):
-			_audio_sliders[ch].value = defaults[ch]
-		if _audio_mutes.has(ch):
-			_audio_mutes[ch].button_pressed = false
-		_on_audio_slider_changed(ch, defaults[ch])
-	_show_status("Audio restablecido a valores predeterminados")
-
-# ==============================================================================
-# Panel de Créditos
-# ==============================================================================
-func _build_credits_view() -> Control:
-	var margin := MarginContainer.new()
-	margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	margin.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	margin.add_theme_constant_override("margin_left", 12)
-	margin.add_theme_constant_override("margin_right", 12)
-	margin.add_theme_constant_override("margin_top", 10)
-	margin.add_theme_constant_override("margin_bottom", 10)
-
-	var panel := PanelContainer.new()
-	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	var panel_sb := StyleBoxFlat.new()
-	panel_sb.bg_color = Color(0.20, 0.21, 0.23, 1.0)
-	panel_sb.border_color = Color(0.28, 0.30, 0.33, 1.0)
-	panel_sb.set_border_width_all(1)
-	panel_sb.set_corner_radius_all(4)
-	panel_sb.content_margin_left = 16
-	panel_sb.content_margin_right = 16
-	panel_sb.content_margin_top = 12
-	panel_sb.content_margin_bottom = 12
-	panel.add_theme_stylebox_override("panel", panel_sb)
-	margin.add_child(panel)
-
-	var vbox := VBoxContainer.new()
-	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	vbox.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	vbox.add_theme_constant_override("separation", 10)
-	panel.add_child(vbox)
-
-	# Fila Superior: Título + Badge de Archivo + Botón de Recarga
-	var top_h := HBoxContainer.new()
-	vbox.add_child(top_h)
-
-	var title_vbox := VBoxContainer.new()
-	title_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	top_h.add_child(title_vbox)
-
-	var h_lbl := Label.new()
-	h_lbl.text = "Créditos, Modelos y Agradecimientos"
-	h_lbl.add_theme_font_size_override("font_size", 14)
-	h_lbl.add_theme_color_override("font_color", Color(0.24, 0.68, 0.91))
-	title_vbox.add_child(h_lbl)
-
-	var sub_lbl := Label.new()
-	sub_lbl.text = "Archivo editable para desarrolladores: data/credits.md"
-	sub_lbl.add_theme_font_size_override("font_size", 11)
-	sub_lbl.add_theme_color_override("font_color", Color(0.55, 0.58, 0.63))
-	title_vbox.add_child(sub_lbl)
-
-	var reload_btn := _create_yuzu_action_button("🔄  Recargar Archivo", Vector2(150, 26))
-	reload_btn.pressed.connect(_load_and_display_credits)
-	top_h.add_child(reload_btn)
-
-	# Visor Markdown / RichText
-	var text_panel := PanelContainer.new()
-	text_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	text_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	var text_sb := StyleBoxFlat.new()
-	text_sb.bg_color = Color(0.12, 0.13, 0.15, 1.0)
-	text_sb.border_color = Color(0.24, 0.26, 0.28, 1.0)
-	text_sb.set_border_width_all(1)
-	text_sb.set_corner_radius_all(3)
-	text_sb.content_margin_left = 16
-	text_sb.content_margin_right = 16
-	text_sb.content_margin_top = 14
-	text_sb.content_margin_bottom = 14
-	text_panel.add_theme_stylebox_override("panel", text_sb)
-	vbox.add_child(text_panel)
-
-	_credits_rich_label = RichTextLabel.new()
-	_credits_rich_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_credits_rich_label.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_credits_rich_label.bbcode_enabled = true
-	_credits_rich_label.selection_enabled = false
-	_credits_rich_label.scroll_following = false
-	text_panel.add_child(_credits_rich_label)
-
-	_load_and_display_credits()
-
-	return margin
-
-func _load_and_display_credits() -> void:
-	if not _credits_rich_label:
-		return
-	var paths_to_try: Array[String] = [
-		"res://data/credits.md",
-		"data/credits.md"
-	]
-	var content: String = ""
-	for path in paths_to_try:
-		if FileAccess.file_exists(path):
-			var f := FileAccess.open(path, FileAccess.READ)
-			if f:
-				content = f.get_as_text()
-				f.close()
-				break
-
-	if content == "":
-		_credits_rich_label.text = "[color=#e06c75]No se pudo cargar el archivo data/credits.md[/color]"
-		return
-
-	var bbcode := _format_markdown_to_bbcode(content)
-	_credits_rich_label.text = bbcode
-	_show_status("Créditos actualizados desde data/credits.md")
-
-func _format_markdown_to_bbcode(md: String) -> String:
-	var lines := md.split("\n")
-	var result_lines: Array[String] = []
-
-	for line in lines:
-		var trimmed := line.strip_edges()
-		if trimmed.begins_with("### "):
-			var text := trimmed.substr(4)
-			result_lines.append("\n[color=#e5c07b][font_size=13][b]%s[/b][/font_size][/color]" % text)
-		elif trimmed.begins_with("## "):
-			var text := trimmed.substr(3)
-			result_lines.append("\n[color=#61afef][font_size=15][b]%s[/b][/font_size][/color]" % text)
-		elif trimmed.begins_with("# "):
-			var text := trimmed.substr(2)
-			result_lines.append("\n[center][color=#98c379][font_size=19][b]%s[/b][/font_size][/color][/center]\n" % text)
-		elif trimmed == "---":
-			result_lines.append("[color=#3e4451]────────────────────────────────────────────────────────────────────────[/color]")
-		elif trimmed.begins_with("- "):
-			var item := trimmed.substr(2)
-			item = _parse_inline_markdown(item)
-			result_lines.append("  [color=#61afef]•[/color] %s" % item)
-		else:
-			result_lines.append(_parse_inline_markdown(line))
-
-	return "\n".join(result_lines)
-
-func _parse_inline_markdown(text: String) -> String:
-	var s: String = text
-	# Negrita **texto** -> [b]texto[/b]
-	var bold_regex := RegEx.new()
-	bold_regex.compile("\\*\\*(.*?)\\*\\*")
-	s = bold_regex.sub(s, "[b]$1[/b]", true)
-
-	# Comillas / citas "texto" -> [color=#e5c07b]"texto"[/color]
-	var quote_regex := RegEx.new()
-	quote_regex.compile("\"([^\"]+)\"")
-	s = quote_regex.sub(s, "[color=#e5c07b]\"$1\"[/color]", true)
-
-	# URLs http -> [color=#56b6c2][u]...[/u][/color]
-	var url_regex := RegEx.new()
-	url_regex.compile("(https?://[^\\s\\)]+)")
-	s = url_regex.sub(s, "[color=#56b6c2][u]$1[/u][/color]", true)
-
-	return s
+#endregion

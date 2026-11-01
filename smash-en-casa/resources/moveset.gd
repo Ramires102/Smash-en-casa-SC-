@@ -1,3 +1,9 @@
+# ==============================================================================
+# MoveSet — Catálogo Completo de Movimientos de un Luchador
+# ==============================================================================
+# Agrupa todas las ranuras de ataques (terrestres, Smash, aéreos, especiales y
+# agarre) que AttackController consulta según la dirección del stick y el botón.
+# ==============================================================================
 class_name MoveSet
 extends Resource
 

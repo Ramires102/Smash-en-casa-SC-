@@ -1,3 +1,9 @@
+# ==============================================================================
+# SpawnManager — Instanciación y Reaparición de Luchadores
+# ==============================================================================
+# Crea las instancias de Character al inicio del combate y las reposiciona en
+# las coordenadas de aparición del escenario tanto al arrancar como tras un KO.
+# ==============================================================================
 class_name SpawnManager
 extends Node
 
@@ -11,26 +17,14 @@ func spawn_player(character_scene: PackedScene, player_id: int, data: CharacterD
 	return instance
 
 func set_initial_transform(instance: Character, player_id: int) -> void:
-	if stage:
-		instance.global_position = stage.get_spawn_position(player_id)
-	else:
-		match player_id:
-			1: instance.global_position = Vector2(-170.0, -80.0)
-			2: instance.global_position = Vector2(170.0, -80.0)
-			3: instance.global_position = Vector2(-65.0, -80.0)
-			4: instance.global_position = Vector2(65.0, -80.0)
-			_: instance.global_position = Vector2(0.0, -80.0)
-	
+	instance.global_position = _resolve_spawn_position(player_id)
 	var initial_facing: float = 1.0 if (player_id % 2 != 0) else -1.0
 	instance.set_facing_direction(initial_facing)
 
 func respawn_player(character: Character) -> void:
+	character.reset_player(_resolve_spawn_position(character.player_id))
+
+func _resolve_spawn_position(player_id: int) -> Vector2:
 	if stage:
-		character.reset_player(stage.get_spawn_position(character.player_id))
-	else:
-		match character.player_id:
-			1: character.reset_player(Vector2(-170.0, -80.0))
-			2: character.reset_player(Vector2(170.0, -80.0))
-			3: character.reset_player(Vector2(-65.0, -80.0))
-			4: character.reset_player(Vector2(65.0, -80.0))
-			_: character.reset_player(Vector2(0.0, -80.0))
+		return stage.get_spawn_position(player_id)
+	return Stage.get_default_spawn_position(player_id)

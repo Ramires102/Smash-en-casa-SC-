@@ -1,48 +1,18 @@
+# ==============================================================================
+# StateMachine — Máquina de Estados Finitos (FSM) del Luchador
+# ==============================================================================
+# Registra automáticamente todos sus nodos hijos de tipo State y delega en un
+# único estado activo (`current_state`) las llamadas de input, renderizado y
+# física. Garantiza que el luchador nunca tenga dos estados contradictorios a la
+# vez (ej. no puede correr y estar aturdido simultáneamente).
+# ==============================================================================
 class_name StateMachine
 extends Node
-
-signal state_changed(current_state_name: String)
 
 @export var initial_state: State
 
 var current_state: State
 var states: Dictionary = {}
-
-# Mapeo de alias ACMD hacia FSM jugable.
-const ACMD_ALIASES: Dictionary = {
-	"wait": "idle",
-	"walk": "walk",
-	"dash": "dash",
-	"run_brake": "run_brake",
-	"pivot": "pivot",
-	"squat": "squat",
-	"jump_squat": "jumpsquat",
-	"jump_f": "jump",
-	"jump_b": "jump",
-	"jump_aerial": "jump",
-	"fall_special": "fall",
-	"fast_fall": "fall",
-	"guard_on": "shield",
-	"guard": "shield",
-	"guard_off": "shield",
-	"guard_damage": "hit",
-	"escape_f": "roll",
-	"escape_b": "roll",
-	"escape_n": "spotdodge",
-	"escape_air": "airdodge",
-	"escape_air_slide": "airdodge",
-	"damage_fly": "tumble",
-	"damage_fall": "tumble",
-	"stop_sce": "hit",
-	"passive": "ukemi",
-	"passive_stand": "ukemi",
-	"passivefb": "ukemi",
-	"cliff_catch": "ledge",
-	"cliff_wait": "ledge",
-	"cliff_climb": "ledgegetup",
-	"cliff_attack": "ledgegetup",
-	"cliff_escape": "ledgegetup"
-}
 
 func _ready() -> void:
 	await owner.ready
@@ -50,10 +20,8 @@ func _ready() -> void:
 
 	if initial_state:
 		current_state = initial_state
-		if current_state is State:
-			(current_state as State).dbg("enter_initial", {"state": current_state.name})
+		current_state.dbg("enter_initial", {"state": current_state.name})
 		current_state.enter()
-
 
 func _cache_states() -> void:
 	states.clear()
@@ -75,27 +43,20 @@ func _physics_process(delta: float) -> void:
 	if current_state:
 		current_state.physics_update(delta)
 
+## Cambia de estado cerrando el actual (`exit`) e iniciando el nuevo (`enter`).
 func transition_to(target_state_name: String, msg: Dictionary = {}) -> void:
-	var from_state_name: String = String(current_state.name) if current_state else "None"
 	var state_key: String = target_state_name.to_lower()
-	if ACMD_ALIASES.has(state_key):
-		state_key = ACMD_ALIASES[state_key]
-
 	if not states.has(state_key):
-		push_error("Estado inexistente: " + target_state_name)
+		push_error("StateMachine: estado inexistente '%s'" % target_state_name)
 		return
 
-	if current_state is State:
-		(current_state as State).dbg("transition_request", {
-			"from": from_state_name,
-			"to_requested": target_state_name,
-			"to_resolved": states[state_key].name,
+	if current_state:
+		current_state.dbg("transition_request", {
+			"from": String(current_state.name),
+			"to": states[state_key].name,
 			"msg": msg
 		})
-	
-	if current_state:
 		current_state.exit()
-	
+
 	current_state = states[state_key]
 	current_state.enter(msg)
-	state_changed.emit(current_state.name)

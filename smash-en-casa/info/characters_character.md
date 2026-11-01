@@ -1,64 +1,41 @@
-# Explicación y Estándar de `characters/character.gd`
+# Explicación y Arquitectura de `characters/character.gd`
 
 ## Resumen
-`Character` es el contenedor raíz reutilizable (`CharacterBody3D`) para cualquier luchador del juego. Sigue una arquitectura **100% Data-Driven**, desacoplada por componentes, donde un único `character.tscn` puede representar a cualquier personaje simplemente aplicando su `CharacterData`.
+`Character` es la fachada raíz reutilizable (`CharacterBody2D`) para cualquier luchador del juego dentro de una arquitectura **2.5D Híbrida y Data-Driven**:
+- **Simulación y colisiones en 2D**: físicas exactas en el plano XY (`CharacterBody2D`, `Hitbox`, `Hurtbox`, `Pushbox`).
+- **Representación visual en 3D**: el componente `VisualController` proyecta cada frame la posición 2D (`100 px = 1.0 m`) a un proxy `Humanoid` (`Node3D`) en el escenario 3D.
+
+Un único `character.tscn` sirve para los 7 personajes simplemente inyectándole su recurso `CharacterData` (`.tres`).
 
 ---
 
-## 🏛️ 1. Nodos Obligatorios de `Character` (Estructura Mínima)
-
-Cualquier escena o instancia de `Character` debe contar obligatoriamente con la siguiente jerarquía de nodos:
+## 🏛️ 1. Jerarquía de Componentes de `Character`
 
 ```text
-Character (CharacterBody3D) [Script: character.gd]
-├── Controller (Node) [Script: character_controller.gd]
-├── Stats (Node) [Script: character_stats.gd]
-├── AttackController (Node) [Script: attack_controller.gd]
-├── CollisionShape3D (CapsuleShape3D principal)
-├── Humanoid (Node3D - Raíz de modelo visual 3D)
-│   ├── ModelRoot (Instancia dinámica del modelo 3D)
-│   └── ShieldMesh (MeshInstance3D - Burbuja de escudo 3D)
-├── Hitbox (Area3D) [Script: hitbox.gd]
-│   └── CollisionShape3D (BoxShape3D ofensivo)
-├── Hurtbox (Area3D) [Script: hurtbox.gd]
-│   └── CollisionShape3D (CapsuleShape3D defensivo)
-├── AnimationController (Node) [Script: animation_controller.gd]
-├── AnimationPlayer (AnimationPlayer)
-└── StateMachine (Node) [Script: state_machine.gd]
-    ├── Idle, Walk, Dash, Run, RunBrake, Pivot, Squat
-    ├── JumpSquat, Jump, Fall
-    ├── Attack, Hit, Death, Shield, Daze, Spotdodge, Roll
+Character (CharacterBody2D) [character.gd]
+├── Controller (Node) [character_controller.gd]
+├── Stats (Node) [character_stats.gd]
+├── AttackController (Node) [attack_controller.gd]
+├── ShieldController (Node) [shield_controller.gd]
+├── VisualController (Node) [visual_controller.gd] ──▶ gestiona Humanoid (Node3D) en el mundo 3D
+├── AnimationController (Node) [animation_controller.gd]
+│   ├── ProceduralPoseSolver (RefCounted) [procedural_pose_solver.gd]
+│   ├── CombatVFXController (RefCounted) [combat_vfx_controller.gd]
+│   └── ProceduralMovesetBuilder (RefCounted) [procedural_moveset_builder.gd]
+├── Hitbox (Area2D) [hitbox.gd]
+├── Hurtbox (Area2D) [hurtbox.gd]
+├── Pushbox (Area2D) [pushbox.gd]
+└── StateMachine (Node) [state_machine.gd]
+    └── 15 estados activos (Idle, Run, JumpSquat, Jump, Fall, Attack, Hit,
+        Shield, Roll, SpotDodge, AirDodge, Daze, Ledge, LedgeGetup, Death)
 ```
 
 ---
 
-## ⚙️ 2. Contrato de Configuración Data-Driven (`configure`)
-
-El método estándar para inicializar o cambiar el luchador es:
-
-```gdscript
-func configure(data: CharacterData) -> void
-```
-
-### Acciones ejecutadas por `configure(data)`:
-1. Asigna la referencia `character_data = data`.
-2. **Físicas y Movimiento**: Llama a `controller.setup(data)` aplicando velocidades de carrera/caminata, tracción, salto y gravedad.
-3. **Estadísticas de Combate**: Llama a `stats.setup(data)` configurando peso y reseteando porcentaje (`0.0%`).
-4. **Moveset y Ataques**: Llama a `attack_controller.setup(data)` vinculando los recursos `AttackData` para ataques neutrales, aéreos, tilts y especiales.
-5. **Representación Visual 3D**:
-   - Si `data.model_scene` está presente: Instancia el modelo 3D final (`ModelRoot`), aplica `data.model_offset` y escala `data.model_scale`.
-   - Si no está presente (Fallback): Aplica `data.character_color` en los materiales del maniquí articulado placeholder.
-
----
-
-## 🚫 3. Cero Hardcode por Personaje
-
-* **Sin condicionales por nombre**: No existen comprobaciones del tipo `if data.character_name == "..."`.
-* **Extensibilidad**: Crear un nuevo personaje solo requiere crear un nuevo recurso `.tres` (`CharacterData`) en la carpeta `resources/instances/` sin modificar código de motor.
-
----
-
-## 📡 Comunicación e Interacciones
-* **Entradas**: Lee intenciones de control desacopladas mediante `current_input: PlayerInput`.
-* **Señales**: Emite `percentage_changed(new_percentage)` y `character_ko(player_id)`.
-* **Consumido por**: `SpawnManager`, `BattleManager`, `CameraController`, `HUD`.
+## ⚙️ 2. Configuración Data-Driven (`configure(data: CharacterData)`)
+Al iniciar la partida, `SpawnManager` invoca `character.configure(data)`, que delega la configuración a cada subsistema:
+1. **`controller.setup(data)`**: Velocidad de carrera, aceleración, gravedad, fuerza de salto y peso.
+2. **`stats.setup(data)`**: Peso para knockback y porcentaje de daño inicial (`0.0%`).
+3. **`attack_controller.setup(data)`**: Carga el `Moveset` (Jabs, Tilts, Aerials y Especiales).
+4. **`visual_controller.setup_3d_visuals(data)`**: Instancia el modelo `.glb` (`ModelRoot`), configura escala/offset y la malla de escudo 3D.
+5. **`animation_controller.setup_character_rig(...)`**: Vincula huesos humanoides (`Skeleton3D`) y genera/conecta las animaciones de combate.
