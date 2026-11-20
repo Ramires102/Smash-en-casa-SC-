@@ -8,6 +8,7 @@
 #        - Hornet: 5 carretes de seda (`TextureProgressBar`) que se llenan por tercios.
 #   3. Reloj central de la partida y cuenta regresiva inicial ("3, 2, 1, ¡SMASH!").
 #   4. Atajo rápido manteniendo `[R]` para volver a la selección de personajes.
+#   5. Guía discreta de controles en pantalla (Teclado J1 a la izquierda y Joystick a la derecha).
 # ==============================================================================
 class_name HUD
 extends Control
@@ -32,6 +33,7 @@ var _hold_r_container: PanelContainer = null
 var _hold_r_bar: ProgressBar = null
 var _hold_r_percent_lbl: Label = null
 var _hold_r_fill_sb: StyleBoxFlat = null
+var _controls_hints_row: HBoxContainer = null
 #endregion
 
 #region Ciclo de Vida
@@ -45,6 +47,7 @@ func _ready() -> void:
 
 	_init_player_panels()
 	_setup_character_visuals()
+	_build_controls_hints_ui()
 	_build_hold_r_ui()
 
 func _exit_tree() -> void:
@@ -347,6 +350,168 @@ func start_countdown() -> void:
 			countdown_container.visible = false
 		else:
 			await get_tree().create_timer(0.8).timeout
+#endregion
+
+#region Guía Discreta de Controles en Combate (Teclado J1 y Joystick)
+func _build_controls_hints_ui() -> void:
+	if _controls_hints_row != null:
+		return
+
+	var main_vbox: VBoxContainer = get_node_or_null("MarginContainer/VBoxContainer") as VBoxContainer
+	if main_vbox == null:
+		return
+
+	main_vbox.add_theme_constant_override("separation", 6)
+
+	_controls_hints_row = HBoxContainer.new()
+	_controls_hints_row.name = "ControlsHintsRow"
+	_controls_hints_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_controls_hints_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_controls_hints_row.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	_controls_hints_row.add_theme_constant_override("separation", 12)
+
+	var kb_rows: Array[Array] = [
+		[
+			{"key": "WASD", "label": "Moverse", "color": Color(0.86, 0.93, 1.0)},
+			{"key": "ESPACIO", "label": "Saltar", "color": Color(0.86, 0.93, 1.0)}
+		],
+		[
+			{"key": "J", "label": "Ataque normal", "color": Color(0.55, 0.84, 1.0)},
+			{"key": "K", "label": "Especial", "color": Color(1.0, 0.62, 0.58)},
+			{"key": "L", "label": "Escudo", "color": Color(0.82, 0.90, 0.96)}
+		]
+	]
+	var kb_card: PanelContainer = _create_controls_card(
+		"KeyboardControlsCard",
+		"TECLADO (J1)",
+		kb_rows,
+		Color(0.32, 0.72, 0.96, 0.36),
+		Color(0.64, 0.87, 1.0, 0.88),
+		false
+	)
+	_controls_hints_row.add_child(kb_card)
+
+	var center_spacer := Control.new()
+	center_spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	center_spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_controls_hints_row.add_child(center_spacer)
+
+	var joy_rows: Array[Array] = [
+		[
+			{"key": "STICK / D-PAD", "label": "Moverse", "color": Color(0.88, 0.92, 0.98)},
+			{"key": "A", "label": "Saltar", "color": Color(0.46, 0.90, 0.56)}
+		],
+		[
+			{"key": "X / Y", "label": "Ataque normal", "color": Color(0.50, 0.80, 1.0)},
+			{"key": "B", "label": "Especial", "color": Color(0.98, 0.52, 0.50)},
+			{"key": "LB / RB / LT / RT", "label": "Escudo", "color": Color(0.84, 0.88, 0.94)}
+		]
+	]
+	var joy_card: PanelContainer = _create_controls_card(
+		"JoystickControlsCard",
+		"JOYSTICK",
+		joy_rows,
+		Color(0.78, 0.82, 0.90, 0.30),
+		Color(0.84, 0.88, 0.95, 0.82),
+		true
+	)
+	_controls_hints_row.add_child(joy_card)
+
+	main_vbox.add_child(_controls_hints_row)
+
+func _create_controls_card(
+	node_name: String,
+	title: String,
+	rows: Array[Array],
+	border_col: Color,
+	title_col: Color,
+	align_right: bool
+) -> PanelContainer:
+	var card := PanelContainer.new()
+	card.name = node_name
+	card.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	card.size_flags_horizontal = Control.SIZE_SHRINK_END if align_right else Control.SIZE_SHRINK_BEGIN
+	card.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	card.modulate = Color(1.0, 1.0, 1.0, 0.82)
+
+	var card_sb: StyleBoxFlat = UIThemeUtils.make_stylebox(
+		Color(0.04, 0.06, 0.10, 0.56), border_col, 1, 4, 8.0, 5.0
+	)
+	if align_right:
+		card_sb.border_width_right = 2
+	else:
+		card_sb.border_width_left = 2
+	card.add_theme_stylebox_override("panel", card_sb)
+
+	var vbox := VBoxContainer.new()
+	vbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	vbox.add_theme_constant_override("separation", 3)
+	card.add_child(vbox)
+
+	var ui_font: Font = ThemeDB.fallback_font
+
+	var title_lbl := Label.new()
+	title_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	title_lbl.text = title
+	title_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT if align_right else HORIZONTAL_ALIGNMENT_LEFT
+	title_lbl.add_theme_font_override("font", ui_font)
+	title_lbl.add_theme_font_size_override("font_size", 9)
+	title_lbl.add_theme_color_override("font_color", title_col)
+	title_lbl.add_theme_color_override("font_outline_color", Color(0.0, 0.0, 0.0, 0.75))
+	title_lbl.add_theme_constant_override("outline_size", 2)
+	vbox.add_child(title_lbl)
+
+	for row_items in rows:
+		var row_hbox := HBoxContainer.new()
+		row_hbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		row_hbox.alignment = BoxContainer.ALIGNMENT_END if align_right else BoxContainer.ALIGNMENT_BEGIN
+		row_hbox.add_theme_constant_override("separation", 8)
+		for item in row_items:
+			row_hbox.add_child(_create_control_hint_item(
+				str(item["key"]),
+				str(item["label"]),
+				item["color"] as Color,
+				ui_font
+			))
+		vbox.add_child(row_hbox)
+
+	return card
+
+func _create_control_hint_item(key_text: String, action_text: String, key_color: Color, ui_font: Font) -> HBoxContainer:
+	var item_box := HBoxContainer.new()
+	item_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	item_box.add_theme_constant_override("separation", 4)
+
+	var key_badge := PanelContainer.new()
+	key_badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	key_badge.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	key_badge.add_theme_stylebox_override(
+		"panel",
+		UIThemeUtils.make_stylebox(Color(0.12, 0.16, 0.23, 0.82), Color(0.65, 0.75, 0.88, 0.34), 1, 3, 4.0, 1.0)
+	)
+	item_box.add_child(key_badge)
+
+	var key_lbl := Label.new()
+	key_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	key_lbl.text = key_text
+	key_lbl.add_theme_font_override("font", ui_font)
+	key_lbl.add_theme_font_size_override("font_size", 10)
+	key_lbl.add_theme_color_override("font_color", key_color)
+	key_lbl.add_theme_color_override("font_outline_color", Color(0.0, 0.0, 0.0, 0.65))
+	key_lbl.add_theme_constant_override("outline_size", 1)
+	key_badge.add_child(key_lbl)
+
+	var desc_lbl := Label.new()
+	desc_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	desc_lbl.text = action_text
+	desc_lbl.add_theme_font_override("font", ui_font)
+	desc_lbl.add_theme_font_size_override("font_size", 10)
+	desc_lbl.add_theme_color_override("font_color", Color(0.84, 0.88, 0.94, 0.92))
+	desc_lbl.add_theme_color_override("font_outline_color", Color(0.0, 0.0, 0.0, 0.78))
+	desc_lbl.add_theme_constant_override("outline_size", 2)
+	item_box.add_child(desc_lbl)
+
+	return item_box
 #endregion
 
 #region Atajo Rápido: Mantener [R] para Volver a Selección
